@@ -1,0 +1,20 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+use lib '../../../../include';
+use nms::web qw (%json finalize_output);
+use strict;
+use warnings;
+use Data::Dumper;
+
+nms::web::setwhen('60m');
+my $q = $nms::web::dbh->prepare('select distinct on (sysname) extract(epoch from date_trunc(\'second\',time)) as time,sysname from dhcp join switches on dhcp.switch = switches.switch where ' . $nms::web::when . ' order by sysname,time desc;');
+$q->execute();
+while ( my $ref = $q->fetchrow_hashref() ) {
+	my $sysname = $ref->{'sysname'};
+	$json{'dhcp'}{$ref->{'sysname'}} = $ref->{'time'};
+}
+
+$nms::web::cc{'max-age'} = "10";
+$nms::web::cc{'stale-while-revalidate'} = "30";
+finalize_output();

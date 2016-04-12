@@ -1,0 +1,92 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+#use CGI qw(fatalsToBrowser);
+use DBI;
+use lib '../../../../include';
+use nms;
+use nms::web qw(%get_params %json finalize_output get_input $dbh);
+use nms::util qw(guess_placement);
+use strict;
+use warnings;
+use JSON;
+use Data::Dumper;
+
+$nms::web::cc{'max-age'} = "0";
+
+my $in = get_input();
+my @tmp = @{JSON::XS::decode_json($in)};
+
+my @added;
+my @dups;
+
+my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
+
+my @fields = ( 'community', 'current_mac', 'distro_name', 'distro_phy_port', 'lldp_chassis_id', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'switchtype', 'sysname', 'traffic_vlan');
+
+sub convertplace
+{
+	my %in = %{$_[0]};
+	my %out = ();
+
+	if (not defined $in{'x1'} and defined($in{'x'})) {
+		$out{'x1'} = int($in{'x'});
+		$out{'y1'} = int($in{'y'});
+		$out{'xx'} = int($in{'x'} + $in{'width'});
+		$out{'yy'} = int($in{'y'} + $in{'height'});
+	} else {
+		return \%in;
+	}
+	return \%out;
+}
+
+foreach my $tmp2 (@tmp) {
+	my %switch = %{$tmp2};
+	my $affected = 0;
+	my %template = ();
+	map { $template{$_} = 'DEFAULT' } @fields;
+	if (not defined($switch{'sysname'})) {
+		next;
+	}
+
+	$sth->execute( $switch{'sysname'});
+	while ( my @row = $sth->fetchrow_array ) {
+		$affected += 1;
+	}
+
+	if ($affected == 0) {
+		my %placement;
+		if (not defined ($switch{'placement'})) {
+			%placement = guess_placement($switch{'sysname'});
+		} else {
+			%placement = %{convertplace($switch{'placement'})};
+		}
+		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
+			$switch{'ip'} = $switch{'mgtmt4'};
+		}
+		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
+			$switch{'secondary_ip'} = $switch{'mgtmt6'};
+		}
+		my ($x1,$x2,$y1,$y2);
+		$x1 = $placement{'x1'};
+		$y1 = $placement{'y1'};
+		$x2 = $placement{'xx'};
+		$y2 = $placement{'yy'};
+		$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
+		
+		map {
+			if (defined ($template{$_})) {
+					$template{$_} = $dbh->quote($switch{$_});
+			}
+		} keys %switch;
+		
+
+		$nms::web::dbh->do("INSERT INTO SWITCHES (mgmt_v4_addr, sysname, poll_frequency, community, lldp_chassis_id, mgmt_v6_addr, placement,subnet4,subnet6,distro_name)  VALUES ($template{'mgmt_v4_addr'}, $template{'sysname'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'mgmt_v6_addr'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro_name'});");
+		push @added, $switch{'sysname'};
+	}
+}
+
+$json{'switches_addded'} = \@added;
+
+print "X-ban: /api/.*switches.*\n";
+finalize_output();

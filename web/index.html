@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>NMS2</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/navbar-static-top.css" rel="stylesheet">
+
+    <!-- Date-picker styles -->
+    <link href="css/jquery.datetimepicker.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+      <![endif]-->
+      <style type="text/css">
+				canvas {
+					-webkit-touch-callout: none;
+					-webkit-user-select: none;
+					-khtml-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+					outline: none;
+					-webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+				}
+				tr.mgmt_v4_addr {
+					font-weight: 700;
+				}
+				h1.map-mode-title {
+					font-weight: 700;
+					font-size: 55px;
+					color: black;
+					display: none;
+					z-index: 999;
+				}
+				.vertical h1.map-mode-title {
+					left: 30px;
+					bottom: 0px;
+					position: absolute;
+					transform-origin: 0px 0% 0px;
+					transform: rotate(-90deg);
+				}
+				.tvmode h1.map-mode-title {
+					display: block;
+				}
+				.nightmode h1.map-mode-title {
+					color: white;
+				}
+				.tvmode #topCanvas {
+					display: none;
+				}
+				div.map-mode-legend {
+					display: none;
+					position: fixed;
+					bottom: 5%;
+					right: 5%;
+					z-index: 999;
+				}
+				.vertical div.map-mode-legend {
+					top: -10px;
+					right: 30px;
+					position: absolute;
+					transform-origin: 100% 100% 0;
+					transform: rotate(-90deg);
+					height: 40px;
+				}
+				div.map-mode-legend button {
+					font-size: 20px;
+					font-weight: 700;
+				}
+				.tvmode div.map-mode-legend {
+					display: block;
+				}
+      </style>
+  </head>
+
+  <body id="body">
+    <nav class="navbar navbar-default navbar-static-top">
+      <div class="container-fluid">
+	<div class="navbar-header">
+	  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	    <span class="sr-only">Toggle navigation</span>
+	    <span class="icon-bar"></span>
+	    <span class="icon-bar"></span>
+	    <span class="icon-bar"></span>
+	  </button>
+	</div>
+	<div id="navbar" class="navbar-collapse collapse">
+	  <ul class="nav navbar-nav">
+	    <li class="dropdown">
+	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
+		<span class="caret"></span>
+	      </a>
+	      <ul class="dropdown-menu" role="menu">
+		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
+		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
+		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP map</a></li>
+		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
+		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
+		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
+		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
+		<li><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP map</a></li>
+		<li><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU map</a></li>
+		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
+		<li class="divider"> </li>
+		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
+		<li><a href="#" onclick="nms.playback.startReplay('2016-03-21T09:00:00','2016-03-27T12:00:00');" title="Replay from opening 120 minutes per second">Replay TG</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">View</li>
+		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
+		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Switches</li>
+	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
+	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Inventory lists</li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>
+	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','jnxBoxSerialNo')">Serial Numbers</a></li>
+		<li class="divider"> </li>
+		<li class="dropdown-header">Help</li>
+	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
+	      </ul>
+	    </li>
+	    <li><p id="updater_name" class="navbar-text"></p></li>
+	    <div class="navbar-form navbar-left">
+	      <div class="form-group">
+		<button class="btn btn-default btn-sm" id="legend-1"></button>
+		<button class="btn btn-default btn-sm" id="legend-2"></button>
+		<button class="btn btn-default btn-sm" id="legend-3"></button>
+		<button class="btn btn-default btn-sm" id="legend-4"></button>
+		<button class="btn btn-default btn-sm" id="legend-5"></button>
+	      </div>
+	      <div class="input-group input-group-sm">
+		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
+		  <span class="input-group-btn">
+		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
+		</span>
+	      </div>
+	    </div>
+	    </li>
+	  </ul>
+	  <ul class="nav navbar-nav navbar-right">
+	    <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
+	  </ul>
+	</div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container-fluid" id="wrap">
+
+      <div class="row-fluid">
+	<div class="span12">
+	  <div id="aboutKeybindings" class="col-md-4" style="position: absolute; display:none; z-index: 130;">
+	    <div class="panel panel-default">
+	      <div class="panel-heading">
+		<h3 class="panel-title">Keyboard Shortcuts
+		  <button type="button" class="close" aria-label="Close" onclick="document.getElementById('aboutKeybindings').style.display = 'none';" style="float: right">
+		    <span aria-hidden="true">&times;</span>
+		  </button>
+		</h3>
+	      </div>
+	      <table class="table table-condensed">
+		<tr>
+		  <th>Key</th>
+		  <th>Description</th>
+		</tr>
+		<tr>
+		  <td>?</td>
+		  <td>Toggle this help window</td>
+		</tr>
+		<tr>
+		  <td>-</td>
+		  <td>Toggle navigation bar</td>
+		</tr>
+		<tr>
+		  <td>n</td>
+		  <td>Toggle night mode</td>
+		</tr>
+		<tr>
+		  <td>1</td>
+		  <td>View Ping map</td>
+		</tr>
+		<tr>
+		  <td>2</td>
+		  <td>View uplink map</td>
+		</tr>
+		<tr>
+		  <td>3</td>
+		  <td>View DHCP map</td>
+		</tr>
+		<tr>
+		  <td>4</td>
+		  <td>View comment spotter map</td>
+		</tr>
+		<tr>
+		  <td>5</td>
+		  <td>View temperature map</td>
+		</tr>
+		<tr>
+		  <td>6</td>
+		  <td>View uplink traffic map</td>
+		</tr>
+		<tr>
+		  <td>7</td>
+		  <td>View total switch traffic map</td>
+		</tr>
+		<tr>
+		  <td>8</td>
+		  <td>View SNMP map</td>
+		</tr>
+		<tr>
+		  <td>9</td>
+		  <td>View Disco map</td>
+		</tr>
+		<tr>
+		  <td>c</td>
+		  <td>Toggle linknet connections</td>
+		</tr>
+		<tr>
+		  <td>h</td>
+		  <td>Step 1 hour back in time</td>
+		</tr>
+		<tr>
+		  <td>j</td>
+		  <td>Step 5 minutes back in time</td>
+		</tr>
+		<tr>
+		  <td>k</td>
+		  <td>Step 5 minutes forward in time</td>
+		</tr>
+		<tr>
+		  <td>l</td>
+		  <td>Step 1 hour forward in time</td>
+		</tr>
+		<tr>
+		  <td>p</td>
+		  <td>Toggle playback (1 hour per second)</td>
+		</tr>
+		<tr>
+		  <td>r</td>
+		  <td>Return to real time</td>
+		</tr>
+	      </table>
+	    </div>
+	  </div>
+	  <div id="nowPickerBox" style="position: absolute; display: none; z-index: 130;" class="col-sm-6 col-md-5">
+	    <div class="panel panel-default"> 
+	      <div class="panel-heading">
+          <h3 class="panel-title">Time travel
+            <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </h3>
+	      </div>
+	      <div class="panel-body row">
+          <div class="col-sm-12">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="YYYY-MM-DDThh:mm:ss" id="nowPicker">
+              <div class="button-group">
+                <button class="btn btn-primary" onclick="nms.playback.setNow(document.getElementById('nowPicker').dataset.iso);hideLayer('nowPickerBox');">Travel</button>
+                <button class="btn btn-danger" onclick="startNowPicker(Date.now());nms.playback.setNow(false);nms.playback.play();">Back to reality</button>
+                <button class="btn btn-info" data-toggle="button" onclick="toggleLayer('nowPickerInfo');">Info</button>
+              </div>
+            </div>
+          </div>
+          <div id="nowPickerInfo" class="col-sm-12" style="display:none;">
+            <p>Some features do not have time travel support (comment
+            spotting and DHCP map at the moment). We also lack
+            compatible SNMP data for the first day or so, so you'll
+            only have ping data for the first day of TG15.</p>
+            <p>It could take some time to load a specific point in time
+            for the first time. See "About performance" under the help
+            menu for more information.</p>
+            <p>You can also step backwards and forwards in time, stop
+            and start replay and go back to real time using keyboard
+            shortcuts. See the help menu for an overview of keyboard
+            shortcuts.</p>
+          </div>
+	      </div>
+	    </div>
+	  </div>
+	  <div id="info-box-container" class="col-md-5 hidden" style="position: absolute; z-index: 120;">
+	  </div>
+	</div>
+
+	<h1 id="map-mode-title" class="map-mode-title"></h1>
+	<div class="map-mode-legend form-group">
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-1"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-2"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-3"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-4"></button>
+		<button class="btn btn-default btn-sm" id="tv-mode-legend-5"></button>
+	</div>
+	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
+	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10; display: none;"> </canvas>
+	<canvas id="blurCanvas" width="1920" height="1032" style="position: absolute; z-index: 20;"> </canvas>
+	<canvas id="switchCanvas" width="1920" height="1032" style="position: absolute; z-index: 30;"> </canvas>
+	<canvas id="textCanvas" width="1920" height="1032" style="position: absolute; z-index: 40;"> </canvas>
+	<canvas id="textInfoCanvas" width="1920" height="1032" style="position: absolute; z-index: 45;"> </canvas>
+	<canvas id="topCanvas" width="1920" height="1032" style="position: absolute; z-index: 50;"> </canvas>
+	<canvas id="inputCanvas" width="1920" height="1032" style="position: absolute; z-index: 60; cursor: pointer;" onmousedown="nmsMap.canvasClick(event)">
+	</canvas>
+	<canvas id="hiddenCanvas" width="1000" height="10" style="display: none; position: absolute; z-index: 1000 "></canvas>
+
+	<div style="display:none;"><img id="source" src="img/tg16-salkart-clean-big.png" ></div>
+      </div>
+    </div><!--/.fluid-container-->
+    <script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="js/nms-data.js"></script>
+    <script type="text/javascript" src="js/nms-map.js"></script>
+    <script type="text/javascript" src="js/nms-info-box.js"></script>
+    <script type="text/javascript" src="js/nms.js"></script>
+    <script type="text/javascript" src="js/nms-color-util.js"></script>
+    <script type="text/javascript" src="js/nms-map-handlers.js"></script>
+    <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
+    <script type="text/javascript">
+initNMS();
+    </script>
+  </body>
+</html>

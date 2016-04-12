@@ -1,0 +1,312 @@
+system {
+    host-name <?php echo $c['hostname']; ?>;
+    auto-snapshot;
+    time-zone Europe/Oslo;
+    authentication-order [ tacplus password ];
+    root-authentication {
+        encrypted-password "<sensored>";
+    }
+    name-server {
+        2a02:ed02:1ee7::66;
+        2a02:ed02:1337::2;
+    }
+    login {
+        user technet {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "<sensored>";
+            }
+        }
+    }
+    services {
+        ssh {
+            root-login deny;
+        }
+        netconf {
+            ssh;
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+    ntp {
+        server 2001:700:100:2::6;
+    }
+}
+
+chassis {
+    aggregated-devices {
+        ethernet {
+            device-count 1;
+        }
+    }
+    alarm {
+        management-ethernet {
+            link-down ignore;
+        }
+    }
+}
+
+interfaces {
+    interface-range edge-ports {
+        description "Clients";
+        member-range ge-0/0/0 to ge-0/0/43;
+        unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members clients;
+                }
+            }
+        }
+    }
+    interface-range core-ports {
+        description "<?php echo $c['distro_name']; ?> <?php echo $c['distro_phy_port']; ?>";
+        member-range ge-0/0/44 to ge-0/0/47;
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ae0 {
+        description "<?php echo $c['distro_name']; ?> <?php echo $c['distro_phy_port']; ?>";
+        aggregated-ether-options {
+            lacp {
+                active;
+            }
+        }
+        unit 0 {
+            family ethernet-switching {
+                port-mode trunk;
+                vlan {
+                    members [clients mgmt];
+                }
+            }
+        }
+    }
+    vlan {
+        unit <?php echo $c['mgmt_vlan']; ?> {
+            description "MGMT L3 interface";
+            family inet {
+                filter {
+                    input v4-mgmt;
+                }
+                address <?php echo $c['mgmt_v4_addr'] . '/' . $c['mgmt_v4_cidr']; ?>;
+            }
+            family inet6 {
+                filter {
+                    input v6-mgmt;
+                }
+                address <?php echo $c['mgmt_v6_addr'] . '/' . $c['mgmt_v6_cidr']; ?>;
+            }
+        }
+    }
+}
+
+snmp {
+    community <sensored> {
+        client-list-name mgmt;
+    }
+}
+
+policy-options {
+    prefix-list v4-mgmt {
+        /* nLogic jumpstation */
+        <sensored>
+        /* Harald jumpstation */
+        <sensored>
+        /* Tech colo-boks */
+        <sensored>
+        /* NOC clients */
+        151.216.254.0/24;
+        /* Servers */
+        185.12.59.0/26;
+    }
+    prefix-list v6-mgmt {
+        /* Harald jumpstation */
+        <sensored>
+        /* nLogic jumpstation */
+        <sensored>
+        /* Tech colo-boks */
+        <sensored>
+        /* NOC clients */
+        2a02:ed02:254::/64;
+        /* Servers */
+        2a02:ed02:1337::/64;
+    }
+    prefix-list mgmt {
+        /* nLogic jumpstation */
+        <sensored>
+        /* Harald jumpstation */
+        <sensored>
+        /* Tech colo-boks */
+        <sensored>
+        /* NOC clients */
+        151.216.254.0/24;
+        /* Servers */
+        185.12.59.0/26;
+        /* Harald jumpstation */
+        <sensored>
+        /* nLogic jumpstation */
+        <sensored>
+        /* Tech colo-boks */
+        <sensored>
+        /* NOC clients */
+        2a02:ed02:254::/64;
+        /* Servers */
+        2a02:ed02:1337::/64;
+    }
+}
+firewall {
+    family inet {
+        filter v4-mgmt {
+            term accept-ssh {
+                from {
+                    source-prefix-list {
+                        v4-mgmt;
+                    }
+                    destination-port 22;
+                }
+                then {
+                    accept;
+                }
+            }
+            term discard-ssh {
+                from {
+                    destination-port 22;
+                }
+                then {
+                    discard;
+                }
+            }
+            term accept-all {
+                then {
+                    accept;
+                }
+            }
+        }
+    }
+    family inet6 {
+        filter v6-mgmt {
+            term accept-ssh {
+                from {
+                    source-prefix-list {
+                        v6-mgmt;
+                    }
+                    destination-port 22;
+                }
+                then {
+                    accept;
+                }
+            }
+            term discard-ssh {
+                from {
+                    destination-port 22;
+                }
+                then {
+                    discard;
+                }
+            }
+            term accept-all {
+                then {
+
+                    accept;
+                }
+            }
+        }
+    }
+}
+
+protocols {
+    sflow {
+        sample-rate {
+            ingress 10000;
+            egress 10000;
+        }
+        collector 91.209.30.12;
+        interfaces edge-ports;
+        interfaces core-ports;
+    }
+    igmp-snooping {
+        vlan all {
+            version 3;
+            immediate-leave;
+        }
+    }
+    mld-snooping {
+        vlan all {
+            version 2;
+            immediate-leave;
+        }
+    }
+    rstp {
+        bridge-priority 8k;
+        interface edge-ports {
+            edge;
+            no-root-port;
+        }
+    }
+    lldp {
+        interface ae0.0
+    }
+}
+ethernet-switching-options {
+    secure-access-port {
+        interface edge-ports {
+            no-dhcp-trusted;
+        }
+        vlan clients {
+            arp-inspection;
+            examine-dhcp;
+            examine-dhcpv6;
+            neighbor-discovery-inspection;
+            ip-source-guard;
+            ipv6-source-guard;
+            dhcp-option82;
+            dhcpv6-option18 {
+                use-option-82;
+            }
+        }
+        ipv6-source-guard-sessions {
+            max-number 128;
+        }
+    }
+    storm-control {
+        interface all;
+    }
+}
+vlans {
+    clients {
+        vlan-id <?php echo $c['traffic_vlan']; ?>;
+    }
+    mgmt {
+        vlan-id <?php echo $c['mgmt_vlan']; ?>;
+        l3-interface vlan.<?php echo $c['mgmt_vlan']; ?>;
+    }
+}
+
+routing-options {
+    rib inet.0 {
+        static {
+            route 0.0.0.0/0 {
+                next-hop <?php echo $c['mgmt_v4_gw']; ?>;
+            }
+        }
+    }
+    rib inet6.0 {
+        static {
+            route ::/0 {
+                next-hop <?php echo $c['mgmt_v6_gw']; ?>;
+            }
+        }
+    }
+}

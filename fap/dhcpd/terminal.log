@@ -1,0 +1,146 @@
+j@lappie:~/git/tgmanage$ sudo python3 fap/dhcpd/server_dhcp.py
+Starting main loop
+[] DHCP unicast - DHCP forwarding
+[40:b4:f0:cc:76:01] Parsing DHCP packet from client
+[40:b4:f0:cc:76:01] --> processing DHCP options
+[40:b4:f0:cc:76:01]     --> option: 53: DHCP Discover (will not be used in reply)
+[40:b4:f0:cc:76:01]     --> option: 12: b'GP0212466317'
+[40:b4:f0:cc:76:01]     --> option: 60: 4a:75:6e:69:70:65:72:2d:65 [...]
+[40:b4:f0:cc:76:01]     --> processing suboption hook for option 82
+[40:b4:f0:cc:76:01]         --> suboption 1 found - value: "distro0gw:ge-0/0/0.0:mgmt"
+[40:b4:f0:cc:76:01]     --> Finished processing suboption 82
+[40:b4:f0:cc:76:01] --> Finished processing options
+[40:b4:f0:cc:76:01] --> DHCP packet type: DHCP DISCOVER
+[40:b4:f0:cc:76:01] --> DHCP packet contains option 82 - continues to process
+[40:b4:f0:cc:76:01] --> DHCP packet forwarded by relay 10.0.200.1
+[40:b4:f0:cc:76:01] --> DHCP XID/Transaction ID: 75:45:e1:46
+[40:b4:f0:cc:76:01] --> Looking up in the DB
+[40:b4:f0:cc:76:01]     --> Query details: distro_name:distro0gw, distro_phy_port:ge-0/0/0
+[40:b4:f0:cc:76:01]     --> Data found, switch exists in DB - ready to craft response
+[40:b4:f0:cc:76:01] --> Crafting DHCP OFFER response
+[40:b4:f0:cc:76:01]     --> XID/Transaction ID: 75:45:e1:46
+[40:b4:f0:cc:76:01]     --> Client IP: 10.0.200.101
+[40:b4:f0:cc:76:01]     --> DHCP forwarder IP: 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Client MAC: 40:b4:f0:cc:76:01
+[40:b4:f0:cc:76:01] --> Completed DHCP header structure, building DHCP options
+[40:b4:f0:cc:76:01]     --> Option 53  (DHCP OFFER): 2
+[40:b4:f0:cc:76:01]     --> Option 54  (DHCP server identifier): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 51  (Lease time): 43200 (12 hours)
+[40:b4:f0:cc:76:01]     --> Option 1   (subnet mask): 255.255.255.0
+[40:b4:f0:cc:76:01]     --> Option 3   (default gateway): 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Option 150 (Cisco proprietary TFTP server(s)): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 43  (Vendor-specific option):
+[40:b4:f0:cc:76:01]         --> Suboption 0: /files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz
+[40:b4:f0:cc:76:01]         --> Suboption 1: /tg-edge/e-00-1
+[40:b4:f0:cc:76:01]         --> Suboption 3: http
+[40:b4:f0:cc:76:01] --> replying to 10.0.100.1
+
+[40:b4:f0:cc:76:01] DHCP unicast - DHCP forwarding
+[40:b4:f0:cc:76:01] Parsing DHCP packet from client
+[40:b4:f0:cc:76:01] --> processing DHCP options
+[40:b4:f0:cc:76:01]     --> option: 54: b'\n\x00d\x02'
+[40:b4:f0:cc:76:01]     --> option: 55: b'\x033\x01\x0f\x06BC+\x96\x0c\x07*'
+[40:b4:f0:cc:76:01]     --> option: 50: b'\n\x00\xc8e'
+[40:b4:f0:cc:76:01]     --> option: 53: b'\x03'
+[40:b4:f0:cc:76:01]     --> option: 12: b'GP0212466317'
+[40:b4:f0:cc:76:01]     --> option: 60: 4a:75:6e:69:70:65:72:2d:65 [...]
+[40:b4:f0:cc:76:01]     --> processing suboption hook for option 82
+[40:b4:f0:cc:76:01]         --> suboption 1 found - value: "distro0gw:ge-0/0/0.0:mgmt"
+[40:b4:f0:cc:76:01]     --> Finished processing suboption 82
+[40:b4:f0:cc:76:01] --> Finished processing options
+[40:b4:f0:cc:76:01] --> DHCP packet type: DHCP REQUEST
+[40:b4:f0:cc:76:01] --> DHCP packet contains option 82 - continues to process
+[40:b4:f0:cc:76:01] --> DHCP packet forwarded by relay 10.0.200.1
+[40:b4:f0:cc:76:01] --> DHCP XID/Transaction ID: 51:5f:00:7c
+[40:b4:f0:cc:76:01] --> Looking up in the DB
+[40:b4:f0:cc:76:01]     --> Query details: distro_name:distro0gw, distro_phy_port:ge-0/0/0
+[40:b4:f0:cc:76:01]     --> Data found, switch exists in DB - ready to craft response
+[40:b4:f0:cc:76:01] --> Crafting DHCP ACK response
+[40:b4:f0:cc:76:01]     --> XID/Transaction ID: 51:5f:00:7c
+[40:b4:f0:cc:76:01]     --> Client IP: 10.0.200.101
+[40:b4:f0:cc:76:01]     --> DHCP forwarder IP: 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Client MAC: 40:b4:f0:cc:76:01
+[40:b4:f0:cc:76:01] --> Completed DHCP header structure, building DHCP options
+[40:b4:f0:cc:76:01]     --> Option 53  (DHCP ACK): 5
+[40:b4:f0:cc:76:01]     --> Option 54  (DHCP server identifier): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 51  (Lease time): 43200 (12 hours)
+[40:b4:f0:cc:76:01]     --> Option 1   (subnet mask): 255.255.255.0
+[40:b4:f0:cc:76:01]     --> Option 3   (default gateway): 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Option 150 (Cisco proprietary TFTP server(s)): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 43  (Vendor-specific option):
+[40:b4:f0:cc:76:01]         --> Suboption 0: /files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz
+[40:b4:f0:cc:76:01]         --> Suboption 1: /tg-edge/e-00-1
+[40:b4:f0:cc:76:01]         --> Suboption 3: http
+[40:b4:f0:cc:76:01] --> replying to 10.0.100.1
+
+[40:b4:f0:cc:76:01] DHCP unicast - DHCP forwarding
+[40:b4:f0:cc:76:01] Parsing DHCP packet from client
+[40:b4:f0:cc:76:01] --> processing DHCP options
+[40:b4:f0:cc:76:01]     --> option: 53: DHCP Discover (will not be used in reply)
+[40:b4:f0:cc:76:01]     --> option: 60: 4a:75:6e:69:70:65:72:2d:65 [...]
+[40:b4:f0:cc:76:01]     --> processing suboption hook for option 82
+[40:b4:f0:cc:76:01]         --> suboption 1 found - value: "distro0gw:ge-0/0/0.0:mgmt"
+[40:b4:f0:cc:76:01]     --> Finished processing suboption 82
+[40:b4:f0:cc:76:01] --> Finished processing options
+[40:b4:f0:cc:76:01] --> DHCP packet type: DHCP DISCOVER
+[40:b4:f0:cc:76:01] --> DHCP packet contains option 82 - continues to process
+[40:b4:f0:cc:76:01] --> DHCP packet forwarded by relay 10.0.200.1
+[40:b4:f0:cc:76:01] --> DHCP XID/Transaction ID: 64:3c:98:69
+[40:b4:f0:cc:76:01] --> Looking up in the DB
+[40:b4:f0:cc:76:01]     --> Query details: distro_name:distro0gw, distro_phy_port:ge-0/0/0
+[40:b4:f0:cc:76:01]     --> Data found, switch exists in DB - ready to craft response
+[40:b4:f0:cc:76:01] --> Crafting DHCP OFFER response
+[40:b4:f0:cc:76:01]     --> XID/Transaction ID: 64:3c:98:69
+[40:b4:f0:cc:76:01]     --> Client IP: 10.0.200.101
+[40:b4:f0:cc:76:01]     --> DHCP forwarder IP: 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Client MAC: 40:b4:f0:cc:76:01
+[40:b4:f0:cc:76:01] --> Completed DHCP header structure, building DHCP options
+[40:b4:f0:cc:76:01]     --> Option 53  (DHCP OFFER): 2
+[40:b4:f0:cc:76:01]     --> Option 54  (DHCP server identifier): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 51  (Lease time): 43200 (12 hours)
+[40:b4:f0:cc:76:01]     --> Option 1   (subnet mask): 255.255.255.0
+[40:b4:f0:cc:76:01]     --> Option 3   (default gateway): 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Option 150 (Cisco proprietary TFTP server(s)): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 43  (Vendor-specific option):
+[40:b4:f0:cc:76:01]         --> Suboption 0: /files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz
+[40:b4:f0:cc:76:01]         --> Suboption 1: /tg-edge/e-00-1
+[40:b4:f0:cc:76:01]         --> Suboption 3: http
+[40:b4:f0:cc:76:01] --> replying to 10.0.100.1
+
+[40:b4:f0:cc:76:01] DHCP unicast - DHCP forwarding
+[40:b4:f0:cc:76:01] Parsing DHCP packet from client
+[40:b4:f0:cc:76:01] --> processing DHCP options
+[40:b4:f0:cc:76:01]     --> option: 54: b'\n\x00d\x02'
+[40:b4:f0:cc:76:01]     --> option: 55: b'\x033\x01\x0f\x06BC+\x96\x0c\x07*'
+[40:b4:f0:cc:76:01]     --> option: 50: b'\n\x00\xc8e'
+[40:b4:f0:cc:76:01]     --> option: 53: b'\x03'
+[40:b4:f0:cc:76:01]     --> option: 60: 4a:75:6e:69:70:65:72:2d:65 [...]
+[40:b4:f0:cc:76:01]     --> processing suboption hook for option 82
+[40:b4:f0:cc:76:01]         --> suboption 1 found - value: "distro0gw:ge-0/0/0.0:mgmt"
+[40:b4:f0:cc:76:01]     --> Finished processing suboption 82
+[40:b4:f0:cc:76:01] --> Finished processing options
+[40:b4:f0:cc:76:01] --> DHCP packet type: DHCP REQUEST
+[40:b4:f0:cc:76:01] --> DHCP packet contains option 82 - continues to process
+[40:b4:f0:cc:76:01] --> DHCP packet forwarded by relay 10.0.200.1
+[40:b4:f0:cc:76:01] --> DHCP XID/Transaction ID: 66:33:48:73
+[40:b4:f0:cc:76:01] --> Looking up in the DB
+[40:b4:f0:cc:76:01]     --> Query details: distro_name:distro0gw, distro_phy_port:ge-0/0/0
+[40:b4:f0:cc:76:01]     --> Data found, switch exists in DB - ready to craft response
+[40:b4:f0:cc:76:01] --> Crafting DHCP ACK response
+[40:b4:f0:cc:76:01]     --> XID/Transaction ID: 66:33:48:73
+[40:b4:f0:cc:76:01]     --> Client IP: 10.0.200.101
+[40:b4:f0:cc:76:01]     --> DHCP forwarder IP: 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Client MAC: 40:b4:f0:cc:76:01
+[40:b4:f0:cc:76:01] --> Completed DHCP header structure, building DHCP options
+[40:b4:f0:cc:76:01]     --> Option 53  (DHCP ACK): 5
+[40:b4:f0:cc:76:01]     --> Option 54  (DHCP server identifier): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 51  (Lease time): 43200 (12 hours)
+[40:b4:f0:cc:76:01]     --> Option 1   (subnet mask): 255.255.255.0
+[40:b4:f0:cc:76:01]     --> Option 3   (default gateway): 10.0.200.1
+[40:b4:f0:cc:76:01]     --> Option 150 (Cisco proprietary TFTP server(s)): 10.0.100.2
+[40:b4:f0:cc:76:01]     --> Option 43  (Vendor-specific option):
+[40:b4:f0:cc:76:01]         --> Suboption 0: /files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz
+[40:b4:f0:cc:76:01]         --> Suboption 1: /tg-edge/e-00-1
+[40:b4:f0:cc:76:01]         --> Suboption 3: http
+[40:b4:f0:cc:76:01] --> replying to 10.0.100.1
+

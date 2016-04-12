@@ -1,0 +1,16 @@
+#! /usr/bin/perl
+use lib '../../../../include';
+use strict;
+use warnings;
+use nms::web;
+
+nms::web::setwhen('2h');
+
+my $q2 = $nms::web::dbh->prepare("select count(distinct mac) as clients,count(distinct ip) as addresses,count(mac) as acks from dhcp where $nms::web::when;");
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
+	$nms::web::json{'dhcp'} = $ref;
+}
+$nms::web::cc{'max-age'} = "10";
+$nms::web::cc{'stale-while-revalidate'} = "15";
+finalize_output();

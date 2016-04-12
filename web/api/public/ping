@@ -1,0 +1,37 @@
+#! /usr/bin/perl
+use lib '../../../../include';
+use strict;
+use warnings;
+use nms::web;
+
+nms::web::setwhen('15s');
+
+my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (" . $nms::web::now . " - time) as age,sysname, latency_ms FROM ping NATURAL JOIN switches WHERE time in (select max(time) from ping where "
+        . $nms::web::when . " group by switch)");
+
+$q->execute();
+while (my $ref = $q->fetchrow_hashref()) {
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'latency'} = $ref->{'latency_ms'};
+    # Get seconds, without decimlas, from timestamp.
+    # '00:01:01.435601' => 61 seconds.
+    my ( $h, $m, $s ) = split( ':|\.', $ref->{'age'} );
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'age'} = ($h*60*60) + ($m*60) + $s; # $$ref->{'age'};
+}
+
+my $qs = $nms::web::dbh->prepare("SELECT DISTINCT ON (switch) switch, latency_ms FROM ping_secondary_ip WHERE "
+        . $nms::web::when .  " ORDER BY switch, time DESC;");
+$qs->execute();
+while ( my $ref = $qs->fetchrow_hashref() ) {
+    $nms::web::json{'switches'}{$ref->{'switch'}}{'latency_secondary'} = $ref->{'latency_ms'};
+}
+
+my $lq = $nms::web::dbh->prepare("SELECT DISTINCT ON (linknet) linknet, latency1_ms, latency2_ms FROM linknet_ping WHERE "
+        . $nms::web::when . " ORDER BY linknet, time DESC;");
+$lq->execute();
+while ( my $ref = $lq->fetchrow_hashref() ) {
+    $nms::web::json{'linknets'}{$ref->{'linknet'}} = [ $ref->{'latency1_ms'}, $ref->{'latency2_ms'} ];
+}
+
+$nms::web::cc{'max-age'} = "1";
+$nms::web::cc{'stale-while-revalidate'} = "15";
+finalize_output();

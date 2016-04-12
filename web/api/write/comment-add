@@ -1,0 +1,24 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+use lib '../../../../include';
+use utf8;
+use nms::web qw($dbh db_safe_quote get_input finalize_output);
+use strict;
+use warnings;
+
+my $in = get_input();
+my %tmp = %{JSON::XS::decode_json($in)};
+
+my $data = $dbh->quote($tmp{'comment'});
+my $switch = $dbh->quote($tmp{'switch'});
+my $user = $dbh->quote($ENV{'REMOTE_USER'} || "undefined");
+
+my $q = $nms::web::dbh->prepare("INSERT INTO switch_comments (time,username,switch,comment) values (now(),$user,(select switch from switches where sysname = $switch limit 1),$data)");
+$q->execute();
+
+$nms::web::cc{'max-age'} = '0';
+$nms::web::cc{'stale-while-revalidate'} = '0';
+$nms::web::json{'state'} = 'ok';
+
+print "X-ban: /api/read/comments\n";
+finalize_output();

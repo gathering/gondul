@@ -1,0 +1,30 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+use CGI qw(fatalsToBrowser);
+use DBI;
+use lib '../../../../include';
+use nms;
+use nms::web;
+use strict;
+use warnings;
+use Data::Dumper;
+
+$nms::web::cc{'max-age'} = "60";
+
+my $q2 = $nms::web::dbh->prepare('select switch,sysname,mgmt_v4_addr,subnet4,subnet6,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,last_config_fetch,current_mac,poll_frequency,last_updated,distro_phy_port from switches where placement is not null');
+
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
+	my $sysname = $ref->{'sysname'};
+	$nms::web::json{'switches'}{$ref->{'sysname'}} = $ref;
+}
+
+my $q4 = $nms::web::dbh->prepare('select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
+
+$q4->execute();
+while (my $ref = $q4->fetchrow_hashref()) {
+	$nms::web::json{'linknets'}{$ref->{'linknet'}} = $ref;
+}
+
+finalize_output();

@@ -1,0 +1,14 @@
+j@lappie:~/git/tgmanage$ sudo python3 fap/httpd/server_http.py
+
+[Thu Feb 19 23:15:45 2015] Server Starts - 0.0.0.0:80
+[10.0.200.101] [Fri Feb 20 00:18:25 2015] Incoming HTTP GET URI://tg-edge/e-00-1 
+[10.0.200.101] --> Hostname "e-00-1" accepted, fetching info from DB
+[10.0.200.101] --> Template successfully populated
+[10.0.200.101] --> Sending response to client
+[10.0.200.101] --> Success - 1437 bytes sent to client
+[10.0.200.101] [Fri Feb 20 00:18:26 2015] Incoming HTTP GET URI://files/jinstall-ex-2200-12.3R6.6-domestic-signed.tgz 
+[10.0.200.101] --> File request for "jinstall-ex-2200-12.3R6.6-domestic-signed.tgz" in "fap/httpd/files/"
+[10.0.200.101] --> File found
+[10.0.200.101]     --> File transfer started
+[10.0.200.101]     --> File transfer completed
+

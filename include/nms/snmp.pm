@@ -9,12 +9,12 @@ use base 'Exporter';
 our @EXPORT = qw();
 
 BEGIN {
-	# $SNMP::debugging = 1;
+	# FIXME: Should be configurable. 
+	#$SNMP::debugging = 1;
 
-	# sudo mkdir /usr/share/mibs/site
-	# cd /usr/share/mibs/site
-	# wget -O- ftp://ftp.cisco.com/pub/mibs/v2/v2.tar.gz | sudo tar --strip-components=3 -zxvvf -
 	SNMP::initMib();
+	
+	# FIXME: This is just plain dumb.
 	SNMP::addMibDirs("/srv/tgmanage/mibs/StandardMibs");
 	SNMP::addMibDirs("/srv/tgmanage/mibs/JuniperMibs");
 	

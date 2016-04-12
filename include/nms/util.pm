@@ -51,7 +51,8 @@ sub parse_switches {
 }
 
 # Guesses placement from name to get a starting point
-# Largely courtesy of Knuta
+# 
+# FIXME: Move to configuration
 sub guess_placement {
 	my ($x, $y, $xx, $yy);
 

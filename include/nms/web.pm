@@ -26,6 +26,7 @@ sub get_input {
 	while(<STDIN>) { $in .= $_; }
 	return $in;
 }
+
 # Print cache-control from %cc
 sub printcc {
 	my $line = "";

@@ -1,109 +1,43 @@
 #! /usr/bin/perl
 use strict;
 use warnings;
-use DBI;
 package nms::config;
 
 # DB
-our $db_name = "nms";
-our $db_host = "bb-8.tg16.gathering.org";
-our $db_username = "nms";
-our $db_password = "<removed>";
+our $db_name = "{ db_name }";
+our $db_host = "{ db_host }";
+our $db_username = "{ db_user }";
+our $db_password = "{ db_password }";
 
-# NMS: What SNMP objects to fetch.
-# Some basics
-our @snmp_objects = [
-['ifIndex'],
-['sysName'],
-['sysDescr'],
-['ifHighSpeed'],
-['ifType'],
-['ifName'],
-['ifDescr'],
-['ifAlias'],
-['ifOperStatus'],
-['ifAdminStatus'],
-['ifLastChange'],
-['ifHCInOctets'],
-['ifHCOutOctets'],
-['ifInDiscards'],
-['ifOutDiscards'],
-['ifInErrors'],
-['ifOutErrors'],
-['ifInUnknownProtos'],
-['ifOutQLen'],
-['sysUpTime'],
-['jnxOperatingTemp'],
-['jnxOperatingCPU'],
-['jnxOperatingDescr'],
-['jnxBoxSerialNo']
-];
 # Max SNMP polls to fire off at the same time.
 our $snmp_max = 20;
 
-# DHCP-servers
-our $dhcp_server1 = "185.110.149.2"; # primary
-our $dhcp_server2 = "185.110.148.2"; # secondary
-
-# TACACS-login for NMS
-our $tacacs_user = "<removed>";
-our $tacacs_pass = "<removed>";
-
-# Telnet-timeout for smanagrun
-our $telnet_timeout = 300;
-
-# IP/IPv6/DNS-info
-our $tgname = "tg16";
-our $pri_hostname = "r2-d2";
-our $pri_v4 = "185.110.149.2";
-our $pri_v6 = "2a06:5841:149a::2";
-our $pri_net_v4 = "185.110.149.0/26";
-our $pri_net_v6 = "2a06:5841:149a::/64";
-
-our $sec_hostname = "c-3po";
-our $sec_v4 = "185.110.148.2";
-our $sec_v6 = "2a06:5841:1337::2";
-our $sec_net_v4 = "185.110.148.0/26";
-our $sec_net_v6 = "2a06:5841:1337::/64";
-
-# for RIPE to get reverse zones via DNS AXFR
-# https://www.ripe.net/data-tools/dns/reverse-dns/how-to-set-up-reverse-delegation
-our $ext_xfer  = "193.0.0.0/22; 2001:610:240::/48; 2001:67c:2e8::/48";
-
-# allow XFR from NOC
-our $noc_net  = "185.110.150.0/25; 2a06:5841:150a::1/64";
-
-# To generate new dnssec-key for ddns:
-# dnssec-keygen -a HMAC-MD5 -b 128 -n HOST DHCP_UPDATER
-our $ddns_key = "<removed>";
-our $ddns_to  = "127.0.0.1"; # just use localhost
-
-# Base networks
-our $base_ipv4net = "88.92.0.0/17";
-our $base_ipv6net = "2a06:5840::/29";
-our $ipv6zone = "0.4.8.5.6.0.a.2.ip6.arpa";
-
-# extra networks that are outside the normal ranges
-# that should have recursive DNS access
-our $rec_net = "185.110.148.0/22";
-
-# extra networks that are outside the normal ranges
-# that should be added to DNS
-our @extra_nets = (
-	'185.110.148.0/24',
-	'185.110.149.0/24',
-	'185.110.150.0/24',
-	'185.110.151.0/24',
-);
-
-# add WLC's
-our $wlc1 = "185.110.148.14";
-
-# add VOIP-server
-our $voip1 = "<removed>";
-
-# PXE-server (rest of bootstrap assumes $sec_v4/$sec_v6)
-our $pxe_server_v4 = $sec_v4;
-our $pxe_server_v6 = $sec_v6;
+# What SNMP objects to fetch.
+our @snmp_objects = [
+	['ifIndex'],
+	['sysName'],
+	['sysDescr'],
+	['ifHighSpeed'],
+	['ifType'],
+	['ifName'],
+	['ifDescr'],
+	['ifAlias'],
+	['ifOperStatus'],
+	['ifAdminStatus'],
+	['ifLastChange'],
+	['ifHCInOctets'],
+	['ifHCOutOctets'],
+	['ifInDiscards'],
+	['ifOutDiscards'],
+	['ifInErrors'],
+	['ifOutErrors'],
+	['ifInUnknownProtos'],
+	['ifOutQLen'],
+	['sysUpTime'],
+	['jnxOperatingTemp'],
+	['jnxOperatingCPU'],
+	['jnxOperatingDescr'],
+	['jnxBoxSerialNo']
+];
 
 1;

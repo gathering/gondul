@@ -1,4 +1,5 @@
-# The Gathering Network Management/Monitoring System (tgnms)
+The Gathering Network Management/Monitoring System (tgnms)
+==========================================================
 
 This is the system used to monitor the network during The Gathering (a
 computer party with between 5000 and 10000 active clients - see
@@ -27,13 +28,29 @@ various scales. The requirements you should expect are:
   polling about 184 switches.
 - Ping and dhcptailer performance is insignificant.
 
-## Name
+Name
+----
 
 The name is not final.
 
 I have no idea what it should be, but this one is rather silly :D
 
-## Architecture
+Installation
+------------
+
+This is NOT complete and thoroughly lacking.
+
+1. Set up postgresql somewhere.
+2. Check out this repo to a web server
+3. Expose ``web/``. Secure ``web/api/write`` and (optionally)
+   ``web/api/read`` with basic auth or something more clever.
+4. Install database schema (found in ... actually, where is that?)
+5. Configure ``include/config.pm``
+6. Start the clients in ``clients/``.
+7. Read the first line in this chapter.
+
+Architecture
+------------
 
 TGNMS is split in multiple roles, at the very core is the database server
 (postgresql).
@@ -63,7 +80,8 @@ base model that is somewhat agnostic to what we collect (so we can add more
 interesting SNMP communities on the fly) and a front end that does a lot of
 magic.
 
-## Current state
+Current state
+-------------
 
 As of this writing, tgnms is being split out of the original 'tgmanage'
 repository. This means sweeping changes and breakage. The actual code has
@@ -72,11 +90,13 @@ right now for simple organizational reasons.
 
 Check back in a week or eight.
 
-## APIs
+APIs
+----
 
 See web/api/API.rst for now.
 
-## On the topic of the front-end....
+On the topic of the front-end....
+---------------------------------
 
 The front end uses bootstrap and jquery, but not really all that
 extensively.
@@ -92,7 +112,8 @@ absolutely crucial to the entire process.
 
 We need more user-documentation though.
 
-# Security
+Security
+--------
 
 Security is ensured in multiple ways. First of all, database passwords
 should obviously be kept secret. It is never visible in the frontend.
@@ -104,4 +125,5 @@ and in detailed form in the private API.
 The NMS it self does not implement any actual security mechanisms for the
 API. That is left up to the web server. An example Apache configuration
 file is provided.
+
 

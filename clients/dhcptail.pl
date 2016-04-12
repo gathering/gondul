@@ -9,13 +9,9 @@ use warnings;
 
 BEGIN {
         require "../include/config.pm";
-        eval {
-                require "../include/config.local.pm";
-        };
 }
 
-my $year = $nms::config::tgname;
-$year =~ s/tg/20/; # hihi
+my (undef,undef,undef,undef,undef,$year,undef,undef,undef) = gmtime(time);
 
 my %months = (
 	Jan => 1,

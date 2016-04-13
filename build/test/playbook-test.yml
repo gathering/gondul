@@ -1,83 +1,43 @@
 ---
 - hosts: all
   become: false
+  vars: 
+  - images:
+    - name: "nms-db-test"
+      links: []
+    - name: "nms-front-test"
+      links: [ "nms-db-test:db" ]
+    - name: "nms-varnish-test"
+      links: [ "nms-front-test:nms-front" ]
+    - name: "nms-collector-test"
+      links: [ "nms-db-test:db" ]
+
   tasks:
-  - name: make db-test
-    docker_image:
-        nocache: true
-        state: build
-        name: nms-db-test
-        docker_api_version: 1.18
-        dockerfile: test/db-test.Dockerfile
-        path: "src/tgnms/build/"
-  - name: make front-test
-    docker_image:
-        nocache: true
-        state: build
-        name: nms-front-test
-        docker_api_version: 1.18
-        dockerfile: test/front-test.Dockerfile
-        path: "src/tgnms/build/"
-  - name: make collector-test
+  - name: make all
     docker_image:
         state: build
-        name: nms-collector-test
+        name: "{{ item.name }}"
         docker_api_version: 1.18
-        dockerfile: test/collector-test.Dockerfile
+        dockerfile: test/{{ item.name }}.Dockerfile
         path: "src/tgnms/build/"
-  - name: make varnish-test
-    docker_image:
-        state: build
-        name: nms-varnish-test
-        docker_api_version: 1.18
-        dockerfile: test/varnish-test.Dockerfile
-        path: "src/tgnms/build/"
+    with_items: "{{ images }}"
 
-  - name: stop db
+  - name: stop all
     docker:
-        name: nms-db
+        name: "{{ item.name }}"
         state: stopped
-        image: nms-db-test
+        image: "{{ item.name }}"
         docker_api_version: 1.18
-  - name: stop front 
-    docker:
-        name: nms-front
-        state: stopped
-        image: nms-front-test
-        docker_api_version: 1.18
-  - name: stop varnish
-    docker:
-        name: nms-varnish
-        state: stopped
-        image: nms-varnish-test
-        docker_api_version: 1.18
+    with_items: "{{ images }}"
 
-  - name: start db
+  - name: start all
     docker: 
-        name: nms-db
-        image: nms-db-test
+        name: "{{ item.name }}"
+        image: "{{ item.name }}"
         docker_api_version: 1.18
         state: started
         net: bridge
-
-  - name: start front
-    docker: 
-        name: nms-front
-        image: nms-front-test
-        docker_api_version: 1.18
-        state: started
-        net: bridge
-        links:
-        - "nms-db:db"
-
-  - name: start varnish
-    docker: 
-        name: nms-varnish
-        image: nms-varnish-test
-        docker_api_version: 1.18
-        state: started
-        net: bridge
-        links:
-        - "nms-front:nms-front"
+        links: "{{ item.links  }}"
+    with_items: "{{ images }}"
 
 

@@ -3,30 +3,49 @@ The Gathering Network Management/Monitoring System (tgnms)
 
 This is the system used to monitor the network during The Gathering (a
 computer party with between 5000 and 10000 active clients - see
-http://gathering.org).
+http://gathering.org). It is now provided as a stand-alone application with
+the goal of being usable to any number of computer parties and events of
+similar nature.
 
 Unlike other NMS's, it is not designed to run perpetually, but for a
 limited time and needs to be effective with minimal infrastructure in place
 as it is used during initial installation of the network.
 
 You should be able to install this on your own for other similar events of
-various scales. The requirements you should expect are:
+various scales. The system requirements are minimal, but some advise:
 
-- During The Gathering 2016, we collected about 30GB of data in postgresql.
-- Using a good reverse proxy is crucial to the frontend. We saw between 200
-  and 500 requests per second during normal operation of The Gathering
-  2016. Varnish operated with a cache hit rate of 99.99%
-- The number of database updates to expect will vary depending on dhcp
-  requests (so depending on dhcp lease times and clients) and amount of
-  equipment. Each switch and linknet with an IP is pinged slightly more
-  than once per second. SNMP is polled once a minute by default. You do the
-  math.
-- We saw about 300 million rows of data at the end of the event in 2016.
-  Database indexes are crucial, but handled by default schema. There should
-  be no significant performance impact as the data set grows.
-- SNMP polling can be slightly CPU intensive, but we still had no issues
-  polling about 184 switches.
-- Ping and dhcptailer performance is insignificant.
+- You can run it on a single VM or split it based on roles. Either works.
+- The database is used extensively, but careful attention has been paid to
+  scaling it sensibly.
+- Do not (unless you like high CPU loads) ignore the caching layer
+  (Varnish). We use it extensively and are able to invalidate cache
+  properly if needed so it is not a hindrance.
+
+Some facts from The Gathering 2016:
+
+- Non-profit.
+- 5000+ participants, 400 volunteers/crew, plus numerous visitors.
+- Typically 6000-8000 active clients (dhcp ack's to unique macs).
+- Total of 10500+ unique network devices seen (unique mac addresses).
+- Lasts from Wednesday until Sunday. We switch to DST in the middle of it.
+- Active network devices at 2016-03-22T12:00:00: 206
+- Active network devices at 2016-03-23T08:00:00: 346
+- Active network devices at 2016-03-23T12:00:00: 2283
+- Active network devices at 2016-03-23T20:00:00: 6467
+- Ping 180+ switches and routers more than once per second. Store all
+  replies (and lack thereof).
+- Collect SNMP data once a minute from all network infrastructure every
+  minute (180+ devices + a dozen or so monitored linknets).
+- Collected about 30GB of data in postgresql.
+- About 300 million rows.
+- The NMS saw between 200 and 500 requests per second during normal
+  operation.
+- 99.99% cache hit rate.
+- Maybe 300 rows inserted per second. Most of these are COPY() of ping
+  replies (thus performs well).
+- Biggest CPU hog was the SNMP polling, but not an issue.
+- Numerous features developed during the event with no database changes,
+  mainly in the frontend, but also tweaking the API.
 
 Name
 ----
@@ -60,20 +79,22 @@ localhost by default.
 To use it, first set up ssh to localhost (or change host in inventory) and
 install docker, then run::
 
-        $ cd build/
-        $ ansible-playbook -i test/inventory test/playbook-test.yml
+        $ ansible-playbook -i build/test/inventory build/test/playbook-test.yml
 
-This will build the relevant docker images and start them. It assumes a
-check out on the target machine (e.g.: localhost) on ``~/src/tgnms``. It
-does not use sudo or make any attempt to configure the local host beyond
-docker building.
+This will build the relevant docker images, start them and run a very
+simple tests to see that the front works. It assumes a check out on the
+target machine (e.g.: localhost) on ``~/src/tgnms``. It does not use sudo
+or make any attempt to configure the local host beyond docker building.
 
-PS: This is currently NOT complete, but will eventually run actual test
-cases and possibly provide a development environment. It is very likely to
-"move" to the top level, mainly to avoid having to check out the git repo,
-which creates cache issues with docker.
+It will set up 4 containers right now:
 
-It currently DOES work to actual set up a working NMS, save collectors.
+- Database
+- Frontend (apache)
+- Varnish
+- Collector with ping
+
+The IP of the Varnish instance is reported and can be used. The credentials
+used are 'demo/demo'.
 
 Architecture
 ------------
@@ -111,8 +132,8 @@ Current state
 
 As of this writing, tgnms is being split out of the original 'tgmanage'
 repository. This means sweeping changes and breakage. The actual code has
-been used in "production" during The Gathering 2016, but is probably broken
-right now for simple organizational reasons.
+been used in "production" during The Gathering 2016, but is not very
+installable right now for practical reasons.
 
 Check back in a week or eight.
 
@@ -151,5 +172,3 @@ and in detailed form in the private API.
 The NMS it self does not implement any actual security mechanisms for the
 API. That is left up to the web server. An example Apache configuration
 file is provided.
-
-

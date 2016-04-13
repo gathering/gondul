@@ -1,5 +1,5 @@
 FROM debian:jessie
-RUN apt-get update && apt-get install -y git-core
+RUN apt-get update
 RUN apt-get -y install          \
     libcapture-tiny-perl        \
     libcommon-sense-perl        \
@@ -29,7 +29,10 @@ RUN apt-get -y install          \
     libfreezethaw-perl		\
     apache2
 
-RUN git clone https://github.com/tech-server/tgnms /opt/nms
+RUN mkdir -p /opt/nms
+ADD web /opt/nms/web
+ADD include /opt/nms/include
+ADD extras /opt/nms/extras
 
 RUN a2dissite 000-default
 RUN a2enmod cgi
@@ -37,7 +40,7 @@ RUN cp /opt/nms/extras/misc/apache2.conf /etc/apache2/sites-enabled/nms.conf
 RUN mkdir -p /opt/nms/etc
 RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /opt/nms/etc/htpasswd-read
 RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /opt/nms/etc/htpasswd-write
-ADD test/dummy-apache2.start /
+ADD build/test/dummy-apache2.start /
 RUN chmod 0755 /dummy-apache2.start
 CMD /dummy-apache2.start
 EXPOSE 80

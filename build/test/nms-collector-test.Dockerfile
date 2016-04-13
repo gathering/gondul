@@ -1,5 +1,5 @@
 FROM debian:jessie
-RUN apt-get update && apt-get install -y git-core
+RUN apt-get update
 RUN apt-get -y install          \
     libdata-dumper-simple-perl  \
     libdbd-pg-perl              \
@@ -13,5 +13,7 @@ RUN apt-get -y install          \
     libjson-perl                \
     perl-base                   \
     perl-modules 
-RUN git clone https://github.com/tech-server/tgnms /opt/nms
+RUN mkdir -p /opt/nms
+ADD collectors /opt/nms/collectors
+ADD include /opt/nms/include
 CMD /opt/nms/collectors/ping.pl

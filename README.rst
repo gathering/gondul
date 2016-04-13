@@ -44,7 +44,8 @@ This is NOT complete and thoroughly lacking.
 2. Check out this repo to a web server
 3. Expose ``web/``. Secure ``web/api/write`` and (optionally)
    ``web/api/read`` with basic auth or something more clever.
-4. Install database schema (found in ... actually, where is that?)
+4. Install database schema (found in ``build/schema.sql`` (uses the ``nms``
+   user which you should make first).
 5. Configure ``include/config.pm``
 6. Start the clients in ``clients/``.
 7. Read the first line in this chapter.

@@ -40,3 +40,4 @@ RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /opt/nms/etc/htpasswd-wr
 ADD test/dummy-apache2.start /
 RUN chmod 0755 /dummy-apache2.start
 CMD /dummy-apache2.start
+EXPOSE 80

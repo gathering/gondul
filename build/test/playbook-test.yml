@@ -25,6 +25,14 @@
         docker_api_version: 1.18
         dockerfile: test/collector-test.Dockerfile
         path: "src/tgnms/build/"
+  - name: make varnish-test
+    docker_image:
+        state: build
+        name: nms-varnish-test
+        docker_api_version: 1.18
+        dockerfile: test/varnish-test.Dockerfile
+        path: "src/tgnms/build/"
+
   - name: stop db
     docker:
         name: nms-db
@@ -37,6 +45,13 @@
         state: stopped
         image: nms-front-test
         docker_api_version: 1.18
+  - name: stop varnish
+    docker:
+        name: nms-varnish
+        state: stopped
+        image: nms-varnish-test
+        docker_api_version: 1.18
+
   - name: start db
     docker: 
         name: nms-db
@@ -55,5 +70,14 @@
         links:
         - "nms-db:db"
 
+  - name: start varnish
+    docker: 
+        name: nms-varnish
+        image: nms-varnish-test
+        docker_api_version: 1.18
+        state: started
+        net: bridge
+        links:
+        - "nms-front:nms-front"
 
 

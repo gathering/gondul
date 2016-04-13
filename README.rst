@@ -25,24 +25,22 @@ Some facts from The Gathering 2016:
 
 - Non-profit.
 - 5000+ participants, 400 volunteers/crew, plus numerous visitors.
-- Typically 6000-8000 active clients (dhcp ack's to unique macs).
-- Total of 10500+ unique network devices seen (unique mac addresses).
 - Lasts from Wednesday until Sunday. We switch to DST in the middle of it.
+- Total of 10500+ unique network devices seen (unique mac addresses).
 - Active network devices at 2016-03-22T12:00:00: 206
 - Active network devices at 2016-03-23T08:00:00: 346
-- Active network devices at 2016-03-23T12:00:00: 2283
 - Active network devices at 2016-03-23T20:00:00: 6467
 - Ping 180+ switches and routers more than once per second. Store all
   replies (and lack thereof).
-- Collect SNMP data once a minute from all network infrastructure every
-  minute (180+ devices + a dozen or so monitored linknets).
+- Collect SNMP data from all network infrastructure every minute.
 - Collected about 30GB of data in postgresql.
 - About 300 million rows.
+- Public NMS and API provided to all participants and the world at large.
 - The NMS saw between 200 and 500 requests per second during normal
-  operation.
-- 99.99% cache hit rate.
-- Maybe 300 rows inserted per second. Most of these are COPY() of ping
-  replies (thus performs well).
+  operation. Many were 304 "Not Modified".
+- 99.99% cache hit rate (Varnish cache size: default 256MB).
+- ~300 rows inserted per second. Most of these are COPY() of ping replies
+  (thus performs well).
 - Biggest CPU hog was the SNMP polling, but not an issue.
 - Numerous features developed during the event with no database changes,
   mainly in the frontend, but also tweaking the API.
@@ -140,7 +138,7 @@ Check back in a week or eight.
 APIs
 ----
 
-See web/api/API.rst for now.
+See doc/API.rst.
 
 On the topic of the front-end....
 ---------------------------------

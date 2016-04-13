@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: false
+  tasks:
+  - name: make db-test
+    docker_image:
+        state: build
+        name: nms-db-test
+        docker_api_version: 1.18
+        dockerfile: test/db-test.Dockerfile
+        path: "src/tgnms/build/"
+  - name: make front-test
+    docker_image:
+        name: nms-front-test
+        docker_api_version: 1.18
+        dockerfile: test/front-test.Dockerfile
+        path: "src/tgnms/build/"
+  - name: make collector-test
+    docker_image:
+        name: nms-collector-test
+        docker_api_version: 1.18
+        dockerfile: test/collector-test.Dockerfile
+        path: "src/tgnms/build/"
+  - name: start db
+    docker: 
+        name: nms-db
+        image: nms-db-test
+        docker_api_version: 1.18
+        state: started
+        net: bridge
+
+

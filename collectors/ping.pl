@@ -26,7 +26,9 @@ while (1) {
 	$q->execute;
 	my %ip_to_switch = ();
 	my %secondary_ip_to_switch = ();
+	my $affected = 0;
 	while (my $ref = $q->fetchrow_hashref) {
+		$affected++;
 		my $switch = $ref->{'switch'};
 
 		my $ip = $ref->{'ip'};
@@ -39,6 +41,12 @@ while (1) {
 			$secondary_ip_to_switch{$secondary_ip} = $switch;
 		}
 	}
+	if ($affected == 0) {
+		print "Nothing to do... sleeping 1 second...\n";
+		sleep(1);
+		next;
+	}
+
 	my $result = $ping->ping();
 	my %dropped = %{$ping->get_dropped()};
 	die $ping->get_error if (!defined($result));

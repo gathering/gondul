@@ -7,7 +7,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-use lib '../include';
+use lib '/opt/nms/include';
 use nms;
 
 $|++;

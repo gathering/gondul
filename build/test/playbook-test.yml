@@ -36,7 +36,7 @@
         name: nms-front
         image: nms-front-test
         docker_api_version: 1.18
-        state: started
+        state: reloaded
         net: bridge
         links:
         - "nms-db:db"

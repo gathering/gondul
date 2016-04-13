@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 # vim:ts=8:sw=8
-use lib '../../../../include';
+use lib '/opt/nms/include';
 use utf8;
 use nms;
 use nms::web qw($dbh db_safe_quote get_input finalize_output);

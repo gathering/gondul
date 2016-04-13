@@ -4,10 +4,10 @@ use warnings;
 package nms::config;
 
 # DB
-our $db_name = "{ db_name }";
-our $db_host = "{ db_host }";
-our $db_username = "{ db_user }";
-our $db_password = "{ db_password }";
+our $db_name = "nms";
+our $db_host = "db";
+our $db_username = "nms";
+our $db_password = "risbrod";
 
 # Max SNMP polls to fire off at the same time.
 our $snmp_max = 20;

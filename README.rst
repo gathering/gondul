@@ -50,6 +50,31 @@ This is NOT complete and thoroughly lacking.
 6. Start the clients in ``clients/``.
 7. Read the first line in this chapter.
 
+Testing
+-------
+
+There is basic test infrastructure set up in ``build/test``. It uses Docker and
+ansible against the host in ``build/test/inventory`` which happens to be
+localhost by default.
+
+To use it, first set up ssh to localhost (or change host in inventory) and
+install docker, then run::
+
+        $ cd build/
+        $ ansible-playbook -i test/inventory test/playbook-test.yml
+
+This will build the relevant docker images and start them. It assumes a
+check out on the target machine (e.g.: localhost) on ``~/src/tgnms``. It
+does not use sudo or make any attempt to configure the local host beyond
+docker building.
+
+PS: This is currently NOT complete, but will eventually run actual test
+cases and possibly provide a development environment. It is very likely to
+"move" to the top level, mainly to avoid having to check out the git repo,
+which creates cache issues with docker.
+
+It currently DOES work to actual set up a working NMS, save collectors.
+
 Architecture
 ------------
 

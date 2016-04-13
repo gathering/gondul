@@ -4,6 +4,7 @@
   tasks:
   - name: make db-test
     docker_image:
+        nocache: true
         state: build
         name: nms-db-test
         docker_api_version: 1.18
@@ -11,6 +12,7 @@
         path: "src/tgnms/build/"
   - name: make front-test
     docker_image:
+        nocache: true
         state: build
         name: nms-front-test
         docker_api_version: 1.18
@@ -23,6 +25,18 @@
         docker_api_version: 1.18
         dockerfile: test/collector-test.Dockerfile
         path: "src/tgnms/build/"
+  - name: stop db
+    docker:
+        name: nms-db
+        state: stopped
+        image: nms-db-test
+        docker_api_version: 1.18
+  - name: stop front 
+    docker:
+        name: nms-front
+        state: stopped
+        image: nms-front-test
+        docker_api_version: 1.18
   - name: start db
     docker: 
         name: nms-db
@@ -36,7 +50,7 @@
         name: nms-front
         image: nms-front-test
         docker_api_version: 1.18
-        state: reloaded
+        state: started
         net: bridge
         links:
         - "nms-db:db"

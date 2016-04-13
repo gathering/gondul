@@ -11,12 +11,14 @@
         path: "src/tgnms/build/"
   - name: make front-test
     docker_image:
+        state: build
         name: nms-front-test
         docker_api_version: 1.18
         dockerfile: test/front-test.Dockerfile
         path: "src/tgnms/build/"
   - name: make collector-test
     docker_image:
+        state: build
         name: nms-collector-test
         docker_api_version: 1.18
         dockerfile: test/collector-test.Dockerfile
@@ -28,5 +30,16 @@
         docker_api_version: 1.18
         state: started
         net: bridge
+
+  - name: start front
+    docker: 
+        name: nms-front
+        image: nms-front-test
+        docker_api_version: 1.18
+        state: started
+        net: bridge
+        links:
+        - "nms-db:db"
+
 
 

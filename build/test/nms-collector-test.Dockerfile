@@ -14,6 +14,4 @@ RUN apt-get -y install          \
     perl-base                   \
     perl-modules 
 RUN mkdir -p /opt/nms
-ADD collectors /opt/nms/collectors
-ADD include /opt/nms/include
 CMD /opt/nms/collectors/ping.pl

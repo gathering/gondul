@@ -60,7 +60,7 @@
 
   - name: Display IP
     debug:
-      msg: "Front test is available at http://{{ ip.stdout }}/"
+      msg: "Varnish test is available at http://{{ ip.stdout }}/"
 
   - name: test index
     uri: url="http://{{ ip.stdout }}/"

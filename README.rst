@@ -70,29 +70,31 @@ This is NOT complete and thoroughly lacking.
 Testing
 -------
 
-There is basic test infrastructure set up in ``build/test``. It uses Docker and
-ansible against the host in ``build/test/inventory`` which happens to be
-localhost by default.
+There is basic test and development infrastructure set up in
+``build/test``. It uses Docker and ansible against the host in
+``build/test/inventory`` which happens to be localhost by default.
 
-To use it, first set up ssh to localhost (or change host in inventory) and
-install docker, then run::
+To use it, first set up docker and install Ansible, then run:
 
         $ ansible-playbook -i build/test/inventory build/test/playbook-test.yml
 
 This will build the relevant docker images, start them and run a very
-simple tests to see that the front works. It assumes a check out on the
-target machine (e.g.: localhost) on ``~/src/tgnms``. It does not use sudo
-or make any attempt to configure the local host beyond docker building.
+simple tests to see that the front works. It does some hacks to detect PWD
+(...), but does not use sudo/root and makes no attempt at configuring the
+host beyond interacting with docker images and containers.
 
-It will set up 4 containers right now:
+It will build and run 4 containers:
 
-- Database
-- Frontend (apache)
-- Varnish
-- Collector with ping
+- nms-db-test - Database
+- nms-front-test -  Frontend (apache)
+- nms-varnish-test - Varnish
+- nms-ping-test - Collector with ping
 
 The IP of the Varnish instance is reported and can be used. The credentials
 used are 'demo/demo'.
+
+The repostiroy is mounted as a docker volume under /opt/nms on all
+containers, which means you can do your editing outside of the containers.
 
 Architecture
 ------------

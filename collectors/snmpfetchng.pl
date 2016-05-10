@@ -12,7 +12,7 @@ use nms;
 SNMP::initMib();
 SNMP::addMibDirs("/opt/nms/mibs/StandardMibs");
 SNMP::addMibDirs("/opt/nms/mibs/JuniperMibs");
-SNMP::addMibDirs("/opt/nms/mibs");
+SNMP::addMibDirs("/opt/nms/mibs/CiscoMibs");
 SNMP::loadModules('ALL');
 
 our $dbh = nms::db_connect();

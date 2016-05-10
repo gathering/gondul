@@ -10,9 +10,9 @@ use lib '../include';
 use nms;
 
 SNMP::initMib();
-SNMP::addMibDirs("/srv/tgmanage/mibs/StandardMibs");
-SNMP::addMibDirs("/srv/tgmanage/mibs/JuniperMibs");
-SNMP::addMibDirs("/srv/tgmanage/mibs");
+SNMP::addMibDirs("/opt/nms/mibs/StandardMibs");
+SNMP::addMibDirs("/opt/nms/mibs/JuniperMibs");
+SNMP::addMibDirs("/opt/nms/mibs");
 SNMP::loadModules('ALL');
 
 our $dbh = nms::db_connect();

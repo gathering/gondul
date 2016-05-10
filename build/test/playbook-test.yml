@@ -11,6 +11,8 @@
       links: [ "nms-front-test:nms-front" ]
     - name: "nms-collector-test"
       links: [ "nms-db-test:db" ]
+    - name: "nms-snmp-test"
+      links: [ "nms-db-test:db" ]
   - simple_urls:
      - "/api/public/switches"
      - "/api/public/switch-state"

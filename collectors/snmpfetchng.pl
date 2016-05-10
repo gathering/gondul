@@ -6,7 +6,7 @@ use POSIX;
 #use Time::HiRes qw(time);
 use SNMP;
 use Data::Dumper;
-use lib '../include';
+use lib '/opt/nms/include';
 use nms;
 
 SNMP::initMib();

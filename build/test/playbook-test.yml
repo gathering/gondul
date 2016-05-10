@@ -78,4 +78,13 @@
       user: demo
       password: demo
     with_items: "{{ read_urls }}"
+  - name: Add some switches
+    uri: 
+      url: http://{{ ip.stdout }}/api/write/switch-add
+      method: "POST"
+      force_basic_auth: true
+      body_format: json
+      user: demo
+      password: demo
+      body: "{{[ { 'sysname': 'foobar1', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar2', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar3', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar4', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar5', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar6', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar7', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar8', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar9', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar10', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar11', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar12', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar13', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar14', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar15', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar16', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar17', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar18', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar19', 'mgmt_v4_addr': '127.0.0.1' }]}}"
  

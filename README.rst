@@ -1,13 +1,14 @@
-The Gathering Network Management/Monitoring System (tgnms)
-==========================================================
+Gondul - The network monitoring/management system
+=================================================
 
 This is the system used to monitor the network during The Gathering (a
 computer party with between 5000 and 10000 active clients - see
 http://gathering.org). It is now provided as a stand-alone application with
 the goal of being usable to any number of computer parties and events of
-similar nature.
+similar nature. First up of non-TG users are DigitalityX
+(http://digitalityx.no).
 
-Unlike other NMS's, it is not designed to run perpetually, but for a
+Unlike other NMS's, Gondul is not designed to run perpetually, but for a
 limited time and needs to be effective with minimal infrastructure in place
 as it is used during initial installation of the network.
 
@@ -48,9 +49,10 @@ Some facts from The Gathering 2016:
 Name
 ----
 
-The name is not final.
+The name comes from the Norse Valkyrie Gondul.
 
-I have no idea what it should be, but this one is rather silly :D
+It has only recently been changed from "nms", which means it is not really
+established in the code yet. Stay tuned.
 
 Installation
 ------------
@@ -83,23 +85,27 @@ simple tests to see that the front works. It does some hacks to detect PWD
 (...), but does not use sudo/root and makes no attempt at configuring the
 host beyond interacting with docker images and containers.
 
-It will build and run 4 containers:
+It will build and run 5 containers:
 
 - nms-db-test - Database
 - nms-front-test -  Frontend (apache)
 - nms-varnish-test - Varnish
 - nms-ping-test - Collector with ping
+- nms-snmp-test - Collector with snmp AND an snmpd running on 127.0.0.1
 
 The IP of the Varnish instance is reported and can be used. The credentials
 used are 'demo/demo'.
 
-The repostiroy is mounted as a docker volume under /opt/nms on all
+The repository is mounted as a docker volume under /opt/nms on all
 containers, which means you can do your editing outside of the containers.
+
+The last part of the test ansible playbook adds a handfull of
+dummy-switches with 127.0.0.1 as management IP.
 
 Architecture
 ------------
 
-TGNMS is split in multiple roles, at the very core is the database server
+Gondul is split in multiple roles, at the very core is the database server
 (postgresql).
 
 The data is provided by three individual data collectors. They are found in
@@ -122,7 +128,7 @@ interacts with the API. It comes in two minimally different versions: one
 public and one "private". The only actual difference should be what they
 _try_ to access.
 
-The basic philosophy of tgnms is to have a generic and solid API, a data
+The basic philosophy of Gondul is to have a generic and solid API, a data
 base model that is somewhat agnostic to what we collect (so we can add more
 interesting SNMP communities on the fly) and a front end that does a lot of
 magic.
@@ -130,7 +136,7 @@ magic.
 Current state
 -------------
 
-As of this writing, tgnms is being split out of the original 'tgmanage'
+As of this writing, Gondul is being split out of the original 'tgmanage'
 repository. This means sweeping changes and breakage. The actual code has
 been used in "production" during The Gathering 2016, but is not very
 installable right now for practical reasons.
@@ -169,6 +175,6 @@ Secondly, APIs are clearly separated. Some data is actually duplicated
 because it has to be available both in a public API in an aggregated form,
 and in detailed form in the private API.
 
-The NMS it self does not implement any actual security mechanisms for the
+Gondul it self does not implement any actual security mechanisms for the
 API. That is left up to the web server. An example Apache configuration
 file is provided.

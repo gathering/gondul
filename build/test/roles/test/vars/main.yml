@@ -1,0 +1,11 @@
+simple_urls:
+   - "/api/public/switches"
+   - "/api/public/switch-state"
+   - "/api/public/ping"
+   - "/api/public/location"
+   - "/api/public/dhcp"
+   - "/api/public/dhcp-summary"
+read_urls:
+   - "/api/read/comments"
+   - "/api/read/snmp"
+   - "/api/read/switches-management"

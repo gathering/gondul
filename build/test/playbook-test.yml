@@ -1,7 +1,10 @@
 ---
 - hosts: all
   become: false
-  vars: 
+  roles:
+    - basics
+    - test
+  vars:
   - images:
     - name: "nms-db-test"
       links: []
@@ -13,78 +16,3 @@
       links: [ "nms-db-test:db" ]
     - name: "nms-snmp-test"
       links: [ "nms-db-test:db" ]
-  - simple_urls:
-     - "/api/public/switches"
-     - "/api/public/switch-state"
-     - "/api/public/ping"
-     - "/api/public/location"
-     - "/api/public/dhcp"
-     - "/api/public/dhcp-summary"
-  - read_urls:
-     - "/api/read/comments"
-     - "/api/read/snmp"
-     - "/api/read/switches-management"
-
-  tasks:
-  - command: pwd
-    register: pwd
-  - name: make all
-    docker_image:
-        state: build
-        name: "{{ item.name }}"
-        docker_api_version: 1.18
-        dockerfile: build/test/{{ item.name }}.Dockerfile
-        path: "{{ pwd.stdout }}"
-    with_items: "{{ images }}"
-
-  - name: stop all
-    docker:
-        name: "{{ item.name }}"
-        state: stopped
-        image: "{{ item.name }}"
-        docker_api_version: 1.18
-        stop_timeout: 2
-    with_items: "{{ images }}"
-
-  - name: start all
-    docker: 
-        name: "{{ item.name }}"
-        image: "{{ item.name }}"
-        docker_api_version: 1.18
-        state: started
-        net: bridge
-        links: "{{ item.links  }}"
-        volumes: [ "{{ pwd.stdout }}/:/opt/nms" ]
-    with_items: "{{ images }}"
-  - name: workaround to get nms-varnish-front-ip
-    shell: "docker inspect nms-varnish-test | grep IPAddress | sed 's/[^0-9.]//g'"
-    register: ip
-
-  - name: Display IP
-    debug:
-      msg: "Varnish test is available at http://{{ ip.stdout }}/"
-
-  - name: test index
-    uri: url="http://{{ ip.stdout }}/"
-
-  - name: test public api without data
-    uri: 
-       url: "http://{{ ip.stdout }}{{ item }}"
-    with_items: "{{ simple_urls }}"
-
-  - name: test read api without data
-    uri: 
-      url: http://{{ ip.stdout }}{{ item }}
-      user: demo
-      password: demo
-    with_items: "{{ read_urls }}"
-  - name: Add some switches
-    uri: 
-      url: http://{{ ip.stdout }}/api/write/switch-add
-      method: "POST"
-      force_basic_auth: true
-      body_format: json
-      user: demo
-      password: demo
-      body: "{{[ { 'sysname': 'foobar1', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar2', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar3', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar4', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar5', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar6', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar7', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar8', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar9', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar10', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar11', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar12', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar13', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar14', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar15', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar16', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar17', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar18', 'mgmt_v4_addr': '127.0.0.1' }, { 'sysname': 'foobar19', 'mgmt_v4_addr': '127.0.0.1' }]}}"
- 

@@ -73,12 +73,11 @@ Testing
 -------
 
 There is basic test and development infrastructure set up in
-``build/test``. It uses Docker and ansible against the host in
-``build/test/inventory`` which happens to be localhost by default.
+``build/`` and ``ansible/``. It uses Docker and ansible/
 
-To use it, first set up docker and install Ansible, then run:
+To use it, first set up docker and install Ansible, then run::
 
-        $ ansible-playbook -i build/test/inventory build/test/playbook-test.yml
+        $ ansible-playbook -i ansible/inventory-localhost ansible/playbook-test.yml
 
 This will build the relevant docker images, start them and run a very
 simple tests to see that the front works. It does some hacks to detect PWD
@@ -101,6 +100,11 @@ containers, which means you can do your editing outside of the containers.
 
 The last part of the test ansible playbook adds a handfull of
 dummy-switches with 127.0.0.1 as management IP.
+
+The following tags are defined: start, stop, build, test. To stop the
+containers, run::
+
+        $ ansible-playbook -i ansible/inventory-localhost -t stop ansibe/playbook-test.yml
 
 Architecture
 ------------

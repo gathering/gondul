@@ -1,7 +1,11 @@
 - name: test index
+  tags:
+  - test
   uri: url="http://{{ ip.stdout }}/"
 
 - name: test public api without data
+  tags:
+  - test
   uri: 
      url: "http://{{ ip.stdout }}{{ item }}"
   with_items: "{{ simple_urls }}"
@@ -12,7 +16,11 @@
     user: demo
     password: demo
   with_items: "{{ read_urls }}"
+  tags:
+  - test
 - name: Add some switches
+  tags:
+  - test
   uri: 
     url: http://{{ ip.stdout }}/api/write/switch-add
     method: "POST"

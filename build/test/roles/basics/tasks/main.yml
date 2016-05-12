@@ -8,6 +8,8 @@
       dockerfile: build/test/{{ item.name }}.Dockerfile
       path: "{{ pwd.stdout }}"
   with_items: "{{ images }}"
+  tags: 
+  - build
 
 - name: stop all
   docker:
@@ -17,6 +19,8 @@
       docker_api_version: 1.18
       stop_timeout: 2
   with_items: "{{ images }}"
+  tags:
+  - stop
 
 - name: start all
   docker: 
@@ -28,11 +32,17 @@
       links: "{{ item.links  }}"
       volumes: [ "{{ pwd.stdout }}/:/opt/nms" ]
   with_items: "{{ images }}"
+  tags: 
+  - start
 - name: workaround to get nms-varnish-front-ip
   shell: "docker inspect nms-varnish-test | grep IPAddress | sed 's/[^0-9.]//g'"
   register: ip
+  tags:
+  - start
 
 - name: Display IP
+  tags:
+  - start
   debug:
     msg: "Varnish test is available at http://{{ ip.stdout }}/"
 

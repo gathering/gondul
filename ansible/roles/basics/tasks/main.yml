@@ -39,10 +39,15 @@
   register: ip
   tags:
   - start
+- name: workaround to get nms-front-ip
+  shell: "docker inspect nms-front-test | grep IPAddress | sed 's/[^0-9.]//g'"
+  register: ipfront
+  tags:
+  - start
 
 - name: Display IP
   tags:
   - start
   debug:
-    msg: "Varnish test is available at http://{{ ip.stdout }}/"
+    msg: "Varnish test is available at http://{{ ip.stdout }}/ uncached ip: http://{{ ipfront.stdout }}/ "
 

@@ -5,8 +5,8 @@ This is the system used to monitor the network during The Gathering (a
 computer party with between 5000 and 10000 active clients - see
 http://gathering.org). It is now provided as a stand-alone application with
 the goal of being usable to any number of computer parties and events of
-similar nature. First up of non-TG users are DigitalityX
-(http://digitalityx.no).
+similar nature. First up of non-TG users is Digitality X 2016
+(http://digitalityx.no), scheduled for June / July 2016.
 
 Unlike other NMS's, Gondul is not designed to run perpetually, but for a
 limited time and needs to be effective with minimal infrastructure in place
@@ -26,16 +26,15 @@ Some facts from The Gathering 2016:
 
 - Non-profit.
 - 5000+ participants, 400 volunteers/crew, plus numerous visitors.
-- Lasts from Wednesday until Sunday. We switch to DST in the middle of it.
+- Lasted 5 days during the easter of 2106. Tech crew arrived on-site 5 days
+  before.
 - Total of 10500+ unique network devices seen (unique mac addresses).
 - Active network devices at 2016-03-22T12:00:00: 206
 - Active network devices at 2016-03-23T08:00:00: 346
 - Active network devices at 2016-03-23T20:00:00: 6467
-- Ping 180+ switches and routers more than once per second. Store all
-  replies (and lack thereof).
-- Collect SNMP data from all network infrastructure every minute.
-- Collected about 30GB of data in postgresql.
-- About 300 million rows.
+- 180+ switches and routers. Pinged seceral times per second. Polled for
+  SNMP every minute. Every reply (or lack thereof) is kept.
+- Collected roughly 300 million database rows, or 30GB of data in postgresql.
 - Public NMS and API provided to all participants and the world at large.
 - The NMS saw between 200 and 500 requests per second during normal
   operation. Many were 304 "Not Modified".
@@ -49,51 +48,55 @@ Some facts from The Gathering 2016:
 Name
 ----
 
-The name comes from the Norse Valkyrie Gondul.
+The name comes from the Norse Valkyrie Gondul, also known as the wand
+bearer.
 
-It has only recently been changed from "nms", which means it is not really
-established in the code yet. Stay tuned.
+Current state
+-------------
+
+Gondul was recently split out from the original 'tgmanage' repository used
+for all Tech:Server-related project at The Gathering.
+
+The basic split from the original tgmanage repo is done and much of the
+name changing is done. The repository works well for general development of
+frontend code now. You should, however, expect significant changes leading
+up to and including Digitality X 2016.
 
 Installation
 ------------
 
-This is NOT complete and thoroughly lacking.
+We are re-doing the installation to production at present. Stay tuned.
 
-1. Set up postgresql somewhere.
-2. Check out this repo to a web server
-3. Expose ``web/``. Secure ``web/api/write`` and (optionally)
-   ``web/api/read`` with basic auth or something more clever.
-4. Install database schema (found in ``build/schema.sql`` (uses the ``nms``
-   user which you should make first).
-5. Configure ``include/config.pm``
-6. Start the clients in ``clients/``.
-7. Read the first line in this chapter.
+For now, see the Testing-chapter.
 
 Testing
 -------
 
 There is basic test and development infrastructure set up in
-``build/`` and ``ansible/``. It uses Docker and ansible/
+``build/`` and ``ansible/``. It uses Docker and Ansible.
 
 To use it, first set up docker and install Ansible, then run::
 
         $ ansible-playbook -i ansible/inventory-localhost ansible/playbook-test.yml
 
-This will build the relevant docker images, start them and run a very
+This will build the relevant Docker images, start them and run a very
 simple tests to see that the front works. It does some hacks to detect PWD
 (...), but does not use sudo/root and makes no attempt at configuring the
 host beyond interacting with docker images and containers.
 
 It will build and run 5 containers:
 
-- nms-db-test - Database
-- nms-front-test -  Frontend (apache)
-- nms-varnish-test - Varnish
-- nms-ping-test - Collector with ping
-- nms-snmp-test - Collector with snmp AND an snmpd running on 127.0.0.1
+- gondul-db-test - Database
+- gondul-front-test -  Frontend (apache)
+- gondul-varnish-test - Varnish
+- gondul-ping-test - Collector with ping
+- gondul-snmp-test - Collector with snmp AND an snmpd running on 127.0.0.1
 
-The IP of the Varnish instance is reported and can be used. The credentials
-used are 'demo/demo'.
+The IP of the Varnish instance and apache/frontend is reported and can be
+used. The credentials used are 'demo/demo'. For development of
+javascript/html it is best to use the apache frontend, for API changes it
+is best to test with the Varnish frontend to ensure your API endpoints
+behave well behind a cache.
 
 The repository is mounted as a docker volume under /opt/gondul on all
 containers, which means you can do your editing outside of the containers.
@@ -105,6 +108,7 @@ The following tags are defined: start, stop, build, test. To stop the
 containers, run::
 
         $ ansible-playbook -i ansible/inventory-localhost -t stop ansibe/playbook-test.yml
+
 
 Architecture
 ------------
@@ -137,15 +141,6 @@ base model that is somewhat agnostic to what we collect (so we can add more
 interesting SNMP communities on the fly) and a front end that does a lot of
 magic.
 
-Current state
--------------
-
-As of this writing, Gondul is being split out of the original 'tgmanage'
-repository. This means sweeping changes and breakage. The actual code has
-been used in "production" during The Gathering 2016, but is not very
-installable right now for practical reasons.
-
-Check back in a week or eight.
 
 APIs
 ----
@@ -179,6 +174,7 @@ Secondly, APIs are clearly separated. Some data is actually duplicated
 because it has to be available both in a public API in an aggregated form,
 and in detailed form in the private API.
 
-Gondul it self does not implement any actual security mechanisms for the
-API. That is left up to the web server. An example Apache configuration
-file is provided.
+Gondul it self does not implement any actual authentication mechanisms for
+the API. That is left up to the web server. An example Apache configuration
+file is provided and the default ansible recipies use them.
+

@@ -6,13 +6,13 @@
     - test
   vars:
   - images:
-    - name: "nms-db-test"
+    - name: "gondul-db-test"
       links: []
-    - name: "nms-front-test"
-      links: [ "nms-db-test:db" ]
-    - name: "nms-varnish-test"
-      links: [ "nms-front-test:nms-front" ]
-    - name: "nms-collector-test"
-      links: [ "nms-db-test:db" ]
-    - name: "nms-snmp-test"
-      links: [ "nms-db-test:db" ]
+    - name: "gondul-front-test"
+      links: [ "gondul-db-test:db" ]
+    - name: "gondul-varnish-test"
+      links: [ "gondul-front-test:gondul-front" ]
+    - name: "gondul-collector-test"
+      links: [ "gondul-db-test:db" ]
+    - name: "gondul-snmp-test"
+      links: [ "gondul-db-test:db" ]

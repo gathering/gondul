@@ -29,6 +29,7 @@
       docker_api_version: 1.18
       state: started
       net: bridge
+      ports: "{{ item.ports }}"
       links: "{{ item.links  }}"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
   with_items: "{{ images }}"

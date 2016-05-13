@@ -8,11 +8,16 @@
   - images:
     - name: "gondul-db-test"
       links: []
+      ports: []
     - name: "gondul-front-test"
       links: [ "gondul-db-test:db" ]
+      ports: []
     - name: "gondul-varnish-test"
       links: [ "gondul-front-test:gondul-front" ]
+      ports: []
     - name: "gondul-collector-test"
       links: [ "gondul-db-test:db" ]
+      ports: []
     - name: "gondul-snmp-test"
       links: [ "gondul-db-test:db" ]
+      ports: []

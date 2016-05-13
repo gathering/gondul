@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 # vim:ts=8:sw=8
 
-use lib '/opt/nms/include';
+use lib '/opt/gondul/include';
 use nms::web;
 use strict;
 use warnings;

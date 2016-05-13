@@ -3,7 +3,7 @@
 
 use CGI qw(fatalsToBrowser);
 use DBI;
-use lib '/opt/nms/include';
+use lib '/opt/gondul/include';
 use nms;
 use nms::web;
 use strict;

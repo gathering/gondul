@@ -29,12 +29,12 @@ RUN apt-get -y install          \
     libfreezethaw-perl		\
     apache2
 
-RUN mkdir -p /opt/nms
+RUN mkdir -p /opt/gondul
 
 RUN a2dissite 000-default
 RUN a2enmod cgi
-RUN ln -s /opt/nms/extras/misc/apache2.conf /etc/apache2/sites-enabled/nms.conf
-RUN mkdir -p /opt/nms/etc
+RUN ln -s /opt/gondul/extras/misc/apache2.conf /etc/apache2/sites-enabled/nms.conf
+RUN mkdir -p /opt/gondul/etc
 RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /htpasswd-read
 RUN echo 'demo:$apr1$IKrQYF6x$0zmRciLR7Clc2tEEosyHV.' > /htpasswd-write
 ADD build/test/dummy-apache2.start /

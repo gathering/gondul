@@ -95,7 +95,7 @@ It will build and run 5 containers:
 The IP of the Varnish instance is reported and can be used. The credentials
 used are 'demo/demo'.
 
-The repository is mounted as a docker volume under /opt/nms on all
+The repository is mounted as a docker volume under /opt/gondul on all
 containers, which means you can do your editing outside of the containers.
 
 The last part of the test ansible playbook adds a handfull of

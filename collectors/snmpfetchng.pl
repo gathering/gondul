@@ -6,13 +6,13 @@ use POSIX;
 #use Time::HiRes qw(time);
 use SNMP;
 use Data::Dumper;
-use lib '/opt/nms/include';
+use lib '/opt/gondul/include';
 use nms;
 
 SNMP::initMib();
-SNMP::addMibDirs("/opt/nms/mibs/StandardMibs");
-SNMP::addMibDirs("/opt/nms/mibs/JuniperMibs");
-SNMP::addMibDirs("/opt/nms/mibs/CiscoMibs");
+SNMP::addMibDirs("/opt/gondul/mibs/StandardMibs");
+SNMP::addMibDirs("/opt/gondul/mibs/JuniperMibs");
+SNMP::addMibDirs("/opt/gondul/mibs/CiscoMibs");
 SNMP::loadModules('ALL');
 
 our $dbh = nms::db_connect();

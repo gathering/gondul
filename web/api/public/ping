@@ -1,5 +1,5 @@
 #! /usr/bin/perl
-use lib '/opt/nms/include';
+use lib '/opt/gondul/include';
 use strict;
 use warnings;
 use nms::web;

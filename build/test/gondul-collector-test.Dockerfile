@@ -13,5 +13,5 @@ RUN apt-get -y install          \
     libjson-perl                \
     perl-base                   \
     perl-modules 
-RUN mkdir -p /opt/nms
-CMD /opt/nms/collectors/ping.pl
+RUN mkdir -p /opt/gondul
+CMD /opt/gondul/collectors/ping.pl

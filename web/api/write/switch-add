@@ -3,7 +3,7 @@
 
 #use CGI qw(fatalsToBrowser);
 use DBI;
-use lib '/opt/nms/include';
+use lib '/opt/gondul/include';
 use nms;
 use nms::web qw(%get_params %json finalize_output get_input $dbh);
 use nms::util qw(guess_placement);

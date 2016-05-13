@@ -15,6 +15,6 @@ RUN apt-get -y install          \
     snmpd			\
     libsnmp-perl		\
     perl-modules 
-RUN mkdir -p /opt/nms
+RUN mkdir -p /opt/gondul
 COPY build/test/snmpd.conf /etc/snmp/
-CMD /opt/nms/build/test/snmpfetch-misc.sh
+CMD /opt/gondul/build/test/snmpfetch-misc.sh

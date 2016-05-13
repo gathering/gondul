@@ -35,12 +35,12 @@
   tags: 
   - start
 - name: workaround to get gondul-varnish-front-ip
-  shell: "docker inspect gondul-varnish | grep IPAddress | sed 's/[^0-9.]//g'"
+  shell: "docker inspect gondul-varnish-test | grep IPAddress | sed 's/[^0-9.]//g'"
   register: ip
   tags:
   - start
 - name: workaround to get gondul-front-ip
-  shell: "docker inspect gondul-front | grep IPAddress | sed 's/[^0-9.]//g'"
+  shell: "docker inspect gondul-front-test | grep IPAddress | sed 's/[^0-9.]//g'"
   register: ipfront
   tags:
   - start

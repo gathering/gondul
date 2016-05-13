@@ -3,7 +3,7 @@
 vcl 4.0;
 
 backend default {
-    .host = "nms-front";
+    .host = "gondul-front";
     .port = "80";
 }
 

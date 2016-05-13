@@ -18,16 +18,34 @@ var nms = {
 	timers: {
 		playback:false,
 		tvmode: false
-    },
+	},
 	
 	menuShowing:true,
+	_vertical: 0,
+	get vertical() { return this._vertical },
+	set vertical(v) {
+		this._vertical = v;
+		if(v)
+			document.body.classList.add("vertical");
+		else
+			document.body.classList.remove("vertical");
+		saveSettings();
+	},
+
+	interval: 0,
+	tvmodeToggle: false,
+	views: "ping",
 	/*
 	 * This is a list of nms[x] variables that we store in our
 	 * settings-cookie when altered and restore on load.
 	 */
 	settingsList:[
 		'nightMode',
-		'menuShowing'
+		'menuShowing',
+		'tvmodeToggle',
+		'vertical',
+		'views',
+		'interval'
 	],
 	keyBindings:{
 		'-':toggleMenu,
@@ -65,9 +83,7 @@ var nms = {
 		handlers: [],
 		currentIndex: 0,
 		interval: 20000,
-		hideMenu: false,
 		active: false,
-		nightMode: false,
 		vertical: false
 	}
 };
@@ -323,14 +339,15 @@ function getNowEpoch() {
  */
 function setLegend(x,color,name)
 {
-	if(nms.tvmode.active) {
-		var el = document.getElementById("tv-mode-legend-" + x);
-	} else {
-		var el = document.getElementById("legend-" + x);
-	}
+	var el = document.getElementById("legend-" + x);
 	el.style.background = color;
 	el.title = name;
 	el.textContent = name;
+	if (name == "") {
+		el.style.display = 'none';
+	} else {
+		el.style.display = '';
+	}
 }
 
 /*
@@ -339,7 +356,7 @@ function setLegend(x,color,name)
  * Loops trough a list of views/updaters at a set interval.
  * Arguments: array of views, interval in seconds, use nightmode, hide menus
  */
-nms.tvmode.start = function(views,interval,nightMode,hideMenus,displayVertical) {
+nms.tvmode.start = function(views,interval) {
 	nms.tvmode.handlers = [];
 	for(var view in views) {
 		for(var handler in handlers) {
@@ -351,19 +368,10 @@ nms.tvmode.start = function(views,interval,nightMode,hideMenus,displayVertical) 
 	if (nms.tvmode.handlers.length > 1) {
 		if(interval > 0)
 			nms.tvmode.interval = interval * 1000;
-		setNightMode(nightMode);
-		if(nms.menuShowing && hideMenus)
-			toggleMenu();
-		if(displayVertical)
-			nms.tvmode.vertical = true;
 		nms.timers.tvmode = new nmsTimer(nms.tvmode.tick, nms.tvmode.interval, "TV-mode ticker", "Handler used to advance tv-mode");
 		nms.timers.tvmode.start();
 		nms.tvmode.tick();
 		nms.tvmode.active = true;
-
-		document.body.classList.add("tvmode");
-		if(nms.tvmode.vertical)
-			document.body.classList.add("vertical");
 	}
 }
 nms.tvmode.tick = function() {
@@ -398,8 +406,6 @@ function setUpdater(fo)
 		console.log("Possibly broken handler: " + fo.name);
 		console.log(e);
 	}
-	var foo = document.getElementById("updater_name");
-	foo.innerHTML = fo.name + "   ";
 	var foo = document.getElementById("map-mode-title");
 	foo.innerHTML = fo.name;
 	document.location.hash = fo.tag;
@@ -560,40 +566,28 @@ function initNMS() {
 }
 
 function detectHandler() {
-	for (var i in handlers) {
-		if (('#' + handlers[i].tag) == document.location.hash) {
-			setUpdater(handlers[i]);
-			return;
-		}
-	}
-	if(document.location.hash == "#tvmode") {
-		var views = getUrlVars()["views"];
-		var nightMode = parseInt(getUrlVars()["nightmode"]);
-		var vertical = parseInt(getUrlVars()["vertical"]);
-		var interval = parseInt(getUrlVars()["interval"]);
+	if (nms.tvmodeToggle) {
+		var views = nms.views;
+		var interval = nms.interval;
 
 		views = views.split(",");
-		if(nightMode == "0") {
-			nightMode = false;
-		} else {
-			nightMode = true;
-		}
-		if(vertical == 1) {
-			vertical = true;
-		} else {
-			vertical = false;
-		}
 
-		nms.tvmode.start(views,interval,nightMode,true,vertical);
+		nms.tvmode.start(views,interval);
 		return;
 	} else {
-		setUpdater(handler_ping);
+		for (var i in handlers) {
+			if (('#' + handlers[i].tag) == document.location.hash) {
+				setUpdater(handlers[i]);
+				return;
+			}
+		}
 	}
+	setUpdater(handler_ping);
 }
 
 function getUrlVars() {
 	var vars = {};
-	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&#]*)/gi, function(m,key,value) {
 		vars[key] = value;
 	});
 	return vars;
@@ -740,21 +734,41 @@ function getCookie(cname) {
 	return "";
 }
 
+/*
+ * Store relevant settings to a cookie.
+ *
+ * Also prints the value of the cookie on the console. This can then be
+ * used as part of the URL instead.
+ */
 function saveSettings()
 {
 	var foo={};
 	for ( var v in nms.settingsList ) {
 		foo[ nms.settingsList[v] ] = nms[ nms.settingsList[v] ];
 	}
-	document.cookie = 'nms='+btoa(JSON.stringify(foo));
+	var string = btoa(JSON.stringify(foo));
+	document.cookie = 'nms='+string;
+	console.log("Add this to the URL to use these settings: nms="+string);
 }
 
+/*
+ * Restore settings from a cookie or from the url, using the "GET
+ * paramater" nms.
+ * Url paramater overrides the cookie.
+ */
 function restoreSettings()
 {
 	try {
 		var retrieve = JSON.parse(atob(getCookie("nms")));
 	} catch(e) { 
-		console.log("nothing saved");
+	}
+	try {
+		var retrieve2 = getUrlVars()['nms'];
+		if (retrieve2 != "") {
+			retrieve = JSON.parse(atob(retrieve2));
+
+		}
+	} catch (e) {
 	}
 
 	for (var v in retrieve) {

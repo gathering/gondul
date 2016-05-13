@@ -43,7 +43,7 @@
 					font-weight: 700;
 					font-size: 55px;
 					color: black;
-					display: none;
+					display: block;
 					z-index: 999;
 				}
 				.vertical h1.map-mode-title {
@@ -53,9 +53,6 @@
 					transform-origin: 0px 0% 0px;
 					transform: rotate(-90deg);
 				}
-				.tvmode h1.map-mode-title {
-					display: block;
-				}
 				.nightmode h1.map-mode-title {
 					color: white;
 				}
@@ -63,7 +60,6 @@
 					display: none;
 				}
 				div.map-mode-legend {
-					display: none;
 					position: fixed;
 					bottom: 5%;
 					right: 5%;
@@ -80,9 +76,6 @@
 				div.map-mode-legend button {
 					font-size: 20px;
 					font-weight: 700;
-				}
-				.tvmode div.map-mode-legend {
-					display: block;
 				}
       </style>
   </head>
@@ -137,15 +130,7 @@
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
 	      </ul>
 	    </li>
-	    <li><p id="updater_name" class="navbar-text"></p></li>
 	    <div class="navbar-form navbar-left">
-	      <div class="form-group">
-		<button class="btn btn-default btn-sm" id="legend-1"></button>
-		<button class="btn btn-default btn-sm" id="legend-2"></button>
-		<button class="btn btn-default btn-sm" id="legend-3"></button>
-		<button class="btn btn-default btn-sm" id="legend-4"></button>
-		<button class="btn btn-default btn-sm" id="legend-5"></button>
-	      </div>
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
@@ -301,11 +286,11 @@
 
 	<h1 id="map-mode-title" class="map-mode-title"></h1>
 	<div class="map-mode-legend form-group">
-		<button class="btn btn-default btn-sm" id="tv-mode-legend-1"></button>
-		<button class="btn btn-default btn-sm" id="tv-mode-legend-2"></button>
-		<button class="btn btn-default btn-sm" id="tv-mode-legend-3"></button>
-		<button class="btn btn-default btn-sm" id="tv-mode-legend-4"></button>
-		<button class="btn btn-default btn-sm" id="tv-mode-legend-5"></button>
+		<button class="btn btn-default btn-sm" id="legend-1"></button>
+		<button class="btn btn-default btn-sm" id="legend-2"></button>
+		<button class="btn btn-default btn-sm" id="legend-3"></button>
+		<button class="btn btn-default btn-sm" id="legend-4"></button>
+		<button class="btn btn-default btn-sm" id="legend-5"></button>
 	</div>
 	<canvas id="bgCanvas" width="1920" height="1032" style="position: absolute; z-index: 1;"> </canvas>
 	<canvas id="linkCanvas" width="1920" height="1032" style="position: absolute; z-index: 10; display: none;"> </canvas>

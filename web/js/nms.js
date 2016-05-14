@@ -1,4 +1,21 @@
 "use strict";
+
+/*
+ * This is the original nms.js and it's a bit of a mess as much has been
+ * moved into separate js-files and cleaned up.
+ *
+ * Gradual refactoring has begun.
+ *
+ * On the TODO list:
+ *
+ * - Move all pure UI stuff into nmsUi: nightMode, vertical mode,
+ *   menushowing,
+ * - Get rid of "tvmode". As in: complete the merge
+ * - Move all time-travel related code out into a separate entity.
+ * - Remove nms.now: it belongs in nmsData.
+ * - nms.timers probably also deserves to die. It used to do a lot more,
+ *   now it's just leftovers.
+ */
 var nms = {
 	stats:{}, // Various internal stats
 	get nightMode() { return this._nightMode; },
@@ -495,6 +512,8 @@ function isIn(box, x, y)
 /*
  * Return the name of the switch found at coordinates (x,y), or 'undefined'
  * if none is found.
+ *
+ * FIXME: this belongs in nmsMap.
  */
 function findSwitch(x,y) {
 	x = parseInt(parseInt(x) / nmsMap.scale);

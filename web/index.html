@@ -126,6 +126,7 @@
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
+		<li><a href="#" onclick="nmsUi.toggleVertical()">Toggle vertical mode</a></li>
 		<li class="divider"> </li>
 		<li class="gondul-is-private dropdown-header">Switches</li>
 	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
@@ -145,6 +146,7 @@
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
+		  <button id="searchbox-help" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('searchHelp');">?</button>
 		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
 		</span>
 	      </div>

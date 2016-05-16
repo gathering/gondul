@@ -21,3 +21,7 @@ nmsUi.setActive = function(pane) {
 
 	nmsUi._active = pane;
 }
+
+nmsUi.toggleVertical = function(x) {
+	nms.vertical = !nms.vertical;
+}

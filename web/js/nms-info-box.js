@@ -81,6 +81,16 @@ var nmsInfoBox = nmsInfoBox || {
 		}
 	},
 	{
+		'id': 'searchHelp',
+		'title': 'Search help',
+		'views': {
+			'initial': {
+				'name': 'Search help',
+				'panels': ['searchHelp']
+			}
+		}
+	},
+	{
 		'id': 'inventoryListing',
 		'title': 'Inventory listing',
 		'views': {
@@ -577,6 +587,27 @@ var switchDetailsPanel = function() {
 };
 nmsInfoBox.addPanelType("switchDetails",switchDetailsPanel);
 
+var searchHelpPanel = function() {
+	nmsInfoPanel.call(this,"searchHelp");
+	this.refresh = function(reason) {
+		var x = document.createElement("div");
+		var searchHelp = [
+			"The search box can be used to identify switches in several ways. The simplest is by name.",
+			"If you are using the non-public version of Gondul, you can also perform smart searches.",
+			"Distro search: Type the name of a distro-switch and all access switches registered to that distro switch will also be hilighted.",
+			'Active ports: Type "active>x", "active<x" or "active=x" to identify switch with "x" amount of active gigabit ethernet (ge) ports. E.g.: "active>30".',
+			'IP search: Start typing an IP and any switch with that IP registered either as management IP or part of its subnet will be identified',
+			'SNMP search: Type anything found in the "sysDescr" SNMP OID to hilight a switch matching that. Practical examples include version numbers for firmware (e.g.: "JUNOS 12." vs "JUNOS 14.").'];
+		for (var a in searchHelp) {
+			var c = document.createElement("p");
+			c.innerText = searchHelp[a];
+			x.appendChild(c);
+		}
+		this._render(x);
+	};
+};
+nmsInfoBox.addPanelType("searchHelp",searchHelpPanel);
+
 /*
  * Panel type: Add switch
  *
@@ -698,6 +729,7 @@ var inventoryListingPanel = function() {
 		this._render(contentObj);
 	};
 };
+
 nmsInfoBox.addPanelType("inventoryListing",inventoryListingPanel);
 
 /*

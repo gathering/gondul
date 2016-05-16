@@ -97,7 +97,7 @@
 	<div id="navbar" class="navbar-collapse collapse">
 	  <ul class="nav navbar-nav">
 	     <li id='map-link' class="active"><a href="#" onclick="nmsUi.setActive('map');">Map<span class="sr-only">(current)</span></a></li>
-	     <li id='admin-link'><a href="#" onclick="nmsUi.setActive('admin');">Admin</a></li>
+	     <li id='admin-link'><a href="#" onclick="nmsUi.setActive('admin');nmsAdmin.updateConfigPane();">Admin</a></li>
 	    <li class="dropdown">
 	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
 		<span class="caret"></span>
@@ -155,7 +155,6 @@
 
     <div class="container-fluid" id="admin">
     <div class="row-fluid" id="admin-row">
-    Admin-stuff goes here.
     </div>
     </div>
     <div class="container-fluid" id="map">
@@ -326,6 +325,7 @@
     <script type="text/javascript" src="js/nms-color-util.js"></script>
     <script type="text/javascript" src="js/nms-map-handlers.js"></script>
     <script type="text/javascript" src="js/nms-ui.js"></script>
+    <script type="text/javascript" src="js/nms-admin-pane.js"></script>
     <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
 initNMS();

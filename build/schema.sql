@@ -4,7 +4,7 @@
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET client_encoding = 'UTF8';
+SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
@@ -42,6 +42,41 @@ ALTER TYPE comment_state OWNER TO nms;
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+--
+-- Name: config; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE TABLE config (
+    id integer NOT NULL,
+    publicvhost character varying,
+    shortname character varying,
+    data jsonb
+);
+
+
+ALTER TABLE config OWNER TO nms;
+
+--
+-- Name: config_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
+--
+
+CREATE SEQUENCE config_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE config_id_seq OWNER TO nms;
+
+--
+-- Name: config_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
+--
+
+ALTER SEQUENCE config_id_seq OWNED BY config.id;
+
 
 --
 -- Name: dhcp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
@@ -306,6 +341,13 @@ CREATE TABLE test_table (
 ALTER TABLE test_table OWNER TO nms;
 
 --
+-- Name: id; Type: DEFAULT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY config ALTER COLUMN id SET DEFAULT nextval('config_id_seq'::regclass);
+
+
+--
 -- Name: linknet; Type: DEFAULT; Schema: public; Owner: nms
 --
 
@@ -555,6 +597,15 @@ REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- Name: config; Type: ACL; Schema: public; Owner: nms
+--
+
+REVOKE ALL ON TABLE config FROM PUBLIC;
+REVOKE ALL ON TABLE config FROM nms;
+GRANT ALL ON TABLE config TO nms;
 
 
 --

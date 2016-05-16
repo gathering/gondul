@@ -548,6 +548,35 @@ function setNightMode(toggle) {
 }
 
 /*
+ * Only used to fetch the initial config for anything that needs to be
+ * handled prior to regular "boot up".
+ *
+ * For the moment, that only means detecting if we're being run on a public
+ * vhost or not. This has to be done in synch because it affects what
+ * sources we register for nmsData[]. If we wait for nmsData['config'],
+ * it's too late because all other things have been initialized already.
+ *
+ * If you add a configuration setting, use nmsData['config'] as much as
+ * possible. Avoid adding to this function.
+ */
+function getInitialConfig() {
+	$.ajax({
+		type: "GET",
+		url: "/api/public/config",
+		async: false,
+		dataType: "json",
+		success: function (data, textStatus, jqXHR) {
+			if (data["config"]["public"] == "true") {
+				nms._public = true;
+			} else {
+				console.log("Private");
+				nms._public = false;
+			}
+		}
+	});
+}
+
+/*
  * Boot up "fully fledged" NMS.
  *
  * This can be re-written to provide different looks and feels but using
@@ -558,12 +587,17 @@ function initNMS() {
 	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
 	
 	// Public
+	nmsData.registerSource("config","/api/public/config");
 	nmsData.registerSource("ping", "/api/public/ping");
 	nmsData.registerSource("switches","/api/public/switches");
 	nmsData.registerSource("switchstate","/api/public/switch-state");
 	nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
 	nmsData.registerSource("dhcp","/api/public/dhcp");
-	
+
+	// Fetch initial config. Basically just populates nms._public.
+	// All other settings are kept in nmsData['config'].
+	getInitialConfig();
+
 	// This is a magic dummy-source, it's purpose is to give a unified
 	// way to get ticks every second. It is mainly meant to allow map
 	// handlers to register for ticks so they will execute without data
@@ -571,10 +605,12 @@ function initNMS() {
 	// despite no pings)
 	nmsData.registerSource("ticker","bananabananbanana");
 
-	// Private	
-	nmsData.registerSource("snmp","/api/read/snmp");
-	nmsData.registerSource("comments", "/api/read/comments");
-	nmsData.registerSource("smanagement","/api/read/switches-management");
+	if (!nms._public) {
+		// Private	
+		nmsData.registerSource("snmp","/api/read/snmp");
+		nmsData.registerSource("comments", "/api/read/comments");
+		nmsData.registerSource("smanagement","/api/read/switches-management");
+	}
 
 	restoreSettings();
 	nmsMap.init();

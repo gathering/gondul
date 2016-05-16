@@ -22,37 +22,37 @@
 var handler_uplinks = {
 	init:uplinkInit,
 	tag:"uplink",
-	name:"Uplink map"
+	name:"Uplink"
 };
 
 var handler_temp = {
 	init:tempInit,
 	tag:"temp",
-	name:"Temperature map"
+	name:"Temperature"
 };
 
 var handler_ping = {
 	init:pingInit,
 	tag:"ping",
-	name:"IPv4 Ping map"
+	name:"IPv4 Ping"
 };
 
 var handler_traffic = {
 	init:trafficInit,
 	tag:"traffic",
-	name:"Uplink traffic map"
+	name:"Uplink traffic"
 };
 
 var handler_traffic_tot = {
 	init:trafficTotInit,
 	tag:"traffictot",
-	name:"Switch traffic map"
+	name:"Switch traffic"
 };
 
 var handler_dhcp = {
 	init:dhcpInit,
 	tag:"dhcp",
-	name:"DHCP map"
+	name:"DHCP"
 };
 
 var handler_disco = {

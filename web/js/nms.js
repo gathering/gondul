@@ -568,9 +568,11 @@ function getInitialConfig() {
 		success: function (data, textStatus, jqXHR) {
 			if (data["config"]["public"] == "true") {
 				nms._public = true;
+				document.body.classList.add("gondul-public");
 			} else {
 				console.log("Private");
 				nms._public = false;
+				document.body.classList.add("gondul-private");
 			}
 		}
 	});

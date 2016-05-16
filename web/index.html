@@ -46,6 +46,9 @@
 					display: block;
 					z-index: 999;
 				}
+				.gondul-public .gondul-is-private {
+					display: none;
+				}
 				.vertical h1.map-mode-title {
 					left: 30px;
 					bottom: 0px;
@@ -97,7 +100,7 @@
 	<div id="navbar" class="navbar-collapse collapse">
 	  <ul class="nav navbar-nav">
 	     <li id='map-link' class="active"><a href="#" onclick="nmsUi.setActive('map');">Map<span class="sr-only">(current)</span></a></li>
-	     <li id='admin-link'><a href="#" onclick="nmsUi.setActive('admin');nmsAdmin.updateConfigPane();">Admin</a></li>
+	     <li id='admin-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('admin');nmsAdmin.updateConfigPane();">Admin</a></li>
 	    <li class="dropdown">
 	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
 		<span class="caret"></span>
@@ -106,12 +109,12 @@
 		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
 		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
 		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP map</a></li>
-		<li><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
+		<li class="gondul-is-private"><a href="#comment" onclick="setUpdater(handler_comment)">Comment spotter</a></li>
 		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
 		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
 		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
 		<li><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP map</a></li>
-		<li><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU map</a></li>
+		<li class="gondul-is-private"><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU map</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
@@ -121,16 +124,16 @@
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
 		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li class="divider"> </li>
-		<li class="dropdown-header">Switches</li>
-	  	<li><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
-	  	<li><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
-	  	<li><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
-		<li class="divider"> </li>
-		<li class="dropdown-header">Inventory lists</li>
-	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
-	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>
-	  	<li><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','jnxBoxSerialNo')">Serial Numbers</a></li>
-		<li class="divider"> </li>
+		<li class="gondul-is-private dropdown-header">Switches</li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+		<li class="gondul-is-private divider"> </li>
+		<li class="gondul-is-private dropdown-header">Inventory lists</li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','jnxBoxSerialNo')">Serial Numbers</a></li>
+		<li class="gondul-is-private divider"> </li>
 		<li class="dropdown-header">Help</li>
 	  	<li><a href="#" onclick="toggleLayer('aboutKeybindings');" >Keyboard Shortcuts</a></li>
 	      </ul>

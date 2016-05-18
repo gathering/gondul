@@ -145,6 +145,42 @@ ALTER SEQUENCE linknets_linknet_seq OWNED BY linknets.linknet;
 
 
 --
+-- Name: oplog; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+--
+
+CREATE TABLE oplog (
+    id integer NOT NULL,
+    "time" timestamp with time zone DEFAULT now(),
+    systems character varying,
+    username character varying,
+    log text
+);
+
+
+ALTER TABLE oplog OWNER TO nms;
+
+--
+-- Name: oplog_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
+--
+
+CREATE SEQUENCE oplog_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE oplog_id_seq OWNER TO nms;
+
+--
+-- Name: oplog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
+--
+
+ALTER SEQUENCE oplog_id_seq OWNED BY oplog.id;
+
+
+--
 -- Name: ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -352,6 +388,13 @@ ALTER TABLE ONLY config ALTER COLUMN id SET DEFAULT nextval('config_id_seq'::reg
 --
 
 ALTER TABLE ONLY linknets ALTER COLUMN linknet SET DEFAULT nextval('linknets_linknet_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY oplog ALTER COLUMN id SET DEFAULT nextval('oplog_id_seq'::regclass);
 
 
 --

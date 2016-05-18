@@ -166,10 +166,10 @@
 	  </ul>
 	  <div class="navbar-form navbar-right gondul-is-private">
 	  <div class="form-group">
-		<input id="logbox-id" type="text" class="form-control" oninput='var x = document.getElementById("searchbox"); var y = document.getElementById("logbox-id"); x.value = y.value; x.oninput();' placeholder="System(s)" />
+		<input id="logbox-id" type="text" size="8" class="form-control" oninput='var x = document.getElementById("searchbox"); var y = document.getElementById("logbox-id"); x.value = y.value; x.oninput();' placeholder="System(s)" />
 	  </div>
 	  <div class="form-group">
-		<input id="logbox" type="text" class="form-control" placeholder="Log" />
+		<input id="logbox" type="text" size="30" class="form-control" placeholder="Log entry" />
 	  </div>
 	  <button id="logbox-submit" class="btn btn-default" type="button" onclick="nmsOplog.commit();">Log</button>
 	  </div>

@@ -71,7 +71,7 @@ var nmsInfoBox = nmsInfoBox || {
 	},
 	{
 		'id': 'addSwitch',
-		'title': 'Add new switch',
+		'title': 'Add new switch(es)',
 		'views': {
 			'initial': {
 				'name': 'Add switch',
@@ -617,12 +617,16 @@ var switchAddPanel = function() {
 	nmsInfoPanel.call(this,"switchAdd");
 	this.refresh = function(reason) {
 		var domObj = document.createElement("div");
-		domObj.innerHTML = '<input type="text" class="form-control" id="create-sysname" placeholder="Sysname id"><button class="btn btn-default" onclick="nmsInfoBox._windowHandler.doInPanel(\'' + this.id +'\',\'save\');">Add switch</button>'
+		domObj.innerHTML = '<input type="text" class="form-control" id="create-sysname" placeholder="Space-seaprated list of system names"><button class="btn btn-default" onclick="nmsInfoBox._windowHandler.doInPanel(\'' + this.id +'\',\'save\');">Add switch</button>'
 		this._render(domObj);
 	};
 	this.save = function () {
-		var sysname = document.getElementById('create-sysname').value;
-		var myData = JSON.stringify([{'sysname':sysname}]);
+		var sysname = document.getElementById('create-sysname').value.split(" ");
+		var myData = [];
+		for (var v in sysname) {
+			myData.push({"sysname":sysname[v]});
+		}
+		var myData = JSON.stringify(myData);
 		$.ajax({
 			type: "POST",
 			url: "/api/write/switch-add",

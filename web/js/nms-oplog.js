@@ -26,6 +26,7 @@ nmsOplog.commit = function() {
 	document.getElementById('logbox-id').value = "";
 	document.getElementById('logbox').value = "";
 	document.getElementById('searchbox').value = "";
+	document.getElementById('searchbox').oninput();
 
 }
 
@@ -61,6 +62,8 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 		td2 = tr.insertCell(1);
 		td1.textContent = nmsData['oplog']['oplog'][v][timefield];
 		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
+		td2.hiddenthing = v;
+		td2.onclick = function(e){ console.log(e); var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; console.log("KEK" + v);  x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
 		if (++i == limit)
 			break;
 	}

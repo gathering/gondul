@@ -25,6 +25,7 @@ nmsOplog.commit = function() {
 	});
 	document.getElementById('logbox-id').value = "";
 	document.getElementById('logbox').value = "";
+	document.getElementById('searchbox').value = "";
 
 }
 
@@ -32,6 +33,18 @@ nmsOplog.updateComments = function() {
 	nmsOplog._updateComments(5,"-mini","time");
 	nmsOplog._updateComments(0,"","timestamp");
 }
+
+nmsOplog.getSwitchLogs = function(sw) {
+	var logs = [];
+	for (var v in nmsData['oplog']['oplog']) {
+		var log = nmsData['oplog']['oplog'][v];
+		if (nmsInfoBox.searchSmart(log['systems'],sw)) {
+			logs.push(log);
+		}
+	}
+	return logs;
+}
+
 nmsOplog._updateComments = function(limit,prefix,timefield) {
 	var table = document.createElement("table");
 	var tr;
@@ -44,13 +57,10 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 	var i = 0;
 	for (var v in nmsData['oplog']['oplog']) {
 		tr = table.insertRow(-1);
-		tr.className = 
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
-		td3 = tr.insertCell(2);
 		td1.innerHTML = nmsData['oplog']['oplog'][v][timefield];
-		td2.innerHTML = nmsData['oplog']['oplog'][v]['username'];
-		td3.innerHTML = nmsData['oplog']['oplog'][v]['log'];
+		td2.innerHTML = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
 		if (++i == limit)
 			break;
 	}

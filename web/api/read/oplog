@@ -6,7 +6,7 @@ use nms::web;
 use strict;
 use warnings;
 
-my $query = $nms::web::dbh->prepare('select id,time as timestamp,extract(hour from time) as h, extract(minute from time) as m,systems,username,log from oplog order by id desc;');
+my $query = $nms::web::dbh->prepare('select id,date_trunc(\'second\',time) as timestamp,extract(hour from time) as h, extract(minute from time) as m,systems,username,log from oplog order by id desc;');
 $query->execute();
 while (my $ref = $query->fetchrow_hashref()) {
 	my %meh;

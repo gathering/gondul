@@ -440,66 +440,6 @@ function toggleConnect() {
 	toggleLayer("linkCanvas");
 }
 
-function commentInactive(id)
-{
-	commentChange(id,"inactive");
-}
-
-function commentPersist(id)
-{
-	commentChange(id,"persist");
-}
-
-function commentDelete(id)
-{
-	var r = confirm("Really delete comment? (Delted comments are still stored in the database, but never displayed)");
-	if (r == true) {
-		commentChange(id,"delete");
-	}
-}
-
-/*
- * FIXME: Neither of these two handle failures in any way, shape or form.
- * Nor do they really give user-feedback. They work, but only by magic.
- */
-function commentChange(id,state)
-{
-	var myData = {
-		comment:id,
-		state:state
-	};
-	myData = JSON.stringify(myData);
-	$.ajax({
-		type: "POST",
-		url: "/api/write/comment-change",
-		dataType: "text",
-		data:myData,
-		success: function (data, textStatus, jqXHR) {
-			nmsData.invalidate("comments");
-		}
-	});
-}
-
-function addComment(sw,comment)
-{
-	var myData = {
-		switch:sw,
-		comment:comment
-	};
-	myData = JSON.stringify(myData);
-	$.ajax({
-		type: "POST",
-		url: "/api/write/comment-add",
-		dataType: "text",
-		data:myData,
-		success: function (data, textStatus, jqXHR) {
-			nmsData.invalidate("comments");
-		}
-	});
-}
-
-
-
 /*
  * Returns true if the coordinates (x,y) is inside the box defined by
  * box.{x,y,w.h} (e.g.: placement of a switch).
@@ -610,7 +550,6 @@ function initNMS() {
 	if (!nms._public) {
 		// Private	
 		nmsData.registerSource("snmp","/api/read/snmp");
-		nmsData.registerSource("comments", "/api/read/comments");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
 		nmsOplog.init();
@@ -683,9 +622,6 @@ function setMapModeFromN(e,key)
 			break;
 		case '3':
 			setUpdater(handler_dhcp);
-			break;
-		case '4':
-			setUpdater(handler_comment);
 			break;
 		case '5':
 			setUpdater(handler_temp);

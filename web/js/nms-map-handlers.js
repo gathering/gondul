@@ -61,12 +61,6 @@ var handler_disco = {
 	name:"Disco fever"
 };
 
-var handler_comment = {
-	init:commentInit,
-	tag:"comment",
-	name:"Fresh comment spotter"
-};
-
 var handler_snmp = {
 	init:snmpInit,
 	tag:"snmp",
@@ -85,7 +79,6 @@ var handlers = [
 	handler_ping,
 	handler_traffic,
 	handler_disco,
-	handler_comment,
 	handler_traffic_tot,
 	handler_dhcp,
 	handler_snmp,
@@ -304,60 +297,6 @@ function pingInit()
 	nmsData.addHandler("ping","mapHandler",pingUpdater);
 	nmsData.addHandler("switches","mapHandler",pingUpdater);
 	nmsData.addHandler("ticker", "mapHandler", pingUpdater);
-}
-
-function commentUpdater()
-{
-	var realnow = Date.now();
-	var now = Math.floor(realnow / 1000);
-	if (nmsData.comments == undefined || nmsData.comments.comments == undefined) {
-		return
-	}
-	if(!nmsData.switches) 
-		return;
-	for (var sw in nmsData.switches.switches) {
-		var c = "white";
-		if (nmsData.comments.comments[sw] == undefined) {
-			nmsMap.setSwitchColor(sw,c);
-			continue;
-		}
-		var s = nmsData.comments.comments[sw];
-		var then = 0;
-		var active = 0;
-		var persist = 0;
-		c = "yellow";
-		for (var v in s["comments"]) {
-			var then_test = parseInt(s["comments"][v]["time"]);
-			if (then_test > then && s["comments"][v]["state"] != "inactive")
-				then = then_test;
-			if (s["comments"][v]["state"] == "active") {
-				active++;
-			}
-			if (s["comments"][v]["state"] == "persist")
-				persist++;
-		}
-		if (then > (now - (60*15))) {
-			c = red;
-		} else if (active > 0) {
-			c = orange;
-		} else if (persist > 0) {
-			c = blue;
-		} else {
-			c = green;
-		}
-		nmsMap.setSwitchColor(sw, c);
-	}
-}
-
-
-function commentInit()
-{
-	nmsData.addHandler("comments","mapHandler",commentUpdater);
-	setLegend(1,"white","0 comments");
-	setLegend(2,blue,"Persistent");
-	setLegend(3,red, "New");
-	setLegend(4,orange,"Active");	
-	setLegend(5,green ,"Old/inactive only");	
 }
 
 function getDhcpColor(stop)

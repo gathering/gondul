@@ -271,43 +271,6 @@ ALTER SEQUENCE snmp_id_seq OWNED BY snmp.id;
 
 
 --
--- Name: switch_comments; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE TABLE switch_comments (
-    switch integer NOT NULL,
-    "time" timestamp with time zone,
-    comment text,
-    state comment_state DEFAULT 'active'::comment_state,
-    username character varying(32),
-    id integer NOT NULL
-);
-
-
-ALTER TABLE switch_comments OWNER TO nms;
-
---
--- Name: switch_comments_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
---
-
-CREATE SEQUENCE switch_comments_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE switch_comments_id_seq OWNER TO nms;
-
---
--- Name: switch_comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
---
-
-ALTER SEQUENCE switch_comments_id_seq OWNED BY switch_comments.id;
-
-
---
 -- Name: switch_temp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -405,13 +368,6 @@ ALTER TABLE ONLY snmp ALTER COLUMN id SET DEFAULT nextval('snmp_id_seq'::regclas
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: nms
---
-
-ALTER TABLE ONLY switch_comments ALTER COLUMN id SET DEFAULT nextval('switch_comments_id_seq'::regclass);
-
-
---
 -- Name: polls_time_switch_ifname_key; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -425,14 +381,6 @@ ALTER TABLE ONLY polls
 
 ALTER TABLE ONLY seen_mac
     ADD CONSTRAINT seen_mac_pkey PRIMARY KEY (mac, address, seen);
-
-
---
--- Name: switch_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
---
-
-ALTER TABLE ONLY switch_comments
-    ADD CONSTRAINT switch_comments_pkey PRIMARY KEY (id);
 
 
 --
@@ -625,14 +573,6 @@ ALTER TABLE ONLY ping
 
 
 --
--- Name: switchname; Type: FK CONSTRAINT; Schema: public; Owner: nms
---
-
-ALTER TABLE ONLY switch_comments
-    ADD CONSTRAINT switchname FOREIGN KEY (switch) REFERENCES switches(switch);
-
-
---
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -732,15 +672,6 @@ REVOKE ALL ON SEQUENCE snmp_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE snmp_id_seq FROM nms;
 GRANT ALL ON SEQUENCE snmp_id_seq TO nms;
 GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
-
-
---
--- Name: switch_comments; Type: ACL; Schema: public; Owner: nms
---
-
-REVOKE ALL ON TABLE switch_comments FROM PUBLIC;
-REVOKE ALL ON TABLE switch_comments FROM nms;
-GRANT ALL ON TABLE switch_comments TO nms;
 
 
 --

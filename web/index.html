@@ -62,6 +62,14 @@
 					color: white;
 					text-shadow: 4px 4px 5px black;
 				}
+				.logbook  {
+					background-color: rgba(255,255,255,0.7);
+					color: black;
+				}
+				.nightmode .logbook  {
+					background-color: rgba(0,0,0,0.7);
+					color: white;
+				}
 				.tvmode #topCanvas {
 					display: none;
 				}
@@ -72,6 +80,9 @@
 					z-index: 999;
 				}
 				#admin {
+					display: none;
+				}
+				#oplog {
 					display: none;
 				}
 				.vertical div.map-mode-legend {
@@ -104,6 +115,7 @@
 	  <ul class="nav navbar-nav">
 	     <li id='map-link' class="active"><a href="#" onclick="nmsUi.setActive('map');">Map<span class="sr-only">(current)</span></a></li>
 	     <li id='admin-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('admin');nmsAdmin.updateConfigPane();">Admin</a></li>
+	     <li id='oplog-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('oplog');">Oplog</a></li>
 	    <li class="dropdown">
 	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
 		<span class="caret"></span>
@@ -153,9 +165,16 @@
 	    </div>
 	    </li>
 	  </ul>
-	  <ul class="nav navbar-nav navbar-right">
-	    <li><p id="speed" class="navbar-text" title="Client port speed / Total port speed"></p></li>
-	  </ul>
+	  <div class="navbar-form navbar-right gondul-is-private">
+	  <div class="form-group">
+		<input id="logbox-id" type="text" class="form-control" oninput='var x = document.getElementById("searchbox"); var y = document.getElementById("logbox-id"); x.value = y.value; x.oninput();' placeholder="System(s)" />
+	  </div>
+	  <div class="form-group">
+		<input id="logbox" type="text" class="form-control" placeholder="Log" />
+	  </div>
+	  <button id="logbox-submit" class="btn btn-default" type="button" onclick="nmsOplog.commit();">Log</button>
+	  </div>
+		
 	</div><!--/.nav-collapse -->
       </div>
     </nav>
@@ -163,6 +182,14 @@
 
     <div class="container-fluid" id="admin">
     <div class="row-fluid" id="admin-row">
+    </div>
+    </div>
+    <div class="container-fluid" id="oplog">
+    <div class="row-fluid" id="oplog-row">
+	<div id="oplog-parent" class="logbook">
+	<table id="oplog-table" class="table table-condensed">
+	</table>
+	</div>
     </div>
     </div>
     <div class="container-fluid" id="map">
@@ -320,6 +347,12 @@
 	<canvas id="inputCanvas" width="1920" height="1032" style="position: absolute; z-index: 60; cursor: pointer;" onmousedown="nmsMap.canvasClick(event)">
 	</canvas>
 	<canvas id="hiddenCanvas" width="1000" height="10" style="display: none; position: absolute; z-index: 1000 "></canvas>
+	<div class="logbook gondul-is-private" style="position: absolute; right: 10px; width: 20%; z-index: 70; float: right;">
+	<div id="oplog-parent-mini" class="logbook" style="border-color: transparent;">
+	<table id="oplog-table-mini" class="table table-condensed">
+	</table>
+	</div>
+	</div>
 
 	<div style="display:none;"><img id="source" src="img/tg16-salkart-clean-big.png" ></div>
       </div>
@@ -334,6 +367,7 @@
     <script type="text/javascript" src="js/nms-map-handlers.js"></script>
     <script type="text/javascript" src="js/nms-ui.js"></script>
     <script type="text/javascript" src="js/nms-admin-pane.js"></script>
+    <script type="text/javascript" src="js/nms-oplog.js"></script>
     <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
 initNMS();

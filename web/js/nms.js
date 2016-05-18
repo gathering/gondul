@@ -612,6 +612,8 @@ function initNMS() {
 		nmsData.registerSource("snmp","/api/read/snmp");
 		nmsData.registerSource("comments", "/api/read/comments");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
+		nmsData.registerSource("oplog", "/api/read/oplog");
+		nmsOplog.init();
 	}
 
 	restoreSettings();

@@ -45,7 +45,7 @@ var nmsInfoBox = nmsInfoBox || {
 		'views': {
 			'initial': {
 				'name': 'Switch summary',
-				'panels': ['switchComments','switchSummary']
+				'panels': ['switchSummary','switchComments']
 			},
 			'details': {
 				'name': 'Switch details',
@@ -294,7 +294,7 @@ var windowHandler = function () {
 		this.unloadWindow();
 		this.argument = argument;
 		this._window = this.windowTypes[windowName];
-		this.showTitle(this._window.title);
+		this.showTitle(this._window.title + " " + (argument ? argument : ""));
 		this.showView();
 		this.show();
 	};
@@ -849,8 +849,8 @@ var switchCommentsPanel = function () {
 		tr.className = 
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
-		td1.innerHTML = logs[v]['timestamp'];
-		td2.innerHTML = "[" + logs[v]['username'] + "] " + logs[v]['log'];
+		td1.textContent = logs[v]['timestamp'];
+		td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
 	}
 	domObj.appendChild(table);
 

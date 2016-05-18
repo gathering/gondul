@@ -59,8 +59,8 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 		tr = table.insertRow(-1);
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
-		td1.innerHTML = nmsData['oplog']['oplog'][v][timefield];
-		td2.innerHTML = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
+		td1.textContent = nmsData['oplog']['oplog'][v][timefield];
+		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
 		if (++i == limit)
 			break;
 	}

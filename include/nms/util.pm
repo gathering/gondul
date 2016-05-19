@@ -124,8 +124,8 @@ sub guess_placement {
 	} else {
 		# Fallback to have _some_ position
 		$src = "random";
-		$x = int(rand(500));
-		$y = int(rand(500));
+		$x = int(rand(1900));
+		$y = int(rand(900));
 		$xx = $x + 20;
 		$yy = $y + 130;
 	};

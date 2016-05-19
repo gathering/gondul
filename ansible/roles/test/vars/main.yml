@@ -6,6 +6,6 @@ simple_urls:
    - "/api/public/dhcp"
    - "/api/public/dhcp-summary"
 read_urls:
-   - "/api/read/comments"
+   - "/api/read/oplog"
    - "/api/read/snmp"
    - "/api/read/switches-management"

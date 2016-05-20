@@ -408,7 +408,7 @@ nmsMap._drawBox = function(ctx, x, y, boxw, boxh) {
 };
 
 nmsMap._connectSwitches = function(sw1, sw2, color1, color2) {
-	nmsMap._connectBoxes(this._getBox(sw1), this._getBox(sw2),
+	nmsMap._connectBoxes(nmsMap._getBox(sw1), nmsMap._getBox(sw2),
 			     color1, color2);
 };
 

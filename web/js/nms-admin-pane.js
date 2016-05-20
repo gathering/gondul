@@ -78,3 +78,22 @@ nmsAdmin.updateConfigPane = function() {
 		}
 	}
 }
+
+nmsAdmin.addLinknet = function() {
+	var myData = { 
+		"switch1": document.getElementById("admin-input-linknet1").value,
+		"switch2": document.getElementById("admin-input-linknet2").value
+		};
+	myData = JSON.stringify(myData);
+	$.ajax({
+		type: "POST",
+		url: "/api/write/linknet-add",
+		dataType: "text",
+		data:myData,
+		success: function (data, textStatus, jqXHR) {
+			nmsData.invalidate("switches");
+			document.getElementById("admin-input-linknet1").value = "";
+			document.getElementById("admin-input-linknet2").value = "";
+		}
+	});
+}

@@ -15,6 +15,9 @@ my $hostname = $ENV{'HTTP_HOST'} || "";
 my $q2 = $nms::web::dbh->prepare('select id, publicvhost, shortname, data from config order by id desc limit 1;');
 
 $q2->execute();
+$nms::web::json{'config'}{'data'} = 0;
+$nms::web::json{'config'}{'shortname'} = "notset";
+$nms::web::json{'config'}{'publicvhost'} = "notset";
 while (my $ref = $q2->fetchrow_hashref()) {
 	$nms::web::json{'config'} = $ref;
 	$nms::web::json{'config'}{'data'} = JSON::XS::decode_json($ref->{'data'});

@@ -11,10 +11,10 @@
       ports: []
     - name: "gondul-front-test"
       links: [ "gondul-db-test:db" ]
-      ports: []
+      ports: "{{ front_ports }}"
     - name: "gondul-varnish-test"
       links: [ "gondul-front-test:gondul-front" ]
-      ports: []
+      ports: "{{ varnish_ports }}"
     - name: "gondul-collector-test"
       links: [ "gondul-db-test:db" ]
       ports: []

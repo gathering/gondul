@@ -10,7 +10,6 @@ our @EXPORT = qw(guess_placement parse_switches_txt parse_switches parse_switch)
 # Parse a single switches.txt-formatted switch
 sub parse_switch {
 	my ($switch, $subnet4, $subnet6, $mgtmt4, $mgtmt6, $lolid, $distro) = split(/ /);
-	my %foo = guess_placement($switch);
 	my %ret = (
 		'sysname' => "$switch",
 		'subnet4' => "$subnet4",

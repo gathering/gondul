@@ -8,7 +8,7 @@ use JSON;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(switch_disconnect switch_connect_ssh switch_connect_dlink switch_exec switch_exec_json switch_timeout db_connect);
+our @EXPORT = qw(db_connect);
 
 BEGIN {
 	require "config.pm";

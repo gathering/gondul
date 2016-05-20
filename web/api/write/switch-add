@@ -11,6 +11,7 @@ use strict;
 use warnings;
 use JSON;
 use Data::Dumper;
+use nms::oplog qw(oplog);
 
 $nms::web::cc{'max-age'} = "0";
 
@@ -83,10 +84,11 @@ foreach my $tmp2 (@tmp) {
 
 		$nms::web::dbh->do("INSERT INTO SWITCHES (mgmt_v4_addr, sysname, poll_frequency, community, lldp_chassis_id, mgmt_v6_addr, placement,subnet4,subnet6,distro_name)  VALUES ($template{'mgmt_v4_addr'}, $template{'sysname'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'mgmt_v6_addr'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro_name'});");
 		push @added, $switch{'sysname'};
+		oplog($switch{'sysname'}, "Switch added: " . $switch{'sysname'});
 	}
 }
 
 $json{'switches_addded'} = \@added;
 
-print "X-ban: /api/.*switches.*\n";
+print "X-ban: /api/.*\n";
 finalize_output();

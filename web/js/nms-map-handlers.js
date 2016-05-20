@@ -33,6 +33,7 @@ var handler_temp = {
 
 var handler_ping = {
 	init:pingInit,
+	getInfo:pingInfo,
 	tag:"ping",
 	name:"IPv4 Ping"
 };
@@ -63,6 +64,7 @@ var handler_disco = {
 
 var handler_snmp = {
 	init:snmpInit,
+	getInfo:snmpInfo,
 	tag:"snmp",
 	name:"SNMP state"
 };
@@ -71,6 +73,12 @@ var handler_cpu = {
 	init:cpuInit,
 	tag:"cpu",
 	name:"CPU utilization"
+};
+
+var handler_combo = {
+	init:comboInit,
+	tag:"combo",
+	name:"Aggregated health"
 };
 
 var handlers = [
@@ -82,7 +90,8 @@ var handlers = [
 	handler_traffic_tot,
 	handler_dhcp,
 	handler_snmp,
-	handler_cpu
+	handler_cpu,
+	handler_combo
 	];
 
 /*
@@ -286,6 +295,23 @@ function pingUpdater()
 	}
 }
 
+function pingInfo(sw)
+{
+	var ret = { description: "Latency(ms)", switch: sw, why: "Latency" };
+	try {
+		ret.value = nmsData.ping.switches[sw].latency;
+		ret.score = ret.value + 10;
+		if (nmsData.ping.switches[sw].age > 0) {
+			ret.why = "Old ping";
+			ret.score = 900;
+		}
+	} catch(e) {
+		ret.why = "No ping replies";
+		ret.score = 1000;
+	}
+	return ret;
+}
+
 function pingInit()
 {
 	drawGradient([green,lightgreen,orange,red]);
@@ -391,6 +417,21 @@ function snmpUpdater() {
 		}
 	}
 }
+function snmpInfo(sw) {
+	var ret = { description: "SNMP data", switch: sw, why: "No data" };
+		if (nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+			ret.score = 800;
+			ret.why = "No data";
+		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
+			ret.score = 300;
+			ret.why = "SNMP sysName doesn't match Gondul sysname";
+		} else {
+			ret.score = 0;
+			nmsMap.setSwitchColor(sw, green);
+		}
+	return ret;
+}
+
 function snmpInit() {
 	nmsData.addHandler("snmp", "mapHandler", snmpUpdater);
 	
@@ -426,4 +467,38 @@ function cpuInit() {
 	setLegend(3,getColorStop(600),"60 %");
 	setLegend(4,getColorStop(1000),"100 %");
 	setLegend(5,"white","N/A");
+}
+
+function comboInfo(sw) {
+	var worst = { score: -1 };
+	for (var h in handlers) {
+		try {
+			if (handlers[h].tag== "combo")
+				continue;
+			var ret = handlers[h].getInfo(sw);
+			if (ret.score > worst.score) {
+				worst = ret;
+			}
+		} catch(e) {}
+	}
+	return worst;
+}
+
+function comboUpdater() {
+	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
+		return;
+	for (var sw in nmsData.switches.switches) {
+		var worst = comboInfo(sw);
+		nmsMap.setSwitchColor(sw, getColorStop(worst.score));
+	}
+}
+
+function comboInit() {
+	nmsData.addHandler("ping", "mapHandler", comboUpdater);
+	drawGradient([green,orange,red]);
+	setLegend(1,getColorStop(0),"All good");
+	setLegend(2,getColorStop(250),"Ok-ish");
+	setLegend(3,getColorStop(600),"Ick-ish");
+	setLegend(4,getColorStop(800),"Nasty");
+	setLegend(5,getColorStop(1000),"WTF?");
 }

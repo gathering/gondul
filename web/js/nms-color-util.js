@@ -20,7 +20,7 @@ function gradient_from_latency(latency_ms, latency_secondary_ms)
 {
 	if (latency_ms == undefined)
 		return blue;
-	return getColorStop(parseInt(latency_ms) * 10);
+	return getColorStop(parseInt(latency_ms));
 }
 
 /*

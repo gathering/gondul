@@ -11,9 +11,6 @@
  * utilize information from any aspect of NMS, and thus opens NMS up to the
  * world of intelligent maps base don multiple data sources.
  *
- * Warning: This paradigm will change. Handlers will be expected to
- * register their own callbacks for nmsData. Work in progress.
- *
  */
 
 /*
@@ -282,12 +279,7 @@ function pingUpdater()
 	}
 	for (var sw in nmsData.switches.switches) {
 		try {
-            var c;
-			if (nmsData.ping.switches[sw].age > 0) {
-				c = red;
-			} else {
-				c = gradient_from_latency(nmsData.ping.switches[sw].latency);
-			}
+			var c = gradient_from_latency(pingInfo(sw).score);
 			nmsMap.setSwitchColor(sw, c);
 		} catch (e) {
 			nmsMap.setSwitchColor(sw, blue);
@@ -300,8 +292,8 @@ function pingInfo(sw)
 	var ret = { description: "Latency(ms)", switch: sw, why: "Latency" };
 	try {
 		ret.value = nmsData.ping.switches[sw].latency;
-		ret.score = ret.value + 10;
-		if (nmsData.ping.switches[sw].age > 0) {
+		ret.score = parseInt(ret.value) * 10;
+		if (nmsData.ping.switches[sw].age > 5) {
 			ret.why = "Old ping";
 			ret.score = 900;
 		}
@@ -315,10 +307,10 @@ function pingInfo(sw)
 function pingInit()
 {
 	drawGradient([green,lightgreen,orange,red]);
-	setLegend(1,gradient_from_latency(1),"1ms");	
-	setLegend(2,gradient_from_latency(30),"30ms");	
-	setLegend(3,gradient_from_latency(60),"60ms");	
-	setLegend(4,gradient_from_latency(100),"100ms");	
+	setLegend(1,gradient_from_latency(10),"1ms");	
+	setLegend(2,gradient_from_latency(300),"30ms");	
+	setLegend(3,gradient_from_latency(600),"60ms");	
+	setLegend(4,gradient_from_latency(1000),"100ms");	
 	setLegend(5,gradient_from_latency(undefined) ,"No response");	
 	nmsData.addHandler("ping","mapHandler",pingUpdater);
 	nmsData.addHandler("switches","mapHandler",pingUpdater);
@@ -442,6 +434,7 @@ function snmpInit() {
 	setLegend(5,green,"");
 
 }
+
 function cpuUpdater() {
 	for (var sw in nmsData.switches.switches) {
 		try {

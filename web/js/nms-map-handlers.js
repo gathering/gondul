@@ -79,6 +79,33 @@ var handler_combo = {
 	name:"Aggregated health"
 };
 
+var handlerInfo = function(desc) {
+	/*
+	 * Text-representable value (e.g.: for a table).
+	 * Doesn't have to be a number.
+	 */
+	this.value = undefined;
+	/*
+	 * Describe the info in generic terms.
+	 * Should be the same regardless of result.
+	 */
+	this.description = desc || "Generic info";
+	/*
+	 * 0: all good.
+	 * 1000: messed up.
+	 *
+	 * This can be "intelligent". E.g.: pingInfo() takes latency and
+	 * the age of the reply into account in addition to having a
+	 * special handling of lack of a result.
+	 */
+	this.score = 0;
+	/*
+	 * Why the score is what it is. E.g.: If you have multiple
+	 * conditions that set the score, what is the final value based on?
+	 */
+	this.why = "0 score is the default";
+};
+
 var handlers = [
 	handler_uplinks,
 	handler_temp,
@@ -290,7 +317,8 @@ function pingUpdater()
 
 function pingInfo(sw)
 {
-	var ret = { description: "Latency(ms)", switch: sw, why: "Latency" };
+	var ret = new handlerInfo("Latency(ms)");
+	ret.why = "Latency";
 	try {
 		ret.value = nmsData.ping.switches[sw].latency;
 		ret.score = parseInt(ret.value) * 10;
@@ -299,6 +327,7 @@ function pingInfo(sw)
 			ret.score = 900;
 		}
 	} catch(e) {
+		ret.value = "N/A - no ping replies";
 		ret.why = "No ping replies";
 		ret.score = 1000;
 	}
@@ -411,20 +440,21 @@ function snmpUpdater() {
 	}
 }
 function snmpInfo(sw) {
-	var ret = { description: "SNMP data", switch: sw, why: "No data" };
-		if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
-			ret.score = 800;
-			ret.why = "No data";
-			ret.value = "No data";
-		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
-			ret.score = 300;
-			ret.why = "SNMP sysName doesn't match Gondul sysname";
-			ret.value = ret.why;
-		} else {
-			ret.score = 0;
-			ret.value = "SNMP freshly updated";
-			nmsMap.setSwitchColor(sw, green);
-		}
+	var ret = new handlerInfo("SNMP data");
+	ret.why = "No data";
+	if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+		ret.score = 800;
+		ret.why = "No data";
+		ret.value = "No data";
+	} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
+		ret.score = 300;
+		ret.why = "SNMP sysName doesn't match Gondul sysname";
+		ret.value = ret.why;
+	} else {
+		ret.score = 0;
+		ret.value = "SNMP freshly updated";
+		ret.why = "SNMP all good";
+	}
 	return ret;
 }
 
@@ -467,7 +497,8 @@ function cpuInit() {
 }
 
 function comboInfo(sw) {
-	var worst = { score: -1 };
+	var worst = new handlerInfo();
+	worst.score = -1;
 	for (var h in handlers) {
 		try {
 			if (handlers[h].tag== "combo")

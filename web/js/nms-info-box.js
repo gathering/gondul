@@ -878,65 +878,18 @@ var switchSummaryPanel = function() {
 	};
 	this.refresh = function(reason) {
 		var content = [];
-
-		//Get DHCP info
-		var lastDhcp = undefined;
-		try {
-			var tempDhcp = nmsData.dhcp.dhcp[this.sw];
-			var now = Date.now();
-			now = Math.floor(now / 1000);
-			tempDhcp = now - parseInt(tempDhcp);
-			tempDhcp = tempDhcp + " s";
-		} catch(e) {}
-
-		//Get SNMP status
-		var snmpStatus = undefined;
-		try {
-			if (nmsData.snmp.snmp[this.sw].misc.sysName[0] != sw) {
-				snmpStatus = "Sysname mismatch";
-			} else {
-				snmpStatus = "OK";
+		for ( var h in handlers ) {
+			if (handlers[h].getInfo != undefined) {
+				var tmp = handlers[h].getInfo(this.sw);
+				content.push([tmp.description,tmp.value]);
 			}
-		} catch(e) {}
-
-		//Get CPU usage
-		var cpuUsage = undefined;
-		try {
-			var cpu = 0;
-			for (var u in nmsData.snmp.snmp[this.sw].misc.jnxOperatingCPU) {
-				var local = nmsData.snmp.snmp[this.sw].misc['jnxOperatingCPU'][u];
-				cpu = Math.max(nmsData.snmp.snmp[this.sw].misc.jnxOperatingCPU[u],cpu);
-			}
-			cpuUsage = cpu + " %";
-		} catch (e) {}
-
-		//Get traffic data
-		var uplinkTraffic = undefined;
-		try {
-			var speed = 0;
-			var t = parseInt(nmsData.switchstate.then[this.sw].uplinks.ifHCOutOctets);
-			var n = parseInt(nmsData.switchstate.switches[this.sw].uplinks.ifHCOutOctets);
-			var tt = parseInt(nmsData.switchstate.then[this.sw].time);
-			var nt = parseInt(nmsData.switchstate.switches[this.sw].time);
-			var tdiff = nt - tt;
-			var diff = n - t;
-			speed = diff / tdiff;
-			if(!isNaN(speed)) {
-				uplinkTraffic = byteCount(speed*8,0);
-			}
-		} catch (e) {};
+		}
 
 		//Get uptime data
 		var uptime = "";
 		try {
 			uptime = nmsData.snmp.snmp[this.sw]["misc"]["sysUpTimeInstance"][""] / 60 / 60 / 100;
 			uptime = Math.floor(uptime) + " t";
-		} catch(e) {}
-
-		//Get temperature data
-		var temp = "";
-		try {
-			temp = nmsData.switchstate.switches[this.sw].temp + " °C";
 		} catch(e) {}
 
 		//Get management data
@@ -951,20 +904,7 @@ var switchSummaryPanel = function() {
 			subnetV6 = nmsData.smanagement.switches[this.sw].subnet6;
 		} catch(e) {}
 
-		//Get ping data
-		var ping = undefined;
-		try {
-			nmsData.ping.switches[this.sw].latency + " ms";
-		} catch (e) {}
-
-
-		content.push(["Ping latency:",ping]);
-		content.push(["Last DHCP lease:",lastDhcp]);
-		content.push(["SNMP status:",snmpStatus]);
-		content.push(["CPU usage:",cpuUsage]);
-		content.push(["Uplink traffic:",uplinkTraffic]);
 		content.push(["System uptime:",uptime]);
-		content.push(["Temperature",temp]);
 		content.push(["Management (v4):",mgmtV4]);
 		content.push(["Management (v6):",mgmtV6]);
 		content.push(["Subnet (v4):",subnetV4]);

@@ -74,6 +74,7 @@ var handler_cpu = {
 
 var handler_combo = {
 	init:comboInit,
+	getInfo:comboInfo,
 	tag:"combo",
 	name:"Aggregated health"
 };
@@ -411,14 +412,17 @@ function snmpUpdater() {
 }
 function snmpInfo(sw) {
 	var ret = { description: "SNMP data", switch: sw, why: "No data" };
-		if (nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+		if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
 			ret.score = 800;
 			ret.why = "No data";
+			ret.value = "No data";
 		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
 			ret.score = 300;
 			ret.why = "SNMP sysName doesn't match Gondul sysname";
+			ret.value = ret.why;
 		} else {
 			ret.score = 0;
+			ret.value = "SNMP freshly updated";
 			nmsMap.setSwitchColor(sw, green);
 		}
 	return ret;
@@ -474,6 +478,7 @@ function comboInfo(sw) {
 			}
 		} catch(e) {}
 	}
+	worst.description = "Worst: " + worst.description;
 	return worst;
 }
 

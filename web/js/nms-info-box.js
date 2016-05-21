@@ -965,8 +965,15 @@ nmsInfoBox.searchSmart = function(id, sw) {
 
 nmsInfoBox._searchSmart = function(id, sw) {
 	try {
-		if(sw.toLowerCase().indexOf(id) > -1) {
+		if(sw.toLowerCase().indexOf(id.toLowerCase()) > -1) {
 			return true;
+		}
+		if (id[0] == "\"") {
+			if (("\"" + sw.toLowerCase() + "\"") == id.toLowerCase()) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 		try {
 			if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {

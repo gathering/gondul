@@ -158,6 +158,7 @@
 	      <div class="input-group input-group-sm">
 		<input id="searchbox" type="text" class="form-control" placeholder="Filter" oninput="nmsInfoBox._search()" />
 		  <span class="input-group-btn">
+		  <button id="searchbox-x" class="btn btn-default" type="button" onclick="var lol = document.getElementById('searchbox'); lol.value = ''; lol.oninput();">X</button>
 		  <button id="searchbox-help" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('searchHelp');">?</button>
 		  <button id="searchbox-submit" class="btn btn-default" type="button" onclick="nmsInfoBox.showWindow('switchInfo',document.getElementById('searchbox').value);">Go!</button>
 		</span>

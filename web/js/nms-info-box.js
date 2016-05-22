@@ -15,10 +15,9 @@
  * Currently broken or needs reimplementing:
  * - Handler unloading is not working correctly, and many are never removed
  * - SSH-management link, this should propably be a custom "view" of sorts
- * - inventoryListing window is partially broken when first opened. Since it's
- *   both a window type and a panel with different modes it has some conflicts.
  *
  * General TODO:
+ * - Move inventory into a separate tab.
  * - Add external windows (timetravel, etc)
  * - Take a critical look at what methods/variables should be marked as "_"
  * - Currently argument is assumed to be a switch, this should not be the case
@@ -193,7 +192,7 @@ nmsInfoBox.click = function(sw)
  * Is based on a hierarchy of objects: Window (itself) > Views > Panels. Where
  * any object should not interact with any other directly. Panels are special
  * nmsInfoPanel-objects that handle their own rendering, refreshing, etc. The
- * window handler only makes shure these panels are loaded and unloaded when
+ * window handler only makes sure these panels are loaded and unloaded when
  * needed in a window or view.
  *
  * Does primarily rely on an imported list of panel types and window types to

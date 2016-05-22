@@ -1,5 +1,9 @@
 - command: pwd
   register: pwd
+  tags:
+  - build
+  - start
+  - test
 - name: make all
   docker_image:
       state: build

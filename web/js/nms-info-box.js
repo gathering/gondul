@@ -13,15 +13,12 @@
 /*
  *
  * Currently broken or needs reimplementing:
- * - Possibly: Comment CRUD, did not want to test writes on our "historic db copy"
- * - Comments popover
  * - Handler unloading is not working correctly, and many are never removed
  * - SSH-management link, this should propably be a custom "view" of sorts
  * - inventoryListing window is partially broken when first opened. Since it's
  *   both a window type and a panel with different modes it has some conflicts.
  *
  * General TODO:
- * - Fix broken stuff
  * - Add external windows (timetravel, etc)
  * - Take a critical look at what methods/variables should be marked as "_"
  * - Currently argument is assumed to be a switch, this should not be the case
@@ -176,8 +173,10 @@ nmsInfoBox.addPanelType = function (id, obj) {
  */
 nmsInfoBox.hide = function() {
 	this._sw = false;
-	this._windowHandler.hide();
-	this._windowHandler.unloadWindow();
+	if (this._windowHandler != undefined && this._windowHandler.hide != undefined) {
+		this._windowHandler.hide();
+		this._windowHandler.unloadWindow();
+	}
 };
 
 /*
@@ -590,13 +589,7 @@ var searchHelpPanel = function() {
 	nmsInfoPanel.call(this,"searchHelp");
 	this.refresh = function(reason) {
 		var x = document.createElement("div");
-		var searchHelp = [
-			"The search box can be used to identify switches in several ways. The simplest is by name.",
-			"If you are using the non-public version of Gondul, you can also perform smart searches.",
-			"Distro search: Type the name of a distro-switch and all access switches registered to that distro switch will also be hilighted.",
-			'Active ports: Type "active>x", "active<x" or "active=x" to identify switch with "x" amount of active gigabit ethernet (ge) ports. E.g.: "active>30".',
-			'IP search: Start typing an IP and any switch with that IP registered either as management IP or part of its subnet will be identified',
-			'SNMP search: Type anything found in the "sysDescr" SNMP OID to hilight a switch matching that. Practical examples include version numbers for firmware (e.g.: "JUNOS 12." vs "JUNOS 14.").'];
+		var searchHelp = nmsSearch.helpText;
 		for (var a in searchHelp) {
 			var c = document.createElement("p");
 			c.innerText = searchHelp[a];
@@ -704,7 +697,7 @@ var inventoryListingPanel = function() {
 		for(var sw in nmsData.switches.switches) {
 			var value = '';
 			if(this.filter != '') {
-				if(sw.toLowerCase().indexOf(this.filter) == -1 && !nmsInfoBox._searchSmart(this.filter,sw))
+				if(sw.toLowerCase().indexOf(this.filter) == -1 && !nmsSearch.searchTest(this.filter,sw))
 					continue;
 			}
 			try {
@@ -955,130 +948,6 @@ nmsInfoBox._makeTable = function(content, caption) {
 		td2.innerHTML = content[v][1];
 	}
 	return table;
-};
-
-nmsInfoBox.searchSmart = function(id, sw) {
-	if (id == "")
-		return false;
-	return nmsInfoBox._searchSmart(id, sw);
-}
-
-nmsInfoBox._searchSmart = function(id, sw) {
-	try {
-		if(sw.toLowerCase().indexOf(id.toLowerCase()) > -1) {
-			return true;
-		}
-		if (id[0] == "\"") {
-			if (("\"" + sw.toLowerCase() + "\"") == id.toLowerCase()) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-		try {
-			if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
-				return true;
-			}
-		} catch (e) {}
-		try {
-		if (id.match("active")) {
-			var limit = id;
-			limit = limit.replace("active>","");
-			limit = limit.replace("active<","");
-			limit = limit.replace("active=","");
-			var operator = id.replace("active","")[0];
-			if (limit == parseInt(limit)) {
-				var ports = parseInt(nmsData.switchstate.switches[sw].ifs.ge.live);
-				limit = parseInt(limit);
-				if (operator == ">" ) {
-					if (ports > limit) {
-						return true;
-					}
-				} else if (operator == "<") {
-					if (ports < limit) {
-						return true;
-					}
-				} else if (operator == "=") {
-					if (ports == limit) {
-						return true;
-					}
-				}
-			}
-		}
-		} catch (e) {}
-		try {
-			if (nmsData.smanagement.switches[sw].mgmt_v4_addr.match(id)) {
-				return true;
-			}
-			if (nmsData.smanagement.switches[sw].mgmt_v6_addr.match(id)) {
-				return true;
-			}
-		} catch (e) {}
-		try {
-			if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
-				return true;
-			}
-			if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
-				return true;
-			}
-		} catch (e) {}
-		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].toLowerCase().match(id)) {
-			return true;
-		}
-	} catch (e) {
-		return false;
-	}
-	return false;
-};
-
-/*
- * FIXME: Not sure this belongs here, it's really part of the "Core" ui,
- * not just the infobox.
- */
-nmsInfoBox._search = function() {
-	var el = document.getElementById("searchbox");
-	var id = false;
-	var matches = [];
-	if (el) {
-		id = el.value.toLowerCase();
-	}
-	if(id) {
-		nmsMap.enableHighlights();
-		for(var sw in nmsData.switches.switches) {
-			if (nmsInfoBox._searchSmart(id,sw)) {
-				matches.push(sw);
-				nmsMap.setSwitchHighlight(sw,true);
-			} else {
-				nmsMap.setSwitchHighlight(sw,false);
-			}
-		}
-	} else {
-		nmsMap.disableHighlights();
-	}
-	if(matches.length == 1) {
-		document.getElementById("searchbox-submit").classList.add("btn-primary");
-		document.getElementById("searchbox").dataset.match = matches[0];
-	} else {
-		document.getElementById("searchbox-submit").classList.remove("btn-primary");
-		document.getElementById("searchbox").dataset.match = '';
-	}
-};
-
-nmsInfoBox._searchKeyListener = function(e) {
-	switch (e.keyCode) {
-		case 13:
-			var sw = document.getElementById("searchbox").dataset.match;
-			if(sw != '') {
-				nmsInfoBox.showWindow("switchInfo",sw);
-			}
-			break;
-		case 27:
-			document.getElementById("searchbox").dataset.match = '';
-			document.getElementById("searchbox").value = '';
-			nmsInfoBox._search();
-			nmsInfoBox.hide();
-			break;
-	}
 };
 
 nmsInfoBox._nullBlank = function(x) {

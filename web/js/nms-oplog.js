@@ -39,7 +39,7 @@ nmsOplog.getSwitchLogs = function(sw) {
 	var logs = [];
 	for (var v in nmsData['oplog']['oplog']) {
 		var log = nmsData['oplog']['oplog'][v];
-		if (nmsInfoBox.searchSmart(log['systems'],sw)) {
+		if (nmsSearch.searchTest(log['systems'],sw)) {
 			logs.push(log);
 		}
 	}

@@ -11,20 +11,24 @@ my $q = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (" . $nms::web::no
 
 $q->execute();
 while (my $ref = $q->fetchrow_hashref()) {
-    $nms::web::json{'switches'}{$ref->{'sysname'}}{'latency'} = $ref->{'latency_ms'};
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'latency4'} = $ref->{'latency_ms'};
     # Get seconds, without decimlas, from timestamp.
     # '00:01:01.435601' => 61 seconds.
     my ( $h, $m, $s ) = split( ':|\.', $ref->{'age'} );
-    $nms::web::json{'switches'}{$ref->{'sysname'}}{'age'} = ($h*60*60) + ($m*60) + $s; # $$ref->{'age'};
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'age4'} = ($h*60*60) + ($m*60) + $s; # $$ref->{'age'};
 }
 
-my $qs = $nms::web::dbh->prepare("SELECT DISTINCT ON (switch) switch, latency_ms FROM ping_secondary_ip WHERE "
-        . $nms::web::when .  " ORDER BY switch, time DESC;");
-$qs->execute();
-while ( my $ref = $qs->fetchrow_hashref() ) {
-    $nms::web::json{'switches'}{$ref->{'switch'}}{'latency_secondary'} = $ref->{'latency_ms'};
-}
+my $q2 = $nms::web::dbh->prepare("SELECT DISTINCT ON (sysname) (" . $nms::web::now . " - time) as age,sysname, latency_ms FROM ping_secondary_ip NATURAL JOIN switches WHERE time in (select max(time) from ping where "
+        . $nms::web::when . " group by switch)");
 
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'latency6'} = $ref->{'latency_ms'};
+    # Get seconds, without decimlas, from timestamp.
+    # '00:01:01.435601' => 61 seconds.
+    my ( $h, $m, $s ) = split( ':|\.', $ref->{'age'} );
+    $nms::web::json{'switches'}{$ref->{'sysname'}}{'age6'} = ($h*60*60) + ($m*60) + $s; # $$ref->{'age'};
+}
 my $lq = $nms::web::dbh->prepare("SELECT DISTINCT ON (linknet) linknet, latency1_ms, latency2_ms FROM linknet_ping WHERE "
         . $nms::web::when . " ORDER BY linknet, time DESC;");
 $lq->execute();

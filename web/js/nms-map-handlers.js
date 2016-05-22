@@ -86,6 +86,7 @@ var handlerInfo = function(tag,desc) {
 	 * Short name, typically matching the url anchor.
 	 */
 	this.tag = tag;
+	this.description = desc || "Unknown";
 	this.data = [
 		{ 
 			value: undefined,
@@ -329,13 +330,33 @@ function pingInfo(sw)
 	var ret = new handlerInfo("ping","Latency(ms)");
 	ret.why = "Latency";
 	try {
-		ret.data[0].value = nmsData.ping.switches[sw].latency;
-		ret.score = parseInt(ret.data[0].value) * 10;
-		if (nmsData.ping.switches[sw].age > 5) {
+		var v4 = nmsData.ping.switches[sw].latency4;
+		var v6 = nmsData.ping.switches[sw].latency6;
+		ret.data[0].value = v4;
+		ret.data[0].description = "IPv4 latency(ms)";
+		ret.data[1] = {};
+		ret.data[1].value = v6;
+		ret.data[1].description = "IPv6 latency(ms)";
+		if (v4 == v6 == undefined) {
+			ret.score = 1000;
+			ret.why = "No IPv4 or IPv6 ping reply";
+		} else if(v6 == undefined) {
+			ret.score = 200;
+			ret.why = "No IPv6 ping reply";
+		} else if (v4 == undefined) {
+			ret.score = 199;
+			ret.why = "No IPv4 ping reply";
+		} else {
+			v4 = parseInt(v4);
+			v6 = parseInt(v6);
+			ret.score = (v4 > v6 ? v4 : v6) * 10;
+		}
+		if (nmsData.ping.switches[sw].age4 > 5 || nmsData.ping.switches[sw].age6 > 5) {
 			ret.why = "Old ping";
 			ret.score = 900;
 		}
 	} catch(e) {
+		console.log(e);
 		ret.data[0].value = "N/A - no ping replies";
 		ret.why = "No ping replies";
 		ret.score = 999;
@@ -566,7 +587,7 @@ function cpuInit() {
 }
 
 function comboInfo(sw) {
-	var worst = new handlerInfo("combo");
+	var worst = new handlerInfo("combo", "Combo");
 	worst.score = -1;
 	for (var h in handlers) {
 		try {
@@ -579,7 +600,7 @@ function comboInfo(sw) {
 		} catch(e) { }
 	}
 	worst.data = [{
-		description: "Worst: " + worst.data[0].description,
+		description: "Worst: " + worst.description,
 		value: worst.why
 	}];
 	return worst;

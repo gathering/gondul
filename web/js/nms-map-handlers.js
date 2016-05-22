@@ -313,7 +313,7 @@ function pingUpdater()
 	for (var sw in nmsData.switches.switches) {
 		try {
 			var c = nmsColor.getColorStop(pingInfo(sw).score);
-			if (c = 1000) {
+			if (c == 1000) {
 				nmsMap.setSwitchColor(sw, nmsColor.blue);
 			} else {
 				nmsMap.setSwitchColor(sw, c);

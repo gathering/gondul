@@ -1,0 +1,71 @@
+canvas {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	outline: none;
+	-webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+}
+tr.mgmt_v4_addr {
+	font-weight: 700;
+}
+h1.map-mode-title {
+	font-weight: 700;
+	font-size: 55px;
+	color: black;
+	display: block;
+	position: absolute;
+	z-index: 55;
+	text-shadow: 4px 4px 5px white;
+}
+.gondul-public .gondul-is-private {
+	display: none;
+}
+.vertical h1.map-mode-title {
+	left: 30px;
+	bottom: 0px;
+	position: absolute;
+	transform-origin: 0px 0% 0px;
+	transform: rotate(-90deg);
+}
+.nightmode h1.map-mode-title {
+	color: white;
+	text-shadow: 4px 4px 5px black;
+}
+.logbook  {
+	background-color: rgba(255,255,255,0.7);
+	color: black;
+}
+.nightmode .logbook  {
+	background-color: rgba(0,0,0,0.7);
+	color: white;
+}
+.tvmode #topCanvas {
+	display: none;
+}
+div.map-mode-legend {
+	position: fixed;
+	bottom: 5%;
+	right: 5%;
+	z-index: 999;
+}
+#admin {
+	display: none;
+}
+#oplog {
+	display: none;
+}
+.vertical div.map-mode-legend {
+	top: -10px;
+	right: 30px;
+	position: absolute;
+	transform-origin: 100% 100% 0;
+	transform: rotate(-90deg);
+	height: 40px;
+}
+div.map-mode-legend button {
+	font-size: 20px;
+	font-weight: 700;
+}

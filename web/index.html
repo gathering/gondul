@@ -20,84 +20,7 @@
     <!-- Date-picker styles -->
     <link href="css/jquery.datetimepicker.css" rel="stylesheet">
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-      <![endif]-->
-      <style type="text/css">
-				canvas {
-					-webkit-touch-callout: none;
-					-webkit-user-select: none;
-					-khtml-user-select: none;
-					-moz-user-select: none;
-					-ms-user-select: none;
-					user-select: none;
-					outline: none;
-					-webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
-				}
-				tr.mgmt_v4_addr {
-					font-weight: 700;
-				}
-				h1.map-mode-title {
-					font-weight: 700;
-					font-size: 55px;
-					color: black;
-					display: block;
-					position: absolute;
-					z-index: 55;
-					text-shadow: 4px 4px 5px white;
-				}
-				.gondul-public .gondul-is-private {
-					display: none;
-				}
-				.vertical h1.map-mode-title {
-					left: 30px;
-					bottom: 0px;
-					position: absolute;
-					transform-origin: 0px 0% 0px;
-					transform: rotate(-90deg);
-				}
-				.nightmode h1.map-mode-title {
-					color: white;
-					text-shadow: 4px 4px 5px black;
-				}
-				.logbook  {
-					background-color: rgba(255,255,255,0.7);
-					color: black;
-				}
-				.nightmode .logbook  {
-					background-color: rgba(0,0,0,0.7);
-					color: white;
-				}
-				.tvmode #topCanvas {
-					display: none;
-				}
-				div.map-mode-legend {
-					position: fixed;
-					bottom: 5%;
-					right: 5%;
-					z-index: 999;
-				}
-				#admin {
-					display: none;
-				}
-				#oplog {
-					display: none;
-				}
-				.vertical div.map-mode-legend {
-					top: -10px;
-					right: 30px;
-					position: absolute;
-					transform-origin: 100% 100% 0;
-					transform: rotate(-90deg);
-					height: 40px;
-				}
-				div.map-mode-legend button {
-					font-size: 20px;
-					font-weight: 700;
-				}
-      </style>
+    <link href="css/nms.css" rel="stylesheet">
   </head>
 
   <body id="body">
@@ -182,27 +105,25 @@
 
 
     <div class="container-fluid" id="admin">
-    <div class="row-fluid" id="admin-row">
-    <div>
-    <p>Add linknet</p>
-    <input id="admin-input-linknet1" type="text" placeholder="Switch 1" />
-    <input id="admin-input-linknet2" type="text" placeholder="Switch 2" />
-    <button class="btn btn-primary"
-    onclick="nmsAdmin.addLinknet()">Add</button>
-    </div>
-    <hr>
-    </div>
+      <div class="row-fluid" id="admin-row">
+        <div>
+        <p>Add linknet</p>
+        <input id="admin-input-linknet1" type="text" placeholder="Switch 1" />
+        <input id="admin-input-linknet2" type="text" placeholder="Switch 2" />
+        <button class="btn btn-primary" onclick="nmsAdmin.addLinknet()">Add</button>
+      </div>
+      <hr>
+      </div>
     </div>
     <div class="container-fluid" id="oplog">
-    <div class="row-fluid" id="oplog-row">
+      <div class="row-fluid" id="oplog-row">
 	<div id="oplog-parent" class="logbook">
-	<table id="oplog-table" class="table table-condensed">
-	</table>
+	  <table id="oplog-table" class="table table-condensed">
+	  </table>
 	</div>
-    </div>
+      </div>
     </div>
     <div class="container-fluid" id="map">
-
       <div class="row-fluid">
 	<div class="span12">
 	  <div id="aboutKeybindings" class="col-md-4" style="position: absolute; display:none; z-index: 130;">
@@ -301,11 +222,11 @@
 	  <div id="nowPickerBox" style="position: absolute; display: none; z-index: 130;" class="col-sm-6 col-md-5">
 	    <div class="panel panel-default"> 
 	      <div class="panel-heading">
-          <h3 class="panel-title">Time travel
-            <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </h3>
+                <h3 class="panel-title">Time travel 
+		  <button type="button" class="close" aria-labe="Close" onclick="document.getElementById('nowPickerBox').style.display = 'none';" style="float: right;">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </h3>
 	      </div>
 	      <div class="panel-body row">
           <div class="col-sm-12">
@@ -380,7 +301,7 @@
     <script type="text/javascript" src="js/nms-search.js"></script>
     <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
-initNMS();
+	initNMS();
     </script>
   </body>
 </html>

@@ -447,6 +447,21 @@ function snmpUpdater() {
 		}
 	}
 }
+
+function secondsToTime(input) {
+	var h, m, s;
+	h = Math.floor(input / 60 / 60);
+	m = Math.floor((input%3600)/60);
+	s = Math.floor(input%60);
+	var string = "";
+	if (h > 0)
+		string = h + " hours ";
+	if (h > 0 || m > 0)
+		string += m + " minutes ";
+	if (string == "")
+		string += s + " seconds";
+	return string;
+}
 function snmpInfo(sw) {
 	var ret = new handlerInfo("snmp","SNMP data");
 	ret.why = "No data";
@@ -455,7 +470,7 @@ function snmpInfo(sw) {
 		ret.why = "No data";
 		ret.data[0].value = "No data";
 	} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
-		ret.score = 300;
+		ret.score = 200;
 		ret.why = "SNMP sysName doesn't match Gondul sysname";
 		ret.data[0].value = ret.why;
 	} else {
@@ -464,10 +479,18 @@ function snmpInfo(sw) {
 		ret.why = "SNMP all good";
 	}
 	try {
-		var uptime = nmsData.snmp.snmp[this.sw]["misc"]["sysUpTimeInstance"][""] / 60 / 60 / 100;
-		uptime = Math.floor(uptime) + " t";
-		ret.data.push({value: uptime, description: "System uptime"});
-	} catch(e){}
+		var uptime = parseInt(nmsData.snmp.snmp[sw]["misc"]["sysUpTimeInstance"][""]) / 100;
+		var upstring = secondsToTime(uptime);
+		ret.data.push({value: upstring, description: "System uptime"});
+		if (uptime < 60*5 && ret.score < 500) {
+			ret.score = 500;
+			ret.why = "System rebooted last 5 minutes";
+		}
+		if (uptime < 60*15 && ret.score < 250) {
+			ret.score = 250;
+			ret.why = "System rebooted last 15 minutes";
+		}
+	} catch(e){ }
 	return ret;
 }
 
@@ -505,20 +528,20 @@ function mgmtInfo(sw) {
 		var mg = nmsData.smanagement.switches[sw];
 		ret.data =
 			[{
-				value: mg.mgmt_v4_addr || "N/A",
+				value: mg.mgmt_v4_addr || "",
 				description: "Management IP (v4)"
 			}, {
-				value: mg.mgmt_v6_addr || "N/A",
+				value: mg.mgmt_v6_addr || "",
 				description: "Management IP (v6)"
 			}, {
-				value: mg.subnet4 || "N/A",
+				value: mg.subnet4 || "",
 				description: "Subnet (v4)"
 			}, {
-				value: mg.subnet6 || "N/A",
+				value: mg.subnet6 || "",
 				description: "Subnet (v6)"
 			}];
-		if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
-			ret.why = "No IPv4 mamagement IP";
+		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
+			ret.why = "No IPv4 or IPv6 mamagement IP";
 			ret.score = 1000;
 		}
 	} catch(e) {

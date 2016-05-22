@@ -1,6 +1,8 @@
 "use strict";
 
 var nmsSearch = nmsSearch || {
+	_handler: false,
+	_lastId: false
 };
 
 nmsSearch.helpText =  [
@@ -91,6 +93,18 @@ nmsSearch.reset = function() {
 	nmsSearch.search();
 }
 
+nmsSearch._enableTimer = function() {
+	if (nmsSearch._handler == false) {
+		nmsSearch._handler = setInterval(nmsSearch.search,1000);
+	}
+}
+
+nmsSearch._disableTimer = function() {
+	if (nmsSearch._handler != false) {
+		clearInterval(nmsSearch.search);
+	}
+}
+
 nmsSearch.search = function() {
 	var el = document.getElementById("searchbox");
 	var id = false;
@@ -108,7 +122,9 @@ nmsSearch.search = function() {
 				nmsMap.setSwitchHighlight(sw,false);
 			}
 		}
+		nmsSearch._enableTimer();
 	} else {
+		nmsSearch._disableTimer();
 		nmsMap.disableHighlights();
 	}
 	if(matches.length == 1) {

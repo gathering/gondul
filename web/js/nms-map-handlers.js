@@ -79,7 +79,11 @@ var handler_combo = {
 	name:"Aggregated health"
 };
 
-var handlerInfo = function(desc) {
+var handlerInfo = function(tag,desc) {
+	/*
+	 * Short name, typically matching the url anchor.
+	 */
+	this.tag = tag;
 	/*
 	 * Text-representable value (e.g.: for a table).
 	 * Doesn't have to be a number.
@@ -144,13 +148,13 @@ function uplinkUpdater()
 		if (uplinks == 0) {
 			nmsMap.setSwitchColor(sw,"white");
 		} else if (uplinks == 1) {
-			nmsMap. setSwitchColor(sw, red);
+			nmsMap. setSwitchColor(sw, nmsColor.red);
 		} else if (uplinks == 2) {
-			nmsMap.setSwitchColor(sw, orange);
+			nmsMap.setSwitchColor(sw, nmsColor.orange);
 		} else if (uplinks == 3) {
-			nmsMap.setSwitchColor(sw,green);
+			nmsMap.setSwitchColor(sw, nmsColor.green);
 		} else if (uplinks > 3) {
-			nmsMap.setSwitchColor(sw, blue);
+			nmsMap.setSwitchColor(sw, nmsColor.blue);
 		}
 	}
 }
@@ -163,10 +167,10 @@ function uplinkInit()
 	nmsData.addHandler("switches","mapHandler",uplinkUpdater);
 	nmsData.addHandler("switchstate","mapHandler",uplinkUpdater);
 	setLegend(1,"white","0 uplinks");	
-	setLegend(2,red,"1 uplink");	
-	setLegend(3,orange,"2 uplinks");	
-	setLegend(4,green,"3 uplinks");	
-	setLegend(5,blue,"4 uplinks");	
+	setLegend(2,nmsColor.red,"1 uplink");	
+	setLegend(3,nmsColor.orange,"2 uplinks");	
+	setLegend(4,nmsColor.green,"3 uplinks");	
+	setLegend(5,nmsColor.blue,"4 uplinks");	
 }
 
 /*
@@ -177,7 +181,7 @@ function trafficInit()
 	nmsData.addHandler("switches","mapHandler",trafficUpdater);
 	nmsData.addHandler("switchstate","mapHandler",trafficUpdater);
 	var m = 1024 * 1024 / 8;
-	drawGradient([lightgreen,green,orange,red]);
+	nmsColor.drawGradient([nmsColor.lightgreen, nmsColor.green, nmsColor.orange, nmsColor.red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
 	setLegend(5,colorFromSpeed(1100 * m) , "1100Mb/s");	
 	setLegend(4,colorFromSpeed(600 * m),"600Mb/s");	
@@ -212,7 +216,7 @@ function trafficTotInit()
 	nmsData.addHandler("switches","mapHandler",trafficTotUpdater);
 	nmsData.addHandler("switchstate","mapHandler",trafficTotUpdater);
 	var m = 1024 * 1024 / 8;
-	drawGradient([lightgreen,green,orange,red]);
+	nmsColor.drawGradient([nmsColor.lightgreen, nmsColor.green, nmsColor.orange, nmsColor.red]);
 	setLegend(1,colorFromSpeed(0),"0 (N/A)");	
 	setLegend(5,colorFromSpeed(5000 * m,5) , "5000Mb/s");	
 	setLegend(4,colorFromSpeed(3000 * m,5),"3000Mb/s");	
@@ -246,9 +250,9 @@ function colorFromSpeed(speed,factor)
 	if (factor == undefined)
 		factor = 1.1;
 	if (speed == 0)
-		return blue;
+		return nmsColor.blue;
 	speed = speed < 0 ? 0 : speed;
-	return getColorStop( 1000 * (speed / (factor * (1000 * m))));
+	return nmsColor.getColorStop( 1000 * (speed / (factor * (1000 * m))));
 }
 
 /*
@@ -260,11 +264,11 @@ function temp_color(t)
 {
 	if (t == undefined) {
 		console.log("Temp_color, but temp is undefined");
-		return blue;
+		return nmsColor.blue;
 	}
 	t = parseInt(t) - 12;
 	t = Math.floor((t / 23) * 1000);
-	return getColorStop(t);
+	return nmsColor.getColorStop(t);
 }
 
 function tempUpdater()
@@ -291,7 +295,7 @@ function tempUpdater()
 function tempInit()
 { 
 	//Padded the gradient with extra colors for the upper unused values
-	drawGradient(["black",blue,lightblue,lightgreen,green,orange,red]);
+	nmsColor.drawGradient(["black", nmsColor.blue, nmsColor.lightblue, nmsColor.lightgreen, nmsColor.green, nmsColor.orange, nmsColor.red]);
 	setLegend(1,temp_color(15),"15 °C");	
 	setLegend(2,temp_color(20),"20 °C");	
 	setLegend(3,temp_color(25),"25 °C");	
@@ -307,17 +311,21 @@ function pingUpdater()
 	}
 	for (var sw in nmsData.switches.switches) {
 		try {
-			var c = gradient_from_latency(pingInfo(sw).score);
-			nmsMap.setSwitchColor(sw, c);
+			var c = nmsColor.getColorStop(pingInfo(sw).score);
+			if (c = 1000) {
+				nmsMap.setSwitchColor(sw, nmsColor.blue);
+			} else {
+				nmsMap.setSwitchColor(sw, c);
+			}
 		} catch (e) {
-			nmsMap.setSwitchColor(sw, blue);
+			nmsMap.setSwitchColor(sw, nmsColor.blue);
 		}
 	}
 }
 
 function pingInfo(sw)
 {
-	var ret = new handlerInfo("Latency(ms)");
+	var ret = new handlerInfo("ping","Latency(ms)");
 	ret.why = "Latency";
 	try {
 		ret.value = nmsData.ping.switches[sw].latency;
@@ -336,12 +344,12 @@ function pingInfo(sw)
 
 function pingInit()
 {
-	drawGradient([green,lightgreen,orange,red]);
-	setLegend(1,gradient_from_latency(10),"1ms");	
-	setLegend(2,gradient_from_latency(300),"30ms");	
-	setLegend(3,gradient_from_latency(600),"60ms");	
-	setLegend(4,gradient_from_latency(1000),"100ms");	
-	setLegend(5,gradient_from_latency(undefined) ,"No response");	
+	nmsColor.drawGradient([nmsColor.green,nmsColor.lightgreen, nmsColor.orange, nmsColor.red]);
+	setLegend(1,nmsColor.getColorStop(10),"1ms");	
+	setLegend(2,nmsColor.getColorStop(300),"30ms");	
+	setLegend(3,nmsColor.getColorStop(600),"60ms");	
+	setLegend(4,nmsColor.getColorStop(1000),"100ms");	
+	setLegend(5,nmsColor.blue,"No response");	
 	nmsData.addHandler("ping","mapHandler",pingUpdater);
 	nmsData.addHandler("switches","mapHandler",pingUpdater);
 	nmsData.addHandler("ticker", "mapHandler", pingUpdater);
@@ -355,7 +363,7 @@ function getDhcpColor(stop)
 		stop = 1000;
 	if (stop > 1000)
 		stop = 1000;
-	return getColorStop(stop);
+	return nmsColor.getColorStop(stop);
 }
 
 function dhcpUpdater()
@@ -369,7 +377,7 @@ function dhcpUpdater()
 	var now = nmsData.dhcp.time;
 	try {
 	for (var sw in nmsData.switches.switches) {
-		var c = blue;
+		var c = nmsColor.blue;
 		if (nmsData.dhcp.dhcp[sw] == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
@@ -386,7 +394,7 @@ function dhcpUpdater()
 
 function dhcpInit()
 {
-	drawGradient([green,lightgreen,orange,red]);
+	nmsColor.drawGradient([nmsColor.green, nmsColor.lightgreen, nmsColor.orange, nmsColor.red]);
 	nmsData.addHandler("dhcp","mapHandler",dhcpUpdater);
 	setLegend(1,"white","Undefined");
 	setLegend(2,getDhcpColor(1),"1 Second old");
@@ -408,39 +416,38 @@ function randomizeColors()
 		return;
 	}
 	for (var sw in nmsData.switches.switches) {
-		nmsMap.setSwitchColor(sw, getRandomColor());
+		nmsMap.setSwitchColor(sw, nmsColor.random());
 	}
 }
 
 function discoDo() {
 	randomizeColors();
-	setTimeout(randomizeColors,500);
 }
 function discoInit()
 {
 	nmsData.addHandler("ticker", "mapHandler", discoDo);
 	
 	setNightMode(true);
-	setLegend(1,blue,"Y");	
-	setLegend(2,red, "M");
-	setLegend(3,orange,"C");
-	setLegend(4,green, "A");
+	setLegend(1,nmsColor.blue,"Y");	
+	setLegend(2,nmsColor.red, "M");
+	setLegend(3,nmsColor.orange,"C");
+	setLegend(4,nmsColor.green, "A");
 	setLegend(5,"white","!");
 }
 
 function snmpUpdater() {
 	for (var sw in nmsData.switches.switches) {
 		if (nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
-			nmsMap.setSwitchColor(sw, red);
+			nmsMap.setSwitchColor(sw, nmsColor.red);
 		} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
-			nmsMap.setSwitchColor(sw, orange);
+			nmsMap.setSwitchColor(sw, nmsColor.orange);
 		} else {
-			nmsMap.setSwitchColor(sw, green);
+			nmsMap.setSwitchColor(sw, nmsColor.green);
 		}
 	}
 }
 function snmpInfo(sw) {
-	var ret = new handlerInfo("SNMP data");
+	var ret = new handlerInfo("snmp","SNMP data");
 	ret.why = "No data";
 	if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
 		ret.score = 800;
@@ -461,11 +468,11 @@ function snmpInfo(sw) {
 function snmpInit() {
 	nmsData.addHandler("snmp", "mapHandler", snmpUpdater);
 	
-	setLegend(1,green,"OK");	
-	setLegend(2,orange, "Sysname mismatch");
-	setLegend(3,red,"No SNMP data");
-	setLegend(4,green, "");
-	setLegend(5,green,"");
+	setLegend(1,nmsColor.green,"OK");	
+	setLegend(2,nmsColor.orange, "Sysname mismatch");
+	setLegend(3,nmsColor.red,"No SNMP data");
+	setLegend(4,nmsColor.green, "");
+	setLegend(5,nmsColor.green,"");
 
 }
 
@@ -477,7 +484,7 @@ function cpuUpdater() {
 				var local = nmsData.snmp.snmp[sw].misc['jnxOperatingCPU'][u];
 				cpu = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingCPU[u],cpu);
 			}
-			nmsMap.setSwitchColor(sw, getColorStop(cpu * 10));
+			nmsMap.setSwitchColor(sw, nmsColor.getColorStop(cpu * 10));
 			nmsMap.setSwitchInfo(sw, cpu + " % ");
 		} catch (e) {
 			nmsMap.setSwitchColor(sw, "white");
@@ -488,7 +495,7 @@ function cpuUpdater() {
 
 function cpuInit() {
 	nmsData.addHandler("snmp", "mapHandler", cpuUpdater);
-	drawGradient([green,orange,red]);
+	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
 	setLegend(1,getColorStop(0),"0 %");
 	setLegend(2,getColorStop(250),"25 %");
 	setLegend(3,getColorStop(600),"60 %");
@@ -497,7 +504,7 @@ function cpuInit() {
 }
 
 function comboInfo(sw) {
-	var worst = new handlerInfo();
+	var worst = new handlerInfo("combo");
 	worst.score = -1;
 	for (var h in handlers) {
 		try {
@@ -518,16 +525,17 @@ function comboUpdater() {
 		return;
 	for (var sw in nmsData.switches.switches) {
 		var worst = comboInfo(sw);
-		nmsMap.setSwitchColor(sw, getColorStop(worst.score));
+		nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
+		nmsMap.setSwitchInfo(sw, worst.tag);
 	}
 }
 
 function comboInit() {
 	nmsData.addHandler("ping", "mapHandler", comboUpdater);
-	drawGradient([green,orange,red]);
-	setLegend(1,getColorStop(0),"All good");
-	setLegend(2,getColorStop(250),"Ok-ish");
-	setLegend(3,getColorStop(600),"Ick-ish");
-	setLegend(4,getColorStop(800),"Nasty");
-	setLegend(5,getColorStop(1000),"WTF?");
+	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
+	setLegend(1,nmsColor.getColorStop(0),"All good");
+	setLegend(2,nmsColor.getColorStop(250),"Ok-ish");
+	setLegend(3,nmsColor.getColorStop(600),"Ick-ish");
+	setLegend(4,nmsColor.getColorStop(800),"Nasty");
+	setLegend(5,nmsColor.getColorStop(1000),"WTF?");
 }

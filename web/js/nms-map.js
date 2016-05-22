@@ -273,13 +273,13 @@ nmsMap._drawSwitch = function(sw)
 	var color = nmsMap._color[sw];
 	if(this._highlightActive) {
 		if(nmsMap._highlight[sw]) {
-			color = green;
+			color = nmsColor.green;
 		} else {
-			color = white;
+			color = nmsColor.white;
 		}
 	}
 	if (color == undefined) {
-		color = blue;
+		color = nmsColor.blue;
 	}
 	this._c.switch.ctx.fillStyle = color;
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
@@ -311,7 +311,7 @@ nmsMap._drawText = function(ctx, text, box, align) {
 
 	if ((box['width'] + 10 )< box['height'])
 		rotate = true;
-	
+
 	this._clearBox(ctx,box);
 	ctx.save();
 	ctx.scale(this.scale, this.scale);
@@ -320,7 +320,7 @@ nmsMap._drawText = function(ctx, text, box, align) {
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
 	ctx.translate(box.x + this._settings.textMargin, box.y + box.height - this._settings.textMargin);
-	
+
 	if (rotate) {
 		ctx.translate(box.width - this._settings.textMargin * 2,0);
 		ctx.rotate(Math.PI * 3/2);
@@ -361,8 +361,8 @@ nmsMap._setLinknetColor = function(l, color1, color2)
 
 nmsMap._drawLinknet = function(l) {
 	try {
-		var color1 = blue;
-		var color2 = blue;
+		var color1 = nmsColor.blue;
+		var color2 = nmsColor.blue;
 		try {
 			color1 = nmsMap._linknets[l].sysname1;
 			color2 = nmsMap._linknets[l].sysname2;
@@ -419,9 +419,9 @@ nmsMap._connectSwitches = function(sw1, sw2, color1, color2) {
 nmsMap._connectBoxes = function(box1, box2,color1, color2) {
 	var ctx = nmsMap._c.link.ctx;
 	if (color1 == undefined)
-		color1 = blue;
+		color1 = nmsColor.blue;
 	if (color2 == undefined)
-		color2 = blue;
+		color2 = nmsColor.blue;
 	var x0 = Math.floor(box1.x + box1.width/2);
 	var y0 = Math.floor(box1.y + box1.height/2);
 	var x1 = Math.floor(box2.x + box2.width/2);

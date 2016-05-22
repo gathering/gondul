@@ -1,34 +1,30 @@
-
+"use strict";
 /*
  * Some stolen colors that look OK.
  *
  * PS: Stolen from boostrap, because we use bootstrap and these look good
  * and match.
  */
-var lightblue = "#d9edf7";
-var lightgreen = "#dff0d8";
-var lightred = "#f2dede";
-var lightorange = "#fcf8e3";
-var blue = "#337ab7";
-var green = "#5cb85c";
-var teal = "#5bc0de"; // Or whatever the hell that is
-var orange = "#f0ad4e";
-var red = "#d9534f";
-var white = "#ffffff";
 
-function gradient_from_latency(latency_ms, latency_secondary_ms)
-{
-	if (latency_ms == undefined)
-		return blue;
-	return getColorStop(parseInt(latency_ms));
+var nmsColor = nmsColor || {
+	lightblue: "#d9edf7",
+	lightgreen: "#dff0d8",
+	lightred: "#f2dede",
+	lightorange: "#fcf8e3",
+	blue: "#337ab7",
+	green: "#5cb85c",
+	teal: "#5bc0de",
+	orange: "#f0ad4e",
+	red: "#d9534f",
+	white: "#ffffff"
 }
 
 /*
  * Return a random-ish color (for testing)
  */
-function getRandomColor()
+nmsColor.random = function()
 {
-	var colors = [ "white", red, teal, orange, green, blue ];
+	var colors = [ "white", nmsColor.red, nmsColor.teal, nmsColor.orange, nmsColor.green, nmsColor.blue ];
 	var i = Math.round(Math.random() * (colors.length-1));
 	return colors[i];	
 }
@@ -47,8 +43,7 @@ function getRandomColor()
  * resize for the moment, because this canvas is also re-sized (which isn't
  * really necessary, but avoids special handling).
  */
-function drawGradient(gradients)
-{
+nmsColor.drawGradient = function(gradients) {
 	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
 	var gradient = ctx.createLinearGradient(0,0,1000,0);
 	var stops = gradients.length - 1;
@@ -70,24 +65,24 @@ function drawGradient(gradients)
 /*
  * Get the color of a gradient, range is from 0 to 999 (inclusive).
  */
-function getColorStop(x) {
+nmsColor.getColorStop = function(x) {
 	x = parseInt(x);
 	if (x > 999)
 		x = 999;
 	if (x < 0)
 		x = 0;
-	return getColor(x,0);
+	return nmsColor._getColor(x,0);
 }
 
 /*
  * Get the color on the hidden canvas at a specific point. Could easily be
  * made generic.
  */
-function getColor(x,y) {
+nmsColor._getColor = function(x,y) {
 	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
 	var imageData = ctx.getImageData(x, y, 1, 1);
 	var data = imageData.data;
 	if (data.length < 4)
 		return false;
-    return 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
+	return 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
 }

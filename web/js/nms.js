@@ -49,8 +49,7 @@ var nms = {
 		saveSettings();
 	},
 
-	interval: 0,
-	tvmodeToggle: false,
+	interval: 10,
 	views: "ping",
 	/*
 	 * This is a list of nms[x] variables that we store in our
@@ -59,7 +58,6 @@ var nms = {
 	settingsList:[
 		'nightMode',
 		'menuShowing',
-		'tvmodeToggle',
 		'vertical',
 		'views',
 		'interval'
@@ -564,19 +562,24 @@ function initNMS() {
 }
 
 function detectHandler() {
-	if (nms.tvmodeToggle) {
-		var views = nms.views;
-		var interval = nms.interval;
-
-		views = views.split(",");
-
+	var views = nms.views;
+	var interval = nms.interval;
+	views = views.split(",");
+	
+	if (views.length > 1) {
 		nms.tvmode.start(views,interval);
-		return;
 	} else {
-		for (var i in handlers) {
-			if (('#' + handlers[i].tag) == document.location.hash) {
-				setUpdater(handlers[i]);
-				return;
+		var anchorviews = document.location.hash.slice(1);
+		views = anchorviews.split(",");
+		if (views.length > 1) {
+			nms.tvmode.start(views,interval);
+			return;
+		} else {
+			for (var i in handlers) {
+				if (('#' + handlers[i].tag) == anchorviews) {
+					setUpdater(handlers[i]);
+					return;
+				}
 			}
 		}
 	}

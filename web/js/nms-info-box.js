@@ -821,8 +821,6 @@ nmsInfoBox.addPanelType("switchEdit",switchEditPanel);
  *
  * Displays the current comments and lets you interact with them or add new ones
  *
- * TODO: Test with a dummy-db to make sure everything still works properly
- *
  */
 var switchCommentsPanel = function () {
 	nmsInfoPanel.call(this,"switchComments");
@@ -830,28 +828,24 @@ var switchCommentsPanel = function () {
 	this.refresh = function (reason) {
 		var domObj = document.createElement("div");
 		var comments = [];
-
 		var logs = nmsOplog.getSwitchLogs(this.sw);
-		// We have data
-	var table = document.createElement("table");
-	var tr;
-	var td1;
-	var td2;
-	var td3;
-	table.className = "table";
-	table.classList.add("table");
-	table.classList.add("table-condensed");
-	for (var v in logs) {
-		tr = table.insertRow(-1);
-		tr.className = 
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
-		td1.textContent = logs[v]['timestamp'];
-		td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
-	}
-	domObj.appendChild(table);
-
-
+		var table = document.createElement("table");
+		var tr;
+		var td1;
+		var td2;
+		var td3;
+		table.className = "table";
+		table.classList.add("table");
+		table.classList.add("table-condensed");
+		for (var v in logs) {
+			tr = table.insertRow(-1);
+			tr.className = 
+				td1 = tr.insertCell(0);
+			td2 = tr.insertCell(1);
+			td1.textContent = logs[v]['timestamp'];
+			td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
+		}
+		domObj.appendChild(table);
 		this._render(domObj);
 	};
 };
@@ -874,34 +868,11 @@ var switchSummaryPanel = function() {
 		for ( var h in handlers ) {
 			if (handlers[h].getInfo != undefined) {
 				var tmp = handlers[h].getInfo(this.sw);
-				content.push([tmp.description,tmp.value]);
+				for (var x in tmp.data) {
+					content.push([tmp.data[x].description, tmp.data[x].value]);
+				}
 			}
 		}
-
-		//Get uptime data
-		var uptime = "";
-		try {
-			uptime = nmsData.snmp.snmp[this.sw]["misc"]["sysUpTimeInstance"][""] / 60 / 60 / 100;
-			uptime = Math.floor(uptime) + " t";
-		} catch(e) {}
-
-		//Get management data
-		var mgmtV4 = "";
-		var mgmtV6 = "";
-		var subnetV4 = "";
-		var subnetV6 = "";
-		try {
-			mgmtV4 = nmsData.smanagement.switches[this.sw].mgmt_v4_addr;
-			mgmtV6 = nmsData.smanagement.switches[this.sw].mgmt_v6_addr;
-			subnetV4 = nmsData.smanagement.switches[this.sw].subnet4;
-			subnetV6 = nmsData.smanagement.switches[this.sw].subnet6;
-		} catch(e) {}
-
-		content.push(["System uptime:",uptime]);
-		content.push(["Management (v4):",mgmtV4]);
-		content.push(["Management (v6):",mgmtV6]);
-		content.push(["Subnet (v4):",subnetV4]);
-		content.push(["Subnet (v6):",subnetV6]);
 
 		var contentCleaned = [];
 		for(var i in content) {

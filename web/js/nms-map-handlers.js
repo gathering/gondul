@@ -13,9 +13,6 @@
  *
  */
 
-/*
- */
-
 var handler_uplinks = {
 	init:uplinkInit,
 	tag:"uplink",
@@ -79,21 +76,21 @@ var handler_combo = {
 	name:"Aggregated health"
 };
 
+var handler_mgmt = {
+	getInfo:mgmtInfo,
+	name:"Management info"
+};
+
 var handlerInfo = function(tag,desc) {
 	/*
 	 * Short name, typically matching the url anchor.
 	 */
 	this.tag = tag;
-	/*
-	 * Text-representable value (e.g.: for a table).
-	 * Doesn't have to be a number.
-	 */
-	this.value = undefined;
-	/*
-	 * Describe the info in generic terms.
-	 * Should be the same regardless of result.
-	 */
-	this.description = desc || "Generic info";
+	this.data = [
+		{ 
+			value: undefined,
+			description: desc || "Generic info"
+		}];
 	/*
 	 * 0: all good.
 	 * 1000: messed up.
@@ -110,7 +107,11 @@ var handlerInfo = function(tag,desc) {
 	this.why = "0 score is the default";
 };
 
+/*
+ * Order matches what's seen in the infobox
+ */
 var handlers = [
+	handler_combo,
 	handler_uplinks,
 	handler_temp,
 	handler_ping,
@@ -120,7 +121,7 @@ var handlers = [
 	handler_dhcp,
 	handler_snmp,
 	handler_cpu,
-	handler_combo
+	handler_mgmt
 	];
 
 /*
@@ -328,16 +329,16 @@ function pingInfo(sw)
 	var ret = new handlerInfo("ping","Latency(ms)");
 	ret.why = "Latency";
 	try {
-		ret.value = nmsData.ping.switches[sw].latency;
-		ret.score = parseInt(ret.value) * 10;
+		ret.data[0].value = nmsData.ping.switches[sw].latency;
+		ret.score = parseInt(ret.data[0].value) * 10;
 		if (nmsData.ping.switches[sw].age > 5) {
 			ret.why = "Old ping";
 			ret.score = 900;
 		}
 	} catch(e) {
-		ret.value = "N/A - no ping replies";
+		ret.data[0].value = "N/A - no ping replies";
 		ret.why = "No ping replies";
-		ret.score = 1000;
+		ret.score = 999;
 	}
 	return ret;
 }
@@ -452,16 +453,21 @@ function snmpInfo(sw) {
 	if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
 		ret.score = 800;
 		ret.why = "No data";
-		ret.value = "No data";
+		ret.data[0].value = "No data";
 	} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
 		ret.score = 300;
 		ret.why = "SNMP sysName doesn't match Gondul sysname";
-		ret.value = ret.why;
+		ret.data[0].value = ret.why;
 	} else {
 		ret.score = 0;
-		ret.value = "SNMP freshly updated";
+		ret.data[0].value = "SNMP freshly updated";
 		ret.why = "SNMP all good";
 	}
+	try {
+		var uptime = nmsData.snmp.snmp[this.sw]["misc"]["sysUpTimeInstance"][""] / 60 / 60 / 100;
+		uptime = Math.floor(uptime) + " t";
+		ret.data.push({value: uptime, description: "System uptime"});
+	} catch(e){}
 	return ret;
 }
 
@@ -493,6 +499,39 @@ function cpuUpdater() {
 	}
 }
 
+function mgmtInfo(sw) {
+	var ret = new handlerInfo("mgmt","Management info");
+	try {
+		var mg = nmsData.smanagement.switches[sw];
+		ret.data =
+			[{
+				value: mg.mgmt_v4_addr || "N/A",
+				description: "Management IP (v4)"
+			}, {
+				value: mg.mgmt_v6_addr || "N/A",
+				description: "Management IP (v6)"
+			}, {
+				value: mg.subnet4 || "N/A",
+				description: "Subnet (v4)"
+			}, {
+				value: mg.subnet6 || "N/A",
+				description: "Subnet (v6)"
+			}];
+		if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
+			ret.why = "No IPv4 mamagement IP";
+			ret.score = 1000;
+		}
+	} catch(e) {
+		ret.score = 800;
+		ret.why = "No management info";
+		ret.data = [{}];
+		ret.data[0].value = "N/A";
+		ret.data[0].description = "Management info";
+	};
+	return ret;
+
+}
+
 function cpuInit() {
 	nmsData.addHandler("snmp", "mapHandler", cpuUpdater);
 	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
@@ -514,9 +553,12 @@ function comboInfo(sw) {
 			if (ret.score > worst.score) {
 				worst = ret;
 			}
-		} catch(e) {}
+		} catch(e) { }
 	}
-	worst.description = "Worst: " + worst.description;
+	worst.data = [{
+		description: "Worst: " + worst.data[0].description,
+		value: worst.why
+	}];
 	return worst;
 }
 

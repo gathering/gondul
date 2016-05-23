@@ -29,7 +29,7 @@ var handler_ping = {
 	init:pingInit,
 	getInfo:pingInfo,
 	tag:"ping",
-	name:"IPv4 Ping"
+	name:"Ping"
 };
 
 var handler_traffic = {

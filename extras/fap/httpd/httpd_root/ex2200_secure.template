@@ -1,35 +1,57 @@
 system {
-    host-name <?php echo $c['hostname']; ?>;
+    host-name <?php echo $c['sysname']; ?>;
+    domain-name infra.gathering.org;
     auto-snapshot;
     time-zone Europe/Oslo;
-    authentication-order [ tacplus password ];
+    authentication-order [ tacplus ];
     root-authentication {
-        encrypted-password "<sensored>";
+        encrypted-password "<censored>"; ## SECRET-DATA
     }
     name-server {
-        2a02:ed02:1ee7::66;
-        2a02:ed02:1337::2;
+        185.110.149.2;
+        185.110.148.2;
+        2a06:5841:149a::2;
+        2a06:5841:1337::2;
     }
+    tacplus-server {
+        <censored> {
+            secret "<censored>"; ## SECRET-DATA
+            source-address <?php echo $c['mgmt_v4_addr']; ?>;
+        }
+    } 
     login {
-        user technet {
+        user <censored> {
             uid 2000;
             class super-user;
             authentication {
-                encrypted-password "<sensored>";
+                encrypted-password "<censored>"; ## SECRET-DATA
             }
         }
     }
     services {
-        ssh {
+        ssh {                         
             root-login deny;
+            no-tcp-forwarding;
+            client-alive-count-max 2;
+            client-alive-interval 300;
+            connection-limit 5;
+            rate-limit 5;
         }
         netconf {
-            ssh;
+            ssh {
+                connection-limit 3;
+                rate-limit 3;
+            }
         }
     }
     syslog {
         user * {
             any emergency;
+        }
+        host <censored> {
+            any info;
+            authorization info;
+            port 515;
         }
         file messages {
             any notice;
@@ -39,6 +61,17 @@ system {
             interactive-commands any;
         }
     }
+     
+    /* Save changes to central site */
+    archival {
+        configuration {
+            transfer-on-commit;
+            archive-sites {
+                "scp://<censored>@<censored>/home/<censored>/configs/" password "<censored>"; ## SECRET-DATA
+            }
+        }
+    }
+    commit synchronize;
     ntp {
         server 2001:700:100:2::6;
     }
@@ -100,79 +133,88 @@ interfaces {
                 filter {
                     input v4-mgmt;
                 }
-                address <?php echo $c['mgmt_v4_addr'] . '/' . $c['mgmt_v4_cidr']; ?>;
+                address <?php echo $c['mgmt_v4_addr']; ?>/26;
             }
-            family inet6 {
+            inactive: family inet6 {
                 filter {
                     input v6-mgmt;
                 }
-                address <?php echo $c['mgmt_v6_addr'] . '/' . $c['mgmt_v6_cidr']; ?>;
+                address <?php echo $c['mgmt_v6_addr']; ?>/64;
             }
         }
     }
 }
 
 snmp {
-    community <sensored> {
+    community <censored> {
+        authorization read-only;
         client-list-name mgmt;
+    }
+    community <censored> {
+        authorization read-only;
+        client-list-name mgmt-nms;
     }
 }
 
 policy-options {
-    prefix-list v4-mgmt {
-        /* nLogic jumpstation */
-        <sensored>
-        /* Harald jumpstation */
-        <sensored>
-        /* Tech colo-boks */
-        <sensored>
-        /* NOC clients */
-        151.216.254.0/24;
-        /* Servers */
-        185.12.59.0/26;
+    prefix-list mgmt-v4 {
+        <censored>
     }
-    prefix-list v6-mgmt {
-        /* Harald jumpstation */
-        <sensored>
-        /* nLogic jumpstation */
-        <sensored>
-        /* Tech colo-boks */
-        <sensored>
-        /* NOC clients */
-        2a02:ed02:254::/64;
-        /* Servers */
-        2a02:ed02:1337::/64;
+    prefix-list mgmt-v6 {
+        <censored>
     }
+    /* Merged separate v4- og v6-lister */
     prefix-list mgmt {
-        /* nLogic jumpstation */
-        <sensored>
-        /* Harald jumpstation */
-        <sensored>
-        /* Tech colo-boks */
-        <sensored>
-        /* NOC clients */
-        151.216.254.0/24;
-        /* Servers */
-        185.12.59.0/26;
-        /* Harald jumpstation */
-        <sensored>
-        /* nLogic jumpstation */
-        <sensored>
-        /* Tech colo-boks */
-        <sensored>
-        /* NOC clients */
-        2a02:ed02:254::/64;
-        /* Servers */
-        2a02:ed02:1337::/64;
+        <censored>
+    }
+    /* NMS boxes - separate list to give full speed to SNMP read */
+    prefix-list mgmt-v4-nms {
+        <censored>
+    }
+    /* NMS boxes - separate list to give full speed to SNMP read */
+    prefix-list mgmt-v6-nms {
+        <censored>
+    }
+    /* NMS boxes - separate list to give full speed to SNMP read */
+    prefix-list mgmt-nms {
+        <censored>
     }
 }
+
+ethernet-switching-options {
+    secure-access-port {
+        interface edge-ports {
+            no-dhcp-trusted;
+        }
+        vlan clients {
+            arp-inspection;
+            examine-dhcp;
+            examine-dhcpv6;
+            neighbor-discovery-inspection;
+            ip-source-guard;
+            ipv6-source-guard;
+            dhcp-option82;
+            dhcpv6-option18 {
+                use-option-82;
+            }
+        }
+        ipv6-source-guard-sessions {
+            max-number 128;
+        }
+    }
+    storm-control {
+        interface all;
+    }
+}
+
+
 firewall {
     family inet {
         filter v4-mgmt {
             term accept-ssh {
                 from {
                     source-prefix-list {
-                        v4-mgmt;
+                        mgmt-v4;
                     }
                     destination-port 22;
                 }
@@ -200,7 +242,7 @@ firewall {
             term accept-ssh {
                 from {
                     source-prefix-list {
-                        v6-mgmt;
+                        mgmt-v6;
                     }
                     destination-port 22;
                 }
@@ -232,19 +274,15 @@ protocols {
             ingress 10000;
             egress 10000;
         }
-        collector 91.209.30.12;
         interfaces edge-ports;
         interfaces core-ports;
+        source-ip <?php echo $c['mgmt_v4_addr']; ?>;
+        collector <censored>;
+        collector <censored>;
     }
     igmp-snooping {
         vlan all {
             version 3;
-            immediate-leave;
-        }
-    }
-    mld-snooping {
-        vlan all {
-            version 2;
             immediate-leave;
         }
     }
@@ -256,34 +294,11 @@ protocols {
         }
     }
     lldp {
-        interface ae0.0
+        interface ae0.0;
+        management-address <?php echo $c['mgmt_v4_addr']; ?>;
     }
 }
-ethernet-switching-options {
-    secure-access-port {
-        interface edge-ports {
-            no-dhcp-trusted;
-        }
-        vlan clients {
-            arp-inspection;
-            examine-dhcp;
-            examine-dhcpv6;
-            neighbor-discovery-inspection;
-            ip-source-guard;
-            ipv6-source-guard;
-            dhcp-option82;
-            dhcpv6-option18 {
-                use-option-82;
-            }
-        }
-        ipv6-source-guard-sessions {
-            max-number 128;
-        }
-    }
-    storm-control {
-        interface all;
-    }
-}
+
 vlans {
     clients {
         vlan-id <?php echo $c['traffic_vlan']; ?>;
@@ -302,11 +317,6 @@ routing-options {
             }
         }
     }
-    rib inet6.0 {
-        static {
-            route ::/0 {
-                next-hop <?php echo $c['mgmt_v6_gw']; ?>;
-            }
-        }
-    }
 }
+
+

@@ -236,13 +236,19 @@ def reqparse(message):
         print('[%s]     --> Query details: distro_name:%s, distro_phy_port:%s' % (client, distro, phy.split('.')[0]))
         
         lease_identifiers = {'distro_name': distro, 'distro_phy_port': phy.split('.')[0]}
-        if lease(lease_identifiers).get('hostname') is not False:
+        print('### lease identifiers ###')
+        print(lease_identifiers)
+        if lease(lease_identifiers).get('sysname') is not False:
+
             l={
-                'hostname': lease(lease_identifiers).get('hostname'),
+                'sysname': lease(lease_identifiers).get('sysname'),
                 'mgmt_v4_addr': lease(lease_identifiers).get('mgmt_v4_addr'),
                 'mgmt_v4_gw': lease(lease_identifiers).get('mgmt_v4_gw'),
                 'mgmt_v4_cidr': lease(lease_identifiers).get('mgmt_v4_cidr')
             }
+            
+            print('### variabel l ###')
+            print(l)
         
             # lease_details = lease({'distro_name': distro, 'distro_phy_port': phy[:-2]}).get_dict()
             print('[%s]     --> Data found, switch exists in DB - ready to craft response' % client)
@@ -267,7 +273,9 @@ def reqparse(message):
     print('[%s]     --> Client IP: %s' % (client, l['mgmt_v4_addr']))
     print('[%s]     --> DHCP forwarder IP: %s' % (client, l['mgmt_v4_gw']))
     print('[%s]     --> Client MAC: %s' % (client, client))
-    
+
+    fix_mgmt_v4_addr = l['mgmt_v4_addr'].split('/')[0]
+
     data = b'\x02' # Message type - boot reply
     data += b'\x01' # Hardware type - ethernet
     data += b'\x06' # Hardware address length - 6 octets for MAC
@@ -276,7 +284,7 @@ def reqparse(message):
     data += b'\x00\x00' # seconds elapsed - 1 second
     data += b'\x80\x00' # BOOTP flags - broadcast (unicast: 0x0000)
     data += b'\x00'*4 # Client IP address
-    data += socket.inet_aton(l['mgmt_v4_addr']) # New IP to client
+    data += socket.inet_aton(fix_mgmt_v4_addr) # New IP to client
     data += socket.inet_aton(dhcp_server_address) # Next server IP address
     data += socket.inet_aton(l['mgmt_v4_gw']) # Relay agent IP - DHCP forwarder
     data += binascii.unhexlify(messagesplit[11]) # Client MAC
@@ -302,8 +310,9 @@ def reqparse(message):
     data += craft_option(51).raw_hex(b'\x00\x00\xa8\xc0') # Option 51 - Lease time left padded with "0"
     print('[%s]     --> Option 51  (Lease time): %s' % (client, '43200 (12 hours)'))
     
-    data += craft_option(1).ip(cidr_to_subnet(l['mgmt_v4_cidr'])) # Option 1 - Subnet mask
-    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(l['mgmt_v4_cidr'])))
+    # data += craft_option(1).ip(cidr_to_subnet(l['mgmt_v4_cidr'])) # Option 1 - Subnet mask
+    data += craft_option(1).ip(cidr_to_subnet(26)) # Option 1 - Subnet mask
+    print('[%s]     --> Option 1   (subnet mask): %s' % (client, cidr_to_subnet(26)))
     
     data += craft_option(3).ip(l['mgmt_v4_gw']) # Option 3 - Default gateway (set to DHCP forwarders IP)
     print('[%s]     --> Option 3   (default gateway): %s' % (client, l['mgmt_v4_gw']))
@@ -312,10 +321,10 @@ def reqparse(message):
     print('[%s]     --> Option 150 (Cisco proprietary TFTP server(s)): %s' % (client, dhcp_server_address))
     
     # http://www.juniper.net/documentation/en_US/junos13.2/topics/concept/software-image-and-configuration-automatic-provisioning-understanding.html
-    data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + l['hostname']) + craft_option(3).string('http')) # Option 43 - ZTP
+    data += craft_option(43).bytes(craft_option(0).string(target_junos_file) + craft_option(1).string('/tg-edge/' + l['sysname']) + craft_option(3).string('http')) # Option 43 - ZTP
     print('[%s]     --> Option 43  (Vendor-specific option):' % client)
     print('[%s]         --> Suboption 0: %s' % (client, target_junos_file))
-    print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + l['hostname']))
+    print('[%s]         --> Suboption 1: %s' % (client, '/tg-edge/' + l['sysname']))
     print('[%s]         --> Suboption 3: %s' % (client, 'http'))
 
     data += b'\xff'
@@ -326,7 +335,7 @@ def reqparse(message):
 
 if __name__ == "__main__":
     interface = b'eth0'
-    dhcp_server_address = '185.12.59.11'
+    dhcp_server_address = '185.110.148.22'
     target_junos_file = '/files/jinstall-ex-2200-14.1X53-D15.2-domestic-signed.tgz'
     
     # Setting up the server, and how it will communicate    

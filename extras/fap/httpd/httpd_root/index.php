@@ -1,4 +1,25 @@
 <?php
+    /*
+        sysname = hostname
+        switchtype
+        last_updated
+        subnet4
+        subnet6
+        distro_name
+        distro_phy_port
+        mgmt_v4_addr
+        mgmt_v4_netsize
+        mgmt_v4_gw
+        mgmt_v6_addr
+        mgmt_v6_netsize
+        mgmt_v6_gw
+        mgmt_vlan
+        traffic_vlan
+        last_config_fetch
+        current_mac 
+    */
+    
+    
     if(isset($_GET['mode'])){
         function log_to_file($text){
             $out = date('c') . ' - ' . $_SERVER['REMOTE_ADDR'] . ' - ' . $text . "\n";
@@ -28,12 +49,12 @@
                 }
             }
 
-
             // Performing SQL query
-            $query = 'SELECT * FROM switches WHERE hostname = \'' . $_GET['hostname'] . '\'';
+            $query = 'SELECT sysname, switchtype, distro_name, distro_phy_port, host(mgmt_v4_addr) as mgmt_v4_addr, mgmt_v4_gw, host(mgmt_v6_addr) as mgmt_v6_addr, mgmt_v6_gw, mgmt_vlan, traffic_vlan FROM switches WHERE sysname = \'' . $_GET['hostname'] . '\'';
             $result = pg_query($query) or die('Query failed: ' . pg_last_error());
             if(pg_num_rows($result) == 1){
                 $c = pg_fetch_assoc($result);
+                # var_dump($c);
                 include $template;
                 log_to_file('Served ' . $template . ' to client');
             }else{
@@ -43,6 +64,7 @@
             }
             
         }elseif($_GET['mode'] === 'image'){
+            # var_dump($_GET['file']) && die();
             if(isset($_GET['file']) && is_readable('../files/' . $_GET['file'])){
                 # SEND IMAGE
                 header('Content-Description: File Transfer');

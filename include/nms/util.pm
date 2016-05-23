@@ -49,10 +49,77 @@ sub parse_switches {
 	return @switches;
 }
 
-# Guesses placement from name to get a starting point
-# 
-# FIXME: Move to configuration
+# FIXME: Derive which function from the config/db using the shortname.
+# If we care.
 sub guess_placement {
+	return guess_placement_dx($_[0]);
+}
+# Guesses placement from name to get a starting point
+# Digitality X layout
+# FIXME: Basically a stub, since MRGLASS is too slow with the map.
+sub guess_placement_dx {
+	my ($x, $y, $xx, $yy);
+
+	my $name = $_[0];
+	my $src = "unknown";
+	if ($name =~ /^row\d+-\d+$/) {
+		$name =~ /row(\d+)-(\d+)/;
+		my ($e, $s) = ($1, $2);
+		$src = "main";
+
+		$x = int(1400 - (($e-1)/2) * 60);
+		$y = undef;
+
+		if ($s > 1) {
+			$y = 100;
+		} else {
+			$y = 500;
+		}
+
+		$xx = $x + 32;
+		$yy = $y + 300;
+
+	} elsif ($name =~ /^core$/) {
+		$src = "core";
+		$x = 800;
+		$y = 850;
+		$xx = $x + 200;
+		$yy = $y + 100;
+	} elsif ($name =~ /^noc$/) {
+		$src = "noc";
+		$x = 400;
+		$y = 900;
+		$xx = $x + 230;
+		$yy = $y + 40;
+	} elsif ($name =~ /^distro(\d)$/) {
+		my $d = ($1);
+		$src = "distro";
+		$x = 1200 - $d * 900;
+		$y = 415;
+		$xx = $x + 230;
+		$yy = $y + 40;
+	} else {
+		# Fallback to have _some_ position
+		$src = "random";
+		$x = int(rand(1900));
+		$y = int(rand(900));
+		$xx = $x + 20;
+		$yy = $y + 130;
+	};
+
+
+	my %box = (
+		'src' => "$src",
+		'x1' => $x,
+		'y1' => $y,
+		'xx' => $xx,
+		'yy' => $yy
+	);
+	return %box;
+}
+
+# Last updated for TG16
+sub guess_placement_tg {
 	my ($x, $y, $xx, $yy);
 
 	my $name = $_[0];

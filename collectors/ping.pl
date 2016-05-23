@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 use DBI;
 use POSIX;
-use Time::HiRes;
+use Time::HiRes qw(sleep time);
 use Net::Oping;
 use strict;
 use warnings;
@@ -15,11 +15,15 @@ my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random()");
-my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null");
+my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random();");
+my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
+my $last = time();
+my $target = 1.0;
 while (1) {
-	sleep(0.5);
+	my $now = time();
+	sleep($target - ($now - $last));
+	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;
 	$ping->timeout(0.2);
@@ -58,7 +62,9 @@ while (1) {
 	my $drops = 0;
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
-		next if (!defined($switch));
+		if (!defined($switch)) {
+			next;
+		}
 
 		if (!defined($latency)) {
 			$drops += $dropped{$ip};

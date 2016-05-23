@@ -21,7 +21,8 @@ nmsSearch.helpText =  [
  */
 nmsSearch.searchTest = function(id, sw) {
 	try {
-		if(sw.toLowerCase().indexOf(id.toLowerCase()) > -1) {
+		var re = new RegExp(id,"i");
+		if(re.test(sw)) {
 			return true;
 		}
 		if (id[0] == "\"") {

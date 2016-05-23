@@ -19,10 +19,13 @@ my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr)
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();
-my $target = 1.0;
+my $target = 0.2;
 while (1) {
 	my $now = time();
-	sleep($target - ($now - $last));
+	my $elapsed = ($now - $last);
+	if ($elapsed < $target) {
+		sleep($target - ($now - $last));
+	}
 	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;

@@ -14,11 +14,10 @@ tr.mgmt_v4_addr {
 h1.map-mode-title {
 	font-weight: 700;
 	font-size: 55px;
-	color: black;
 	display: block;
 	position: absolute;
 	z-index: 55;
-	text-shadow: 4px 4px 5px white;
+	text-shadow: -4px -4px 5px white,-4px 0px 5px white,0px -4px 5px white,0px 0px 5px white,4px 4px 5px white,4px 0px 5px white,0px 4px 5px white;
 }
 .gondul-public .gondul-is-private {
 	display: none;
@@ -30,20 +29,17 @@ h1.map-mode-title {
 	transform-origin: 0px 0% 0px;
 	transform: rotate(-90deg);
 }
+.nightmode { color: #ddd; }
 .nightmode h1.map-mode-title {
-	color: white;
-	text-shadow: 4px 4px 5px black;
+	text-shadow: -4px -4px 5px black,-4px 0px 5px black,0px -4px 5px black,0px 0px 5px black,4px 4px 5px black,4px 0px 5px black,0px 4px 5px black;
 }
 .logbook  {
-	background-color: rgba(255,255,255,0.7);
-	color: black;
+	background-color: rgba(255,255,255,0.1);
+	text-shadow: -4px -4px 5px white,-4px 0px 5px white,0px -4px 5px white,0px 0px 5px white,4px 4px 5px white,4px 0px 5px white,0px 4px 5px white;
 }
 .nightmode .logbook  {
-	background-color: rgba(0,0,0,0.7);
-	color: white;
-}
-.tvmode #topCanvas {
-	display: none;
+	background-color: rgba(0,0,0,0.1);
+	text-shadow: -4px -4px 5px black,-4px 0px 5px black,0px -4px 5px black,0px 0px 5px black,4px 4px 5px black,4px 0px 5px black,0px 4px 5px black;
 }
 div.map-mode-legend {
 	position: fixed;
@@ -68,4 +64,17 @@ div.map-mode-legend {
 div.map-mode-legend button {
 	font-size: 20px;
 	font-weight: 700;
+}
+.nightmode .panel {
+	background: #222;
+	border-color: #555;
+}
+
+.nightmode .panel .panel-heading {
+	background: #333;
+	border-color: #555;
+	color: #ddd;
+}
+.nightmode .table > tbody > tr > td {
+	border-top: 1px solid #555;
 }

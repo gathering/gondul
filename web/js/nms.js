@@ -38,6 +38,10 @@ var nms = {
 	},
 	
 	menuShowing:true,
+	_startTime:0,
+	get uptime() {
+		return (Date.now() - this._startTime)/1000;
+	},
 	_vertical: 0,
 	get vertical() { return this._vertical },
 	set vertical(v) {
@@ -525,6 +529,7 @@ function getInitialConfig() {
  */
 function initNMS() {
 	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
+	nms._startTime = Date.now();
 	
 	// Public
 	nmsData.registerSource("config","/api/public/config");

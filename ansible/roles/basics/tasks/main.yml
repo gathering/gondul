@@ -44,15 +44,18 @@
   register: ip
   tags:
   - start
+  - test
 - name: workaround to get gondul-front-ip
   shell: "docker inspect gondul-front-test | grep IPAddress | sed 's/[^0-9.]//g' | grep 172.17 | uniq"
   register: ipfront
   tags:
   - start
+  - test
 
 - name: Display IP
   tags:
   - start
+  - test
   debug:
     msg: "Varnish test is available at http://{{ ip.stdout }}/ uncached ip: http://{{ ipfront.stdout }}/ "
 

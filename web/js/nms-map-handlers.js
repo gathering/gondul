@@ -356,7 +356,6 @@ function pingInfo(sw)
 			ret.score = 900;
 		}
 	} catch(e) {
-		console.log(e);
 		ret.data[0].value = "N/A - no ping replies";
 		ret.why = "No ping replies";
 		ret.score = 999;

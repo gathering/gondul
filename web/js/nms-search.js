@@ -8,6 +8,7 @@ var nmsSearch = nmsSearch || {
 nmsSearch.helpText =  [
 	"The search box can be used to identify switches in several ways. The simplest is by name.",
 	"Searching by name can be done by just entering text, or if you want to match \"foobar1\" but not \"foobar15\" you can enclose the name in quotation marks. E.g.: foobar1 matches foobar1 and foobar1123123123, while \"foobar1\" only matches exactly foobar1.",
+	"All text-oriented searches are regular expressions. ^row\\d-2$ matches row1-2, row2-2, etc, but not row13-2 or rowx-2.",
 	"If you are using the non-public version of Gondul, you can also perform smart searches.",
 	"Distro search: Type the name of a distro-switch and all access switches registered to that distro switch will also be hilighted.",
 	'Active ports: Type "active>x", "active<x" or "active=x" to identify switch with "x" amount of active gigabit ethernet (ge) ports. E.g.: "active>30".',
@@ -21,7 +22,8 @@ nmsSearch.helpText =  [
  */
 nmsSearch.searchTest = function(id, sw) {
 	try {
-		if(sw.toLowerCase().indexOf(id.toLowerCase()) > -1) {
+		var re = new RegExp(id,"i");
+		if(re.test(sw)) {
 			return true;
 		}
 		if (id[0] == "\"") {
@@ -63,22 +65,22 @@ nmsSearch.searchTest = function(id, sw) {
 		}
 		} catch (e) {}
 		try {
-			if (nmsData.smanagement.switches[sw].mgmt_v4_addr.match(id)) {
+			if (re.test(nmsData.smanagement.switches[sw].mgmt_v4_addr)) {
 				return true;
 			}
-			if (nmsData.smanagement.switches[sw].mgmt_v6_addr.match(id)) {
+			if (re.test(nmsData.smanagement.switches[sw].mgmt_v6_addr)) {
 				return true;
 			}
 		} catch (e) {}
 		try {
-			if (nmsData.smanagement.switches[sw].subnet4.match(id)) {
+			if (re.test(nmsData.smanagement.switches[sw].subnet4)) {
 				return true;
 			}
-			if (nmsData.smanagement.switches[sw].subnet6.match(id)) {
+			if (re.test(nmsData.smanagement.switches[sw].subnet6)) {
 				return true;
 			}
 		} catch (e) {}
-		if (nmsData.snmp.snmp[sw].misc.sysDescr[0].toLowerCase().match(id)) {
+		if (re.test(nmsData.snmp.snmp[sw].misc.sysDescr[0])) {
 			return true;
 		}
 	} catch (e) {

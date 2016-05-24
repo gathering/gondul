@@ -31,7 +31,10 @@ Example: <a href="dhcpd/terminal.log">dhcpd/terminal.log</a>
 
 # TODO
 * DONE: Support for IPv6 management
-* Process multiple HTTP request simultaneously
+* Process multiple HTTP request simultaneously with python, so we can migrate everything over to python (no more PHP).
 * Support for only pushing JunOS image to switch - no config (for backup switches)
 * Try/catch on whole ethernet frame in DHCPD
 * Timestamps on each line in log both from DHCPD and HTTPD
+
+# Changes in regard of TG16
+Migrated from a standalone DB to the NMS ("Gondul") DB. Since time was limited, a lot of ugly haxxes were put in place to get it to work. The neccessary job of cleaning it up has not been done yet. 

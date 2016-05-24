@@ -14,8 +14,7 @@ j@lappie:~/git/tgmanage$ cat /etc/apache2/sites-enabled/000-default.conf
         <Directory /home/j/git/tgmanage/fap/httpd/httpd_root>
                 Options Indexes FollowSymLinks MultiViews
                 AllowOverride All
-                Order allow,deny
-                allow from all
+                Require all granted
         </Directory>
 
 	ErrorLog ${APACHE_LOG_DIR}/error.log

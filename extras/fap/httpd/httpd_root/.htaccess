@@ -1,3 +1,3 @@
 RewriteEngine on
-RewriteRule ^files/(.+)$ x.php?mode=image&file=$1 [L]
-RewriteRule ^tg-edge/(.+)$ x.php?mode=config&hostname=$1 [L]
+RewriteRule ^files/(.+)$ index.php?mode=image&file=$1 [L]
+RewriteRule ^tg-edge/(.+)$ index.php?mode=config&hostname=$1 [L]

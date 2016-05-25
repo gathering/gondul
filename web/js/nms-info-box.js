@@ -766,7 +766,7 @@ var switchEditPanel = function () {
 			var tmpsw = '\'' + this.sw + '\'';
 			var tmpv = '\'' + v + '\'';
 			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
-			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + '>';
+			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' ? "readonly" : "") + '>';
 			content.push([v, html]);
 		}
 
@@ -786,6 +786,7 @@ var switchEditPanel = function () {
 		output.id = "edit-output";
 		domObj.appendChild(output);
 
+		this._render(domObj);
 		if (place) {
 			var pval = document.getElementById("edit-" + this.sw + "-placement");
 			if (pval) {
@@ -793,7 +794,6 @@ var switchEditPanel = function () {
 			}
 		}
 
-		this._render(domObj);
 	};
 	this.save = function () {
 		var myData = nmsInfoBox._editStringify(this.sw);

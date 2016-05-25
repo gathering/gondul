@@ -511,6 +511,10 @@ function setNightMode(toggle) {
  *
  * If you add a configuration setting, use nmsData['config'] as much as
  * possible. Avoid adding to this function.
+ *
+ * FIXME: If anyone has a way to remove the deprecation warnings, either by
+ * just silencing them or by moving this off the main thread, then go
+ * ahead and fix it. I don't consider it a real problem, though.
  */
 function getInitialConfig() {
 	$.ajax({
@@ -523,7 +527,6 @@ function getInitialConfig() {
 				nms._public = true;
 				document.body.classList.add("gondul-public");
 			} else {
-				console.log("Private");
 				nms._public = false;
 				document.body.classList.add("gondul-private");
 			}

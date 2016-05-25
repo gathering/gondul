@@ -65,7 +65,7 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 		td1.textContent = nmsData['oplog']['oplog'][v][timefield];
 		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
 		td2.hiddenthing = v;
-		td2.onclick = function(e){ console.log(e); var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; console.log("KEK" + v);  x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
+		td2.onclick = function(e){ var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
 		if (++i == limit)
 			break;
 	}

@@ -54,7 +54,6 @@ var nms = {
 	},
 
 	interval: 10,
-	views: "ping",
 	/*
 	 * This is a list of nms[x] variables that we store in our
 	 * settings-cookie when altered and restore on load.
@@ -63,7 +62,6 @@ var nms = {
 		'nightMode',
 		'menuShowing',
 		'vertical',
-		'views',
 		'interval'
 	],
 	keyBindings:{
@@ -397,21 +395,32 @@ nms.tvmode.tick = function() {
 	if(nms.tvmode.currentIndex > nms.tvmode.handlers.length - 1) {
 		nms.tvmode.currentIndex = 0;
 	}
-	setUpdater(nms.tvmode.handlers[nms.tvmode.currentIndex]);
+	setUpdater(nms.tvmode.handlers[nms.tvmode.currentIndex],false);
 	nms.tvmode.currentIndex++;
 }
 nms.tvmode.stop = function() {
 	nms.timers.tvmode.stop();
-	document.body.classList.remove("tvmode");
-	document.body.classList.remove("vertical");
 	nms.tvmode.active = false;
 }
 
+function ensureAnchorHas(view) {
+	try  {
+		var views = document.location.hash.slice(1);
+		views = views.split(",");
+		if (views.includes(view)) {
+			return true;
+		}
+	} catch(e) { }
+	document.location.hash = view;
+	return false;
+}
 /*
  * Change map handler (e.g., change from uplink map to ping map)
  */
-function setUpdater(fo)
+function setUpdater(fo, stopTv = true)
 {
+	if (stopTv)
+		nms.tvmode.stop();
 	nmsMap.reset();
 	nmsData.unregisterHandlerWildcard("mapHandler");
 	try {
@@ -427,7 +436,7 @@ function setUpdater(fo)
 	}
 	var foo = document.getElementById("map-mode-title");
 	foo.innerHTML = fo.name;
-	document.location.hash = fo.tag;
+	ensureAnchorHas(fo.tag);
 }
 
 function toggleLayer(layer) {
@@ -567,24 +576,20 @@ function initNMS() {
 }
 
 function detectHandler() {
-	var views = nms.views;
+	var views = document.location.hash.slice(1);
 	var interval = nms.interval;
+	if (views == undefined || views == "")
+		views = "ping";
 	views = views.split(",");
 	
 	if (views.length > 1) {
 		nms.tvmode.start(views,interval);
+		return;
 	} else {
-		var anchorviews = document.location.hash.slice(1);
-		views = anchorviews.split(",");
-		if (views.length > 1) {
-			nms.tvmode.start(views,interval);
-			return;
-		} else {
-			for (var i in handlers) {
-				if (('#' + handlers[i].tag) == anchorviews) {
-					setUpdater(handlers[i]);
-					return;
-				}
+		for (var i in handlers) {
+			if (handlers[i].tag == views[0]) {
+				setUpdater(handlers[i]);
+				return;
 			}
 		}
 	}

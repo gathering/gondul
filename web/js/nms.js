@@ -399,8 +399,10 @@ nms.tvmode.tick = function() {
 	nms.tvmode.currentIndex++;
 }
 nms.tvmode.stop = function() {
-	nms.timers.tvmode.stop();
-	nms.tvmode.active = false;
+	if (nms.tvmode.active) {
+		nms.timers.tvmode.stop();
+		nms.tvmode.active = false;
+	}
 }
 
 function ensureAnchorHas(view) {

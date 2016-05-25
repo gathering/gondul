@@ -37,6 +37,8 @@ nmsOplog.updateComments = function() {
 
 nmsOplog.getSwitchLogs = function(sw) {
 	var logs = [];
+	if (nmsData.oplog == undefined || nmsData['oplog']['oplog'] == undefined)
+		return [];
 	for (var v in nmsData['oplog']['oplog']) {
 		var log = nmsData['oplog']['oplog'][v];
 		if (nmsSearch.searchTest(log['systems'],sw)) {

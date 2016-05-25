@@ -34,7 +34,7 @@ nmsSearch.searchTest = function(id, sw) {
 			}
 		}
 		try {
-			if (nmsData.switches.switches[sw].distro_name.toLowerCase() == id) {
+			if (re.test(nmsData.switches.switches[sw].distro_name)) {
 				return true;
 			}
 		} catch (e) {}
@@ -90,8 +90,8 @@ nmsSearch.searchTest = function(id, sw) {
 };
 
 nmsSearch.reset = function() {
-	var el = document.getElementById("searchbox");
-	el.value = "";
+	document.getElementById("searchbox").dataset.match = '';
+	document.getElementById("searchbox").value = '';
 	nmsSearch.search();
 }
 
@@ -147,10 +147,7 @@ nmsSearch._searchKeyListener = function(e) {
 			}
 			break;
 		case 27:
-			document.getElementById("searchbox").dataset.match = '';
-			document.getElementById("searchbox").value = '';
-			nmsInfoBox._search();
-			nmsInfoBox.hide();
+			nmsSearch.reset();
 			break;
 	}
 }

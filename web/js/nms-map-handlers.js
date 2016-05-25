@@ -113,6 +113,7 @@ var handlerInfo = function(tag,desc) {
  */
 var handlers = [
 	handler_combo,
+	handler_mgmt,
 	handler_uplinks,
 	handler_temp,
 	handler_ping,
@@ -121,8 +122,7 @@ var handlers = [
 	handler_traffic_tot,
 	handler_dhcp,
 	handler_snmp,
-	handler_cpu,
-	handler_mgmt
+	handler_cpu
 	];
 
 /*

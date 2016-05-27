@@ -596,14 +596,14 @@ function comboInfo(sw) {
 	var worst = new handlerInfo("combo", "Combo");
 	worst.score = -1;
 	for (var h in handlers) {
-		try {
-			if (handlers[h].tag== "combo")
-				continue;
-			var ret = handlers[h].getInfo(sw);
-			if (ret.score > worst.score) {
-				worst = ret;
-			}
-		} catch(e) { }
+		if (handlers[h].tag== "combo")
+			continue;
+		if (handlers[h].getInfo == undefined)
+			continue;
+		var ret = handlers[h].getInfo(sw);
+		if (ret.score > worst.score) {
+			worst = ret;
+		}
 	}
 	worst.data = [{
 		description: "Worst: " + worst.description,

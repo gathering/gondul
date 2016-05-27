@@ -7,6 +7,7 @@
  */
 
 var nmsColor = nmsColor || {
+	_cache: [],
 	lightblue: "#d9edf7",
 	lightgreen: "#dff0d8",
 	lightred: "#f2dede",
@@ -47,6 +48,7 @@ nmsColor.drawGradient = function(gradients) {
 	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
 	var gradient = ctx.createLinearGradient(0,0,1000,0);
 	var stops = gradients.length - 1;
+	nmsColor._cache = [];
 	nms.gradients = gradients;
 	for (var color in gradients) {
 		var i = color / stops;
@@ -79,10 +81,13 @@ nmsColor.getColorStop = function(x) {
  * made generic.
  */
 nmsColor._getColor = function(x,y) {
+	if (nmsColor._cache[x] != undefined)
+		return nmsColor._cache[x];
 	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
 	var imageData = ctx.getImageData(x, y, 1, 1);
 	var data = imageData.data;
 	if (data.length < 4)
 		return false;
-	return 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
+	nmsColor._cache[x] = 'rgb(' + data[0] + ',' + data[1] + ',' + data[2] + ')';
+	return nmsColor._cache[x];
 }

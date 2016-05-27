@@ -312,15 +312,11 @@ function pingUpdater()
 		return;
 	}
 	for (var sw in nmsData.switches.switches) {
-		try {
-			var c = nmsColor.getColorStop(pingInfo(sw).score);
-			if (c == 1000) {
-				nmsMap.setSwitchColor(sw, nmsColor.blue);
-			} else {
-				nmsMap.setSwitchColor(sw, c);
-			}
-		} catch (e) {
+		var c = nmsColor.getColorStop(pingInfo(sw).score);
+		if (c == 1000) {
 			nmsMap.setSwitchColor(sw, nmsColor.blue);
+		} else {
+			nmsMap.setSwitchColor(sw, c);
 		}
 	}
 }
@@ -329,7 +325,7 @@ function pingInfo(sw)
 {
 	var ret = new handlerInfo("ping","Latency(ms)");
 	ret.why = "Latency";
-	try {
+	if (testTree(nmsData,['ping','switches',sw])) {
 		var v4 = nmsData.ping.switches[sw].latency4;
 		var v6 = nmsData.ping.switches[sw].latency6;
 		if (v4 == undefined)
@@ -362,7 +358,7 @@ function pingInfo(sw)
 			ret.why = "Old ping";
 			ret.score = 900;
 		}
-	} catch(e) {
+	} else {
 		ret.data[0].value = "N/A - no ping replies";
 		ret.why = "No ping replies";
 		ret.score = 999;
@@ -396,27 +392,20 @@ function getDhcpColor(stop)
 
 function dhcpUpdater()
 {
-	if (nmsData.dhcp == undefined || nmsData.dhcp.dhcp == undefined) {
+	if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches'])) {
 		return
 	}
-	if (nmsData.switches == undefined || nmsData.switches.switches == undefined) {
-		return;
-	}
 	var now = nmsData.dhcp.time;
-	try {
 	for (var sw in nmsData.switches.switches) {
 		var c = nmsColor.blue;
-		if (nmsData.dhcp.dhcp[sw] == undefined) {
+		var s = nmsData.dhcp.dhcp[sw];
+		if (s == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
 		}
-		var s = nmsData.dhcp.dhcp[sw];
 		var then = parseInt(s);
 		c = getDhcpColor(now - then);
 		nmsMap.setSwitchColor(sw, c);
-	}
-	} catch(e) {
-		console.log(e);
 	}
 }
 
@@ -489,10 +478,11 @@ function secondsToTime(input) {
 		string += s + " seconds";
 	return string;
 }
+
 function snmpInfo(sw) {
 	var ret = new handlerInfo("snmp","SNMP data");
 	ret.why = "No data";
-	if (nmsData.snmp == undefined || nmsData.snmp.snmp == undefined || nmsData.snmp.snmp[sw] == undefined || nmsData.snmp.snmp[sw].misc == undefined) {
+	if (!testTree(nmsData,['snmp','snmp',sw,'misc'])) {
 		ret.score = 800;
 		ret.why = "No data";
 		ret.data[0].value = "No data";
@@ -505,7 +495,7 @@ function snmpInfo(sw) {
 		ret.data[0].value = "SNMP freshly updated";
 		ret.why = "SNMP all good";
 	}
-	try {
+	if (testTree(nmsData,['snmp','snmp',sw,'misc','sysUpTimeInstance',''])) {
 		var uptime = parseInt(nmsData.snmp.snmp[sw]["misc"]["sysUpTimeInstance"][""]) / 100;
 		var upstring = secondsToTime(uptime);
 		ret.data.push({value: upstring, description: "System uptime"});
@@ -517,7 +507,7 @@ function snmpInfo(sw) {
 			ret.score = 250;
 			ret.why = "System rebooted last 15 minutes";
 		}
-	} catch(e){ }
+	}
 	return ret;
 }
 
@@ -551,7 +541,7 @@ function cpuUpdater() {
 
 function mgmtInfo(sw) {
 	var ret = new handlerInfo("mgmt","Management info");
-	try {
+	if (testTree(nmsData,['smanagement','switches',sw])) {
 		var mg = nmsData.smanagement.switches[sw];
 		ret.data =
 			[{
@@ -571,7 +561,7 @@ function mgmtInfo(sw) {
 			ret.why = "No IPv4 or IPv6 mamagement IP";
 			ret.score = 1000;
 		}
-	} catch(e) {
+	} else {
 		ret.score = 800;
 		ret.why = "No management info";
 		ret.data = [{}];

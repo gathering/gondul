@@ -813,3 +813,24 @@ function startNowPicker(now) {
 		}
 	});
 }
+
+/*
+ * Test if the entire path specified in the arrary "ar" exists under the
+ * specified root.
+ *
+ * E.g.:
+ * if (!testTree(nmsData,['snmp','snmp',sw,'misc'])) {
+ * 	do stuff with nmsData.snmp.snmp[sw].misc
+ * }
+ *
+ */
+function testTree(root, ar) {
+	if (ar == undefined || root == undefined)
+		return false;
+	for (var i in ar) {
+		root = root[ar[i]];
+		if (root == undefined)
+			return false;
+	}
+	return true;
+}

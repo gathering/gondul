@@ -332,12 +332,16 @@ function pingInfo(sw)
 	try {
 		var v4 = nmsData.ping.switches[sw].latency4;
 		var v6 = nmsData.ping.switches[sw].latency6;
+		if (v4 == undefined)
+			v4 = undefined;
+		if (v6 == undefined)
+			v6 = undefined;
 		ret.data[0].value = v4;
 		ret.data[0].description = "IPv4 latency(ms)";
 		ret.data[1] = {};
 		ret.data[1].value = v6;
 		ret.data[1].description = "IPv6 latency(ms)";
-		if (v4 == v6 == undefined) {
+		if (v4 == undefined && v6 == undefined) {
 			ret.score = 1000;
 			ret.why = "No IPv4 or IPv6 ping reply";
 		} else if(v6 == undefined) {
@@ -346,10 +350,13 @@ function pingInfo(sw)
 		} else if (v4 == undefined) {
 			ret.score = 199;
 			ret.why = "No IPv4 ping reply";
-		} else {
-			v4 = parseInt(v4);
-			v6 = parseInt(v6);
-			ret.score = (v4 > v6 ? v4 : v6) * 10;
+		}
+
+		v4 = parseFloat(v4) * 10;
+		v6 = parseFloat(v6) * 10;
+		if (v4 > ret.score || v6 > ret.score) {
+			ret.why = "Latency";
+			ret.score = parseInt(v4 > v6 ? v4 : v6);
 		}
 		if (nmsData.ping.switches[sw].age4 > 5 || nmsData.ping.switches[sw].age6 > 5) {
 			ret.why = "Old ping";

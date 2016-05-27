@@ -110,10 +110,12 @@ sub callback{
 	my %ttop;
 	my %nics;
 	my @nicids;
+	my $total = 0;
 
 	for my $ret (@top) {
 		for my $var (@{$ret}) {
 			for my $inner (@{$var}) {
+				$total++;
 				my ($tag,$type,$name,$iid, $val) = ( $inner->tag ,$inner->type , $inner->name, $inner->iid, $inner->val);
 				if ($tag eq "ifPhysAddress") {
 					next;
@@ -136,11 +138,17 @@ sub callback{
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
 		}
 	}
-	$sth->execute($switch{'sysname'}, JSON::XS::encode_json(\%tree2));
+	if ($total > 0) {
+		$sth->execute($switch{'sysname'}, JSON::XS::encode_json(\%tree2));
+	}
 	$qunlock->execute($switch{'id'})
 		or die "Couldn't unlock switch";
 	$dbh->commit;
-	mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+	if ($total > 0) {
+		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+	} else {
+		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s - no data. Timeout?");
+	}
 }
 while (1) {
 	inner_loop();

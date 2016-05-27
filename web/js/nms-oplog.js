@@ -8,11 +8,38 @@ nmsOplog.init = function() {
 	nmsData.addHandler("oplog", "nmsOplogHandler", nmsOplog.updateComments);
 }
 
+nmsOplog._reset = function() {
+	document.getElementById('logbox-id').value = "";
+	document.getElementById('logbox').value = "";
+	document.getElementById('searchbox').value = "";
+	document.getElementById('searchbox').oninput();
+}
+
+nmsOplog.getUser = function(force = false) {
+	var user = nms.user;
+	if (user == undefined || force) {
+		user = prompt("Who are you? Short nick for the record.");
+		if (user == null || user == undefined || user == "") {
+			console.log("empty prompt");
+			alert("No cake for you.");
+			return false;
+		}
+		nms.user = user;
+		saveSettings();
+	}
+	return nms.user;
+}
+
 nmsOplog.commit = function() {
 	var s = document.getElementById('logbox-id').value;
 	var d = document.getElementById('logbox').value;
+	var user = nmsOplog.getUser();
+	if (user == undefined) {
+		nmsOplog._reset();
+		return;
+	}
 
-	var myData = {"systems": s, "log": d};
+	var myData = {"user": user, "systems": s, "log": d};
 	myData = JSON.stringify(myData);
 	$.ajax({
 		type: "POST",
@@ -23,11 +50,7 @@ nmsOplog.commit = function() {
 			nmsData.invalidate("oplog");
 		}
 	});
-	document.getElementById('logbox-id').value = "";
-	document.getElementById('logbox').value = "";
-	document.getElementById('searchbox').value = "";
-	document.getElementById('searchbox').oninput();
-
+	nmsOplog._reset();
 }
 
 nmsOplog.updateComments = function() {

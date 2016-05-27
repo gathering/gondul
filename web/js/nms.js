@@ -54,6 +54,13 @@ var nms = {
 	},
 
 	interval: 10,
+	_user: undefined,
+	get user() { return this._user; },
+	set user(u) {
+		this._user = u;
+		document.getElementById('logbook-name').textContent = u;
+		saveSettings();
+	},
 	/*
 	 * This is a list of nms[x] variables that we store in our
 	 * settings-cookie when altered and restore on load.
@@ -62,7 +69,8 @@ var nms = {
 		'nightMode',
 		'menuShowing',
 		'vertical',
-		'interval'
+		'interval',
+		'user'
 	],
 	keyBindings:{
 		'-':toggleMenu,

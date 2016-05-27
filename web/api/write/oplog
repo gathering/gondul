@@ -9,7 +9,7 @@ use warnings;
 my $in = get_input();
 my %tmp = %{JSON::XS::decode_json($in)};
 
-my $user = $ENV{'REMOTE_USER'} || "undefined";
+my $user = $tmp{'user'} || $ENV{'REMOTE_USER'} || "undefined";
 
 my $q = $nms::web::dbh->prepare("INSERT INTO oplog (username, systems, log) values (?,?,?);");
 $q->execute($user, $tmp{'systems'}, $tmp{'log'});

@@ -7,7 +7,7 @@ use POSIX;
 use SNMP;
 use Data::Dumper;
 use lib '/opt/gondul/include';
-use nms;
+use nms qw(convert_mac);
 
 SNMP::initMib();
 SNMP::addMibDirs("/opt/gondul/mibs/StandardMibs");
@@ -68,7 +68,6 @@ sub populate_switches
 		if (!defined($ip) or $ip eq "") {
 			$ip = 'udp6:[' . $ref->{'ip2'} . ']';
 		}
-		print "Ip: $ip\n";
 		push @switches, {
 			'sysname' => $ref->{'sysname'},
 			'id' => $ref->{'switch'},
@@ -118,7 +117,7 @@ sub callback{
 				$total++;
 				my ($tag,$type,$name,$iid, $val) = ( $inner->tag ,$inner->type , $inner->name, $inner->iid, $inner->val);
 				if ($tag eq "ifPhysAddress") {
-					next;
+					$val = convert_mac($val);
 				}
 				$tree{$iid}{$tag} = $val;
 				if ($tag eq "ifIndex") {

@@ -25,6 +25,7 @@ our @snmp_objects = [
 	['ifOperStatus'],
 	['ifAdminStatus'],
 	['ifLastChange'],
+	['ifPhysAddress'],
 	['ifHCInOctets'],
 	['ifHCOutOctets'],
 	['ifInDiscards'],

@@ -8,7 +8,7 @@ use JSON;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(db_connect);
+our @EXPORT = qw(db_connect convert_mac);
 
 BEGIN {
 	require "config.pm";

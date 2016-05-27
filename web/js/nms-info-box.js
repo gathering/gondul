@@ -40,12 +40,8 @@ var nmsInfoBox = nmsInfoBox || {
 		'title': 'Switch info',
 		'views': {
 			'initial': {
-				'name': 'Switch summary',
+				'name': 'Summary',
 				'panels': ['switchSummary','switchComments']
-			},
-			'details': {
-				'name': 'Switch details',
-				'panels': ['switchDetails']
 			},
 			'ports': {
 				'name': 'SNMP - Ports',
@@ -55,9 +51,9 @@ var nmsInfoBox = nmsInfoBox || {
 				'name': 'SNMP - Misc',
 				'panels': ['switchSNMP:misc']
 			},
-			'comments': {
-				'name': 'Comments',
-				'panels': ['switchComments']
+			'details': {
+				'name': 'Settings',
+				'panels': ['switchDetails']
 			},
 			'edit': {
 				'name': 'Edit',

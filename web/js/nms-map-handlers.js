@@ -490,6 +490,7 @@ function snmpInfo(sw) {
 		ret.score = 200;
 		ret.why = "SNMP sysName doesn't match Gondul sysname";
 		ret.data[0].value = ret.why;
+		ret.data[1] = { description: "SNMP sysName", value: nmsData.snmp.snmp[sw].misc.sysName[0] };
 	} else {
 		ret.score = 0;
 		ret.data[0].value = "SNMP freshly updated";
@@ -541,6 +542,8 @@ function cpuUpdater() {
 
 function mgmtInfo(sw) {
 	var ret = new handlerInfo("mgmt","Management info");
+	ret.score = 0;
+	ret.why = "All good";
 	if (testTree(nmsData,['smanagement','switches',sw])) {
 		var mg = nmsData.smanagement.switches[sw];
 		ret.data =
@@ -560,9 +563,15 @@ function mgmtInfo(sw) {
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
 			ret.why = "No IPv4 or IPv6 mamagement IP";
 			ret.score = 1000;
+		} else if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
+			ret.why = "No IPv4 management IP";
+			ret.score = 240;
+		} else if (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "") {
+			ret.why = "No IPv6 management IP";
+			ret.score = 239;
 		}
 	} else {
-		ret.score = 800;
+		ret.score = 1000;
 		ret.why = "No management info";
 		ret.data = [{}];
 		ret.data[0].value = "N/A";
@@ -584,7 +593,8 @@ function cpuInit() {
 
 function comboInfo(sw) {
 	var worst = new handlerInfo("combo", "Combo");
-	worst.score = -1;
+	worst.score = 0;
+	worst.why = "All good";
 	for (var h in handlers) {
 		if (handlers[h].tag== "combo")
 			continue;
@@ -596,8 +606,8 @@ function comboInfo(sw) {
 		}
 	}
 	worst.data = [{
-		description: "Worst: " + worst.description,
-		value: worst.why
+		description: "Health (lower is better): ",
+		value: worst.score + " (" + worst.why + ")"
 	}];
 	return worst;
 }

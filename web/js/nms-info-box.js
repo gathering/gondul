@@ -881,7 +881,6 @@ var switchSummaryPanel = function() {
 				content[i][1] == "No data";
 			contentCleaned.push(content[i]);
 		}
-
 		var table = nmsInfoBox._makeTable(contentCleaned);
 
 		this._render(table);
@@ -911,7 +910,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 	}
 	for (var v in content) {
 		tr = table.insertRow(-1);
-		tr.className = content[v][0].toLowerCase();
+		tr.className = content[v][0].toLowerCase().replace(/[^a-z0-9_]/g,"");
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
 		td1.innerHTML = content[v][0];

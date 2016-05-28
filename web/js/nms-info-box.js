@@ -837,7 +837,8 @@ var switchCommentsPanel = function () {
 			tr.className = 
 				td1 = tr.insertCell(0);
 			td2 = tr.insertCell(1);
-			td1.textContent = logs[v]['timestamp'];
+			var date = new Date(logs[v]['timestamp']);
+			td1.textContent = date.toString();
 			td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
 		}
 		domObj.appendChild(table);

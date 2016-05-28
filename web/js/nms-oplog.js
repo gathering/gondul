@@ -85,7 +85,12 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 		tr = table.insertRow(-1);
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
-		td1.textContent = nmsData['oplog']['oplog'][v][timefield];
+		var date = new Date(nmsData.oplog.oplog[v]['timestamp']);
+		if (timefield == "time") {
+			td1.textContent = date.toTimeString().replace(/:\d\d .*$/,"");
+		} else {
+			td1.textContent = date.toString();
+		}
 		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
 		td2.hiddenthing = v;
 		td2.onclick = function(e){ var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }

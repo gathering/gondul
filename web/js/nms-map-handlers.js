@@ -69,11 +69,11 @@ var handler_cpu = {
 	name:"CPU utilization"
 };
 
-var handler_combo = {
-	init:comboInit,
-	getInfo:comboInfo,
-	tag:"combo",
-	name:"Aggregated health"
+var handler_health = {
+	init:healthInit,
+	getInfo:healthInfo,
+	tag:"health",
+	name:"Health"
 };
 
 var handler_mgmt = {
@@ -112,7 +112,7 @@ var handlerInfo = function(tag,desc) {
  * Order matches what's seen in the infobox
  */
 var handlers = [
-	handler_combo,
+	handler_health,
 	handler_mgmt,
 	handler_uplinks,
 	handler_temp,
@@ -591,12 +591,12 @@ function cpuInit() {
 	setLegend(5,"white","N/A");
 }
 
-function comboInfo(sw) {
-	var worst = new handlerInfo("combo", "Combo");
+function healthInfo(sw) {
+	var worst = new handlerInfo("health", "Health");
 	worst.score = 0;
 	worst.why = "All good";
 	for (var h in handlers) {
-		if (handlers[h].tag== "combo")
+		if (handlers[h].tag== "health")
 			continue;
 		if (handlers[h].getInfo == undefined)
 			continue;
@@ -612,18 +612,18 @@ function comboInfo(sw) {
 	return worst;
 }
 
-function comboUpdater() {
+function healthUpdater() {
 	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
 		return;
 	for (var sw in nmsData.switches.switches) {
-		var worst = comboInfo(sw);
+		var worst = healthInfo(sw);
 		nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
 		nmsMap.setSwitchInfo(sw, worst.tag);
 	}
 }
 
-function comboInit() {
-	nmsData.addHandler("ping", "mapHandler", comboUpdater);
+function healthInit() {
+	nmsData.addHandler("ping", "mapHandler", healthUpdater);
 	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
 	setLegend(1,nmsColor.getColorStop(0),"All good");
 	setLegend(2,nmsColor.getColorStop(250),"Ok-ish");

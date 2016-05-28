@@ -44,17 +44,18 @@
 		<span class="caret"></span>
 	      </a>
 	      <ul class="dropdown-menu" role="menu">
-		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping map</a></li>
-		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink map</a></li>
-		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP map</a></li>
-		<li class="gondul-is-private"><a href="#combo" onclick="setUpdater(handler_combo)">Aggregated map</a></li>
-		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature map</a></li>
-		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic map</a></li>
+		<li class="gondul-is-private"><a href="#health" onclick="setUpdater(handler_health)">Health</a></li>
+		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping</a></li>
+		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink</a></li>
+		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP</a></li>
+		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature</a></li>
+		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic</a></li>
 		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
-		<li class="gondul-is-private"><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP map</a></li>
-		<li class="gondul-is-private"><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU map</a></li>
+		<li class="gondul-is-private"><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP</a></li>
+		<li class="gondul-is-private"><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU</a></li>
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
+		<li class="dropdown-header">Time</li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
 		<li><a href="#" onclick="nms.playback.startReplay('2016-03-21T09:00:00','2016-03-27T12:00:00');" title="Replay from opening 120 minutes per second">Replay TG</a></li>
 		<li class="divider"> </li>

@@ -103,8 +103,8 @@ sub guess_placement_dx {
 		$src = "random";
 		$x = int(rand(1900));
 		$y = int(rand(900));
-		$xx = $x + 20;
-		$yy = $y + 130;
+		$xx = $x + 230;
+		$yy = $y + 40;
 	};
 
 

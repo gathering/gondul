@@ -650,7 +650,7 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_dhcp);
 			break;
 		case '4':
-			setUpdater(handler_combo);
+			setUpdater(handler_health);
 			break;
 		case '5':
 			setUpdater(handler_temp);

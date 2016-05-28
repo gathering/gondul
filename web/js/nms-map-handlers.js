@@ -606,7 +606,7 @@ function healthInfo(sw) {
 		}
 	}
 	worst.data = [{
-		description: "Health (lower is better): ",
+		description: "Health (lower is better)",
 		value: worst.score + " (" + worst.why + ")"
 	}];
 	return worst;

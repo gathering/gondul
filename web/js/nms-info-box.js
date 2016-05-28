@@ -838,7 +838,11 @@ var switchCommentsPanel = function () {
 				td1 = tr.insertCell(0);
 			td2 = tr.insertCell(1);
 			var date = new Date(logs[v]['timestamp']);
-			td1.textContent = date.toString();
+			let month = date.getMonth() + 1;
+			let day = date.getDate();
+			let tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
+			td1.textContent = tmp;
+			td1.classList.add("left");
 			td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
 		}
 		domObj.appendChild(table);
@@ -909,6 +913,7 @@ nmsInfoBox._makeTable = function(content, caption) {
 		tr = table.insertRow(-1);
 		tr.className = content[v][0].toLowerCase().replace(/[^a-z0-9_]/g,"");
 		td1 = tr.insertCell(0);
+		td1.classList.add("left");
 		td2 = tr.insertCell(1);
 		td1.innerHTML = content[v][0];
 		td2.innerHTML = content[v][1];

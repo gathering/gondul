@@ -11,8 +11,6 @@
  * - Move all pure UI stuff into nmsUi: nightMode, vertical mode,
  *   menushowing,
  * - Get rid of "tvmode". As in: complete the merge
- * - Move all time-travel related code out into a separate entity.
- * - Remove nms.now: it belongs in nmsData.
  * - nms.timers probably also deserves to die. It used to do a lot more,
  *   now it's just leftovers.
  */
@@ -21,24 +19,16 @@ var nms = {
 	get nightMode() { return this._nightMode; },
 	set nightMode(val) { if (val != this._nightMode) { this._nightMode = val; setNightMode(val); } },
 	/*
-	 * FIXME: This should be slightly smarter.
-	 */
-	_now: false,
-	get now() { return this._now },
-	set now(v) { this._now = v; nmsData.now = v; },
-	/*
 	 * Various setInterval() handlers. See nmsTimer() for how they are
 	 * used.
 	 *
 	 * FIXME: Should just stop using these.
 	 */
 	timers: {
-		playback:false,
 		tvmode: false
 	},
 	
 	menuShowing:true,
-	_startTime:0,
 	get uptime() {
 		return (Date.now() - this._startTime)/1000;
 	},
@@ -94,16 +84,6 @@ var nms = {
 		'Escape':hideWindow,
 		'?':toggleHelp
 	},
-	/*
-	 * Playback controllers and variables
-	 */
-	playback:{
-		startTime: false,
-		stopTime: false,
-		playing: false,
-		replayTime: 0,
-		replayIncrement: 60 * 60
-	},
 	tvmode: {
 		handlers: [],
 		currentIndex: 0,
@@ -116,8 +96,8 @@ var nms = {
 /*
  * Returns a handler object.
  *
- * This might seem a bit much for 'setInterval()' etc, but it's really more
- * about self-documentation and predictable ways of configuring timers.
+ * FIXME: This is legacy-stuff, should get rid of it. DO NOT use this for
+ * new code.
  */
 function nmsTimer(handler, interval, name, description) {
 	this.handler = handler;
@@ -174,193 +154,8 @@ function toggleNightMode()
 }
 
 /*
- * Parse 'now' from user-input.
- *
- * Should probably just use stringToEpoch() instead, but alas, not yet.
- */
-function parseNow(now)
-{
-	if (Date.parse(now)) {
-		// Adjust for timezone when converting from epoch (UTC) to string (local)
-		var d = new Date(now);
-		var timezoneOffset = d.getTimezoneOffset() * -60000;
-		var d = new Date(Date.parse(now) - timezoneOffset);
-		var str = d.getFullYear() + "-" + ("00" + (parseInt(d.getMonth())+1)).slice(-2) + "-" + ("00" + d.getDate()).slice(-2) + "T";
-		str += ("00" + d.getHours()).slice(-2) + ":" + ("00" + d.getMinutes()).slice(-2) + ":" + ("00" + d.getSeconds()).slice(-2);
-		return str;
-
-	}
-	if (now == "")
-		return "";
-	return false;
-}
-
-/*
- * Convert back and forth between epoch.
- *
- * There's no particular reason why I use seconds instead of javascript
- * microseconds, except to leave the mark of a C coder on this javascript
- * project.
- */
-function stringToEpoch(t)
-{
-	var foo = t.toString();
-//	foo = foo.replace('T',' ');
-	var ret = new Date(Date.parse(foo));
-	return parseInt(parseInt(ret.valueOf()) / 1000);
-}
-
-/*
- * Have to pad with zeroes to avoid "17:5:0" instead of the conventional
- * and more readable "17:05:00". I'm sure there's a better way, but this
- * works just fine.
- */
-function epochToString(t)
-{
-	// Adjust for timezone when converting from epoch (UTC) to string (local)
-	var date = new Date(parseInt(t) * parseInt(1000));
-	var timezoneOffset = date.getTimezoneOffset() * -60;
-	t = t - timezoneOffset;
-
-    date = new Date(parseInt(t) * parseInt(1000));
-	var str = date.getFullYear() + "-";
-	if (parseInt(date.getMonth()) < 9)
-		str += "0";
-	str += (parseInt(date.getMonth())+1) + "-";
-	if (date.getDate() < 10)
-		str += "0";
-	str += date.getDate() + "T";
-	if (date.getHours() < 10)
-		str += "0";
-	str += date.getHours() + ":";
-	if (date.getMinutes() < 10)
-		str += "0";
-	str += date.getMinutes() + ":";
-	if (date.getSeconds() < 10)
-		str += "0";
-	str += date.getSeconds();
-
-	return str;
-}
-
-function localEpochToString(t) {
-	var d = new Date(parseInt(t) * parseInt(1000));
-	var timezoneOffset = d.getTimezoneOffset() * -60;
-	t = t + timezoneOffset;
-
-	return epochToString(t);
-}
-
-/*
- * Start replaying historical data.
- */
-nms.playback.startReplay = function(startTime,stopTime) {
-	if(!startTime || !stopTime)
-		return false;
-
-	nms.playback.pause();
-	nms.playback.startTime = stringToEpoch(startTime);
-	nms.playback.stopTime = stringToEpoch(stopTime);
-	nms.now = epochToString(nms.playback.startTime);
-	nms.playback.play();
-};
-
-/*
- * Pause playback
- */
-nms.playback.pause = function() {
-	nms.timers.playback.stop();
-	nms.playback.playing = false;
-};
-
-/*
- * Start playback
- */
-nms.playback.play = function() {
-	nms.playback.tick();
-	nms.timers.playback.start();
-	nms.playback.playing = true;
-};
-
-/*
- * Toggle playback
- */
-nms.playback.toggle = function() {
-	if(nms.playback.playing) {
-		nms.playback.pause();
-	} else {
-		nms.playback.play();
-	}
-};
-
-/*
- * Jump to place in time
- */
-nms.playback.setNow = function(now) {
-	nms.now = parseNow(now);
-
-	nms.playback.stopTime = false;
-	nms.playback.startTime = false;
-	nms.playback.tick();
-};
-
-/*
- * Step forwards or backwards in timer
- */
-nms.playback.stepTime = function(n)
-{
-	var now = getNowEpoch();
-	var newtime = parseInt(now) + parseInt(n);
-	nms.now = epochToString(parseInt(newtime));
-
-	if(!nms.playback.playing)
-		nms.playback.tick();
-};
-
-/*
- * Ticker to trigger updates, and advance time if replaying
- *
- * This is run on a timer (nms.timers.tick) every second while unpaused
- */
-nms.playback.tick = function()
-{
-	nms.playback.replayTime = getNowEpoch();
-
-	// If outside start-/stopTime, remove limits and pause playback
-	if (nms.playback.stopTime && (nms.playback.replayTime >= nms.playback.stopTime || nms.playback.replayTime < nms.playback.startTime)) {
-		nms.playback.stopTime = false;
-		nms.playback.startTime = false;
-		nms.playback.pause();
-		return;
-	}
-
-	// If past actual datetime, go live
-	if (nms.playback.replayTime > parseInt(Date.now() / 1000)) {
-		nms.now = false;
-	}
-
-	// If we are still replaying, advance time
-	if(nms.now !== false && nms.playback.playing) {
-		nms.playback.stepTime(nms.playback.replayIncrement);
-	}
-};
-
-/*
- * Helper function for safely getting a valid now-epoch
- */
-function getNowEpoch() {
-	if (nms.now && nms.now != 0)
-		return stringToEpoch(nms.now);
-	else
-		return parseInt(Date.now() / 1000);
-}
-
-/*
  * There are 4 legend-bars. This is a helper-function to set the color and
  * description/name for each one. Used from handler init-functions.
- *
- * FIXME: Should be smarter, possibly use a canvas-writer so we can get
- * proper text (e.g.: not black text on dark blue). 
  */
 function setLegend(x,color,name)
 {
@@ -379,7 +174,10 @@ function setLegend(x,color,name)
  * Start TV-mode
  *
  * Loops trough a list of views/updaters at a set interval.
- * Arguments: array of views, interval in seconds, use nightmode, hide menus
+ * Arguments: array of views, interval in seconds
+ *
+ * FIXME: this is getting gradually stripped down from the original, so far
+ * we're not quite there yet with merging it with the regular code paths.
  */
 nms.tvmode.start = function(views,interval) {
 	nms.tvmode.handlers = [];
@@ -413,6 +211,11 @@ nms.tvmode.stop = function() {
 	}
 }
 
+/*
+ * Used when changing handler to ensure that the new handler is listed in
+ * the anchor. The anchor can contain a comma-separated list of views and
+ * we only overwrite it if the new view isn't present.
+ */
 function ensureAnchorHas(view) {
 	try  {
 		var views = document.location.hash.slice(1);
@@ -424,8 +227,12 @@ function ensureAnchorHas(view) {
 	document.location.hash = view;
 	return false;
 }
+
 /*
  * Change map handler (e.g., change from uplink map to ping map)
+ *
+ * stopTv esnures that we don't conflict with the tvmode thing. If a
+ * user-initiated map is selected, tvmode is disabled.
  */
 function setUpdater(fo, stopTv = true)
 {
@@ -456,6 +263,12 @@ function toggleLayer(layer) {
        else
                l.style.display = 'none';
 }
+
+function hideLayer(layer) {
+       var l = document.getElementById(layer);
+       l.style.display = 'none';
+}
+
 
 function toggleConnect() {
 	toggleLayer("linkCanvas");
@@ -550,7 +363,7 @@ function getInitialConfig() {
  * yet.
  */
 function initNMS() {
-	nms.timers.playback = new nmsTimer(nms.playback.tick, 1000, "Playback ticker", "Handler used to advance time");
+	// Only used for dev-purposes now. Accessible through nms.uptime.
 	nms._startTime = Date.now();
 	
 	// Public
@@ -583,7 +396,6 @@ function initNMS() {
 	restoreSettings();
 	nmsMap.init();
 	detectHandler();
-	nms.playback.play();
 	setupKeyhandler();
 	nmsSearch.init();
 }
@@ -675,23 +487,22 @@ function moveTimeFromKey(e,key)
 {
 	switch(key) {
 		case 'h':
-			nms.playback.stepTime(-3600);
+			nmsTime.stepKey(-60);
 			break;
 		case 'j':
-			nms.playback.stepTime(-300);
+			nmsTime.stepKey(-5);
 			break;
 		case 'k':
-			nms.playback.stepTime(300);
+			nmsTime.stepKey(5);
 			break;
 		case 'l':
-			nms.playback.stepTime(3600);
+			nmsTime.stepKey(60);
 			break;
 		case 'p':
-			nms.playback.toggle();
+			nmsTime.togglePause();
 			break;
 		case 'r':
-			nms.playback.setNow();
-			nms.playback.play();
+			nmsTime.realTime();
 			break;
 	}
 	return true;
@@ -792,34 +603,6 @@ function restoreSettings()
 		nms[v] = retrieve[v];
 	}
 	setMenu();
-}
-
-/*
- * Time travel gui
- */
-function startNowPicker(now) {
-	$.datetimepicker.setLocale('no');
-	$('#nowPicker').datetimepicker('destroy');
-	if(!now && nms.now)
-		now = nms.now;
-	var datepicker = $('#nowPicker').datetimepicker({
-		value: now,
-		mask:false,
-		inline:true,
-		todayButton: false,
-		validateOnBlur:false,
-		dayOfWeekStart:1,
-		maxDate:'+1970/01/01',
-		onSelectDate: function(ct,$i){
-			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-		},
-		onSelectTime: function(ct,$i){
-			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-		},
-		onGenerate: function(ct,$i){
-			document.getElementById('nowPicker').dataset.iso = localEpochToString(ct.valueOf()/1000);
-		}
-	});
 }
 
 /*

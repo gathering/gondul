@@ -67,7 +67,7 @@ sub setwhen {
 		$offset = $_[1];
 	}
 	if (defined($get_params{'now'})) {
-		$now = db_safe_quote('now') . "::timestamp with time zone ";
+		$now = "timestamp with time zone 'epoch' + " . db_safe_quote('now') . " * INTERVAL '1 second' ";
 		$cc{'max-age'} = "3600";
 	}
 	$now = "(" . $now . " - '" . $offset . "'::interval)";

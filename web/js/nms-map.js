@@ -180,6 +180,19 @@ nmsMap._resizeEvent = function() {
 nmsMap.drawNow = function ()
 {
 	var now = nmsData.now;
+	var ctx = nmsMap._c.top.ctx;
+	if (nmsTime.isRealTime()) {
+		if (!nmsMap._nowCleared) {
+			ctx.save();
+			ctx.scale(this.scale, this.scale);
+			ctx.clearRect(0,0,800,100);
+			ctx.restore();
+			nmsMap._nowCleared = true;
+			nmsMap._lastNow = undefined;
+		}
+		return true;
+	}
+	nmsMap._nowCleared = false;
 	if(String(now).indexOf('T') == -1) { //If now does not contain 'T' we assume its in epoch format
 		now = new Date(nmsData.now * 1000);
 	} else {
@@ -192,7 +205,6 @@ nmsMap.drawNow = function ()
 	}
 	nmsMap.stats.nows++;
 
-	var ctx = nmsMap._c.top.ctx;
 	ctx.save();
 	ctx.scale(this.scale, this.scale);
 	ctx.font = (2 * this._settings.fontSize) + "px " + this._settings.fontFace;

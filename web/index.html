@@ -56,8 +56,8 @@
 		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Time</li>
-		<li><a href="#" onclick="toggleLayer('nowPickerBox');startNowPicker();">Travel in time</a></li>
-		<li><a href="#" onclick="nms.playback.startReplay('2016-03-21T09:00:00','2016-03-27T12:00:00');" title="Replay from opening 120 minutes per second">Replay TG</a></li>
+		<li><a href="#" onclick="toggleLayer('nowPickerBox');nmsTime.startNowPicker();">Travel in time</a></li>
+		<li><a href="#" onclick="nmsTime.replayEvent();" title="Replay from opening 120 minutes per second">Replay event</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
 		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
@@ -235,7 +235,7 @@
             <div class="form-group">
               <input type="text" class="form-control" placeholder="YYYY-MM-DDThh:mm:ss" id="nowPicker">
               <div class="button-group">
-                <button class="btn btn-primary" onclick="nms.playback.setNow(document.getElementById('nowPicker').dataset.iso);hideLayer('nowPickerBox');">Travel</button>
+                <button class="btn btn-primary" onclick="nmsTime.setNow(document.getElementById('nowPicker').dataset.iso);hideLayer('nowPickerBox');nmsTime.updateData();">Travel</button>
                 <button class="btn btn-danger" onclick="startNowPicker(Date.now());nms.playback.setNow(false);nms.playback.play();">Back to reality</button>
                 <button class="btn btn-info" data-toggle="button" onclick="toggleLayer('nowPickerInfo');">Info</button>
               </div>
@@ -301,6 +301,7 @@
     <script type="text/javascript" src="js/nms-admin-pane.js"></script>
     <script type="text/javascript" src="js/nms-oplog.js"></script>
     <script type="text/javascript" src="js/nms-search.js"></script>
+    <script type="text/javascript" src="js/nms-time.js"></script>
     <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
 	initNMS();

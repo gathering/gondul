@@ -231,7 +231,8 @@ nmsData._genericUpdater = function(name, cacheok) {
 		dataType: "json",
 		success: function (data, textStatus, jqXHR) {
 			if (nmsData[name] == undefined ||  nmsData[name]['hash'] != data['hash']) {
-				nmsData._last = data['time'];
+				if (name == "ping")
+					nmsData._last = data['time'];
 				nmsData.old[name] = nmsData[name];
 				nmsData[name] = data;
 				nmsMap.drawNow();

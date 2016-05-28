@@ -60,6 +60,7 @@ nmsTime.setNow = function(now) {
 	newDate.setMilliseconds(0);
 	newDate.setMinutes(newDate.getMinutes() - newDate.getMinutes()%5);
 	nmsTime._now = newDate;
+	nmsTime._updateData();
 }
 
 nmsTime._updateData = function() {
@@ -135,7 +136,6 @@ nmsTime.togglePause = function() {
 	} else {
 		if (nmsTime.isRealTime()) {
 			nmsTime.setNow(Date.now());
-			nmsTime._updateData();
 		} else {
 			nmsTime.startPlayback(nmsTime._speed ? nmsTime._speed : 5);
 		}

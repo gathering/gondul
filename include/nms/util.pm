@@ -67,35 +67,35 @@ sub guess_placement_dx {
 		my ($e, $s) = ($1, $2);
 		$src = "main";
 
-		$x = int(1400 - (($e-1)/2) * 60);
+		$x = int(1523 - (($e-1)/2) * 61);
 		$y = undef;
 
 		if ($s > 1) {
-			$y = 100;
+			$y = 137;
 		} else {
-			$y = 500;
+			$y = 410;
 		}
 
 		$xx = $x + 32;
-		$yy = $y + 300;
+		$yy = $y + 200;
 
 	} elsif ($name =~ /^core$/) {
 		$src = "core";
-		$x = 800;
-		$y = 850;
+		$x = 1100;
+		$y = 650;
 		$xx = $x + 200;
 		$yy = $y + 100;
 	} elsif ($name =~ /^noc$/) {
 		$src = "noc";
-		$x = 400;
-		$y = 900;
+		$x = 300;
+		$y = 800;
 		$xx = $x + 230;
 		$yy = $y + 40;
 	} elsif ($name =~ /^distro(\d)$/) {
 		my $d = ($1);
 		$src = "distro";
-		$x = 1200 - $d * 900;
-		$y = 415;
+		$x = 1200 - $d * 700;
+		$y = 355;
 		$xx = $x + 230;
 		$yy = $y + 40;
 	} else {

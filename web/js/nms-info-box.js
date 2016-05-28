@@ -832,6 +832,9 @@ var switchCommentsPanel = function () {
 		table.className = "table";
 		table.classList.add("table");
 		table.classList.add("table-condensed");
+		var cap = document.createElement("caption");
+		cap.textContent = "Relevant log entries";
+		table.appendChild(cap);
 		for (var v in logs) {
 			tr = table.insertRow(-1);
 			tr.className = 

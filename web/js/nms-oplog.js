@@ -54,7 +54,7 @@ nmsOplog.commit = function() {
 }
 
 nmsOplog.updateComments = function() {
-	nmsOplog._updateComments(5,"-mini","time");
+	nmsOplog._updateComments(3,"-mini","time",100);
 	nmsOplog._updateComments(0,"","timestamp");
 }
 
@@ -71,7 +71,7 @@ nmsOplog.getSwitchLogs = function(sw) {
 	return logs;
 }
 
-nmsOplog._updateComments = function(limit,prefix,timefield) {
+nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 	var table = document.createElement("table");
 	var tr;
 	var td1;
@@ -89,9 +89,18 @@ nmsOplog._updateComments = function(limit,prefix,timefield) {
 		if (timefield == "time") {
 			td1.textContent = date.toTimeString().replace(/:\d\d .*$/,"");
 		} else {
-			td1.textContent = date.toString();
+			let month = date.getMonth() + 1;
+			let day = date.getDate();
+			let tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
+			td1.textContent = tmp;
 		}
-		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + nmsData['oplog']['oplog'][v]['log'];
+		td1.classList.add("left");
+		let data = nmsData['oplog']['oplog'][v]['log'];
+		if (cutoff && data.length > cutoff) {
+			data = data.slice(0,cutoff);
+			data = data + "(...)";
+		}
+		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
 		td2.hiddenthing = v;
 		td2.onclick = function(e){ var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
 		if (++i == limit)

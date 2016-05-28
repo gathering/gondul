@@ -15,6 +15,9 @@ canvas {
 .left {
 	width:  22ch;
 }
+.logbook-mini .left {
+	width: auto;
+}
 tr.mgmt_v4_addr {
 	font-weight: 700;
 }

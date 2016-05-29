@@ -808,19 +808,38 @@ var switchEditPanel = function () {
 
 		content.sort();
 
-		var table = nmsInfoBox._makeTable(content, "edit");
+		var table = nmsInfoBox._makeTable(content);
 		domObj.appendChild(table);
+
+		var outputCont = document.createElement("div");
+		outputCont.id = "edit-output-cont";
+		outputCont.classList.add("collapse");
+		outputCont.innerHTML = "<h5>Request preview</h5>";
+		var output = document.createElement("output");
+		output.id = "edit-output";
+		outputCont.appendChild(output);
+		domObj.appendChild(outputCont);
+
+		var nav = document.createElement("nav");
+		nav.classList.add("nav","nav-pills");
 
 		var submit = document.createElement("button");
 		submit.innerHTML = "Save changes";
 		submit.classList.add("btn", "btn-primary");
 		submit.id = "edit-submit-" + this.sw;
 		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
-		domObj.appendChild(submit);
+		nav.appendChild(submit);
 
-		var output = document.createElement("output");
-		output.id = "edit-output";
-		domObj.appendChild(output);
+		var toggleDetails = document.createElement("button");
+		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
+		toggleDetails.classList.add("btn", "btn-default", "pull-right");
+		toggleDetails.dataset.toggle = "collapse";
+		toggleDetails.dataset.target = "#edit-output-cont";
+		toggleDetails.title = "Show request preview";
+		toggleDetails.id = "edit-toggle-details-" + this.sw;
+		nav.appendChild(toggleDetails);
+
+		domObj.appendChild(nav);
 
 		this._render(domObj);
 		if (place) {

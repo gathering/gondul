@@ -12,6 +12,13 @@ canvas {
 #info-box-container {
 	max-width: 700px;
 }
+#info-box-container #edit-output {
+	word-wrap: break-word;
+	padding: 20px;
+	margin-bottom: 10px;
+	background-color: #333333;
+	color: #ADADAD;
+}
 .left {
 	width:  22ch;
 }

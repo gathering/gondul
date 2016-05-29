@@ -69,6 +69,8 @@ nmsColor.drawGradient = function(gradients) {
  */
 nmsColor.getColorStop = function(x) {
 	x = parseInt(x);
+	if (isNaN(x))
+		x = 0;
 	if (x > 999)
 		x = 999;
 	if (x < 0)
@@ -84,7 +86,12 @@ nmsColor._getColor = function(x,y) {
 	if (nmsColor._cache[x] != undefined)
 		return nmsColor._cache[x];
 	var ctx = nmsMap._c.hidden.ctx; // FIXME: Move it away...
-	var imageData = ctx.getImageData(x, y, 1, 1);
+	try {
+		var imageData = ctx.getImageData(x, y, 1, 1);
+	} catch(e) {
+		console.log("x: " + x);
+		console.log(e);
+	}
 	var data = imageData.data;
 	if (data.length < 4)
 		return false;

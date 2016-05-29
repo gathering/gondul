@@ -52,4 +52,8 @@ sub vcl_backend_response {
         set beresp.uncacheable = false;
         set beresp.ttl = 5s;
     }
+    if (bereq.url ~ "\.(html|css|js)") {
+        # Mainly for ease of development
+        set beresp.ttl = 10s;
+    }
 }

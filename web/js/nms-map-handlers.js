@@ -21,6 +21,7 @@ var handler_uplinks = {
 
 var handler_temp = {
 	init:tempInit,
+	getInfo:tempInfo,
 	tag:"temp",
 	name:"Temperature"
 };
@@ -46,6 +47,7 @@ var handler_traffic_tot = {
 
 var handler_dhcp = {
 	init:dhcpInit,
+	getInfo:dhcpInfo,
 	tag:"dhcp",
 	name:"DHCP"
 };
@@ -294,6 +296,29 @@ function tempUpdater()
 	}
 }
 
+function tempInfo(sw)
+{
+	var ret = new handlerInfo("temp","Temperature");
+	ret.why = "Temp";
+	ret.score = 0;
+	ret.data[0].value = "N/A";
+	if (testTree(nmsData,['switchstate','switches',sw,'temp'])) {
+		let temp = nmsData.switchstate.switches[sw].temp;
+		if (temp == undefined) {
+			ret.data[0].value = "N/A";
+		} else {
+			temp = parseInt(temp);
+			ret.data[0].value = temp + "°C";
+		}
+		if (temp > 30 && temp < 50) {
+			ret.score = temp;
+		} else if (temp > 50 && temp < 100) {
+			ret.score = temp * 5;
+			ret.why = "Very high temperature";
+		}
+	}
+	return ret;
+}
 function tempInit()
 { 
 	//Padded the gradient with extra colors for the upper unused values
@@ -325,12 +350,13 @@ function pingInfo(sw)
 {
 	var ret = new handlerInfo("ping","Latency(ms)");
 	ret.why = "Latency";
+	ret.score = 999;
 	if (testTree(nmsData,['ping','switches',sw])) {
 		var v4 = nmsData.ping.switches[sw].latency4;
 		var v6 = nmsData.ping.switches[sw].latency6;
-		if (v4 == undefined)
+		if (v4 == undefined || v4 == null || isNaN(v4))
 			v4 = undefined;
-		if (v6 == undefined)
+		if (v6 == undefined || v6 == null || isNaN(v6))
 			v6 = undefined;
 		ret.data[0].value = v4;
 		ret.data[0].description = "IPv4 latency(ms)";
@@ -341,10 +367,10 @@ function pingInfo(sw)
 			ret.score = 1000;
 			ret.why = "No IPv4 or IPv6 ping reply";
 		} else if(v6 == undefined) {
-			ret.score = 200;
+			ret.score = 100;
 			ret.why = "No IPv6 ping reply";
 		} else if (v4 == undefined) {
-			ret.score = 199;
+			ret.score = 99;
 			ret.why = "No IPv4 ping reply";
 		}
 
@@ -407,6 +433,36 @@ function dhcpUpdater()
 		c = getDhcpColor(now - then);
 		nmsMap.setSwitchColor(sw, c);
 	}
+}
+function dhcpInfo(sw) {
+	var ret = new handlerInfo("dhcp","DHCP state");
+	ret.why = "No DHCP data";
+	ret.data[0].description = "DHCP age (seconds)";
+	if (testTree(nmsData,['dhcp','dhcp',sw])) {
+		var now = nmsData.dhcp.time;
+		var then = nmsData.dhcp.dhcp[sw];
+		var diff = now - then;
+		ret.data[0].value = diff;
+		ret.why = "DHCP freshness";
+		ret.score = diff/2> 800 ? 800 : parseInt(diff/2);
+	} else {
+		ret.data[0].value = "No DHCP data";
+		if (testTree(nmsData,['smanagement','switches',sw])) {
+			if (nmsData.smanagement.switches[sw].subnet4 == undefined ||
+				nmsData.smanagement.switches[sw].subnet4 == "") {
+				ret.data[0].value = "No associated subnets";
+				ret.score = 0;
+				ret.why = "No subnet registered";
+			} else {
+				ret.score = 800;
+				ret.why = "No DHCP data";
+			}
+		} else {
+			ret.score = 100;
+			ret.why = "No management data for DHCP";
+		}
+	}
+	return ret;
 }
 
 function dhcpInit()
@@ -481,10 +537,10 @@ function secondsToTime(input) {
 
 function snmpInfo(sw) {
 	var ret = new handlerInfo("snmp","SNMP data");
-	ret.why = "No data";
+	ret.why = "No SNMP data";
 	if (!testTree(nmsData,['snmp','snmp',sw,'misc'])) {
-		ret.score = 800;
-		ret.why = "No data";
+		ret.score = 500;
+		ret.why = "No SNMP data";
 		ret.data[0].value = "No data";
 	} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
 		ret.score = 200;
@@ -493,7 +549,7 @@ function snmpInfo(sw) {
 		ret.data[1] = { description: "SNMP sysName", value: nmsData.snmp.snmp[sw].misc.sysName[0] };
 	} else {
 		ret.score = 0;
-		ret.data[0].value = "SNMP freshly updated";
+		ret.data[0].value = "Available";
 		ret.why = "SNMP all good";
 	}
 	if (testTree(nmsData,['snmp','snmp',sw,'misc','sysUpTimeInstance',''])) {
@@ -501,11 +557,11 @@ function snmpInfo(sw) {
 		var upstring = secondsToTime(uptime);
 		ret.data.push({value: upstring, description: "System uptime"});
 		if (uptime < 60*5 && ret.score < 500) {
-			ret.score = 500;
+			ret.score = 550;
 			ret.why = "System rebooted last 5 minutes";
 		}
 		if (uptime < 60*15 && ret.score < 250) {
-			ret.score = 250;
+			ret.score = 350;
 			ret.why = "System rebooted last 15 minutes";
 		}
 	}
@@ -565,10 +621,10 @@ function mgmtInfo(sw) {
 			ret.score = 1000;
 		} else if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
 			ret.why = "No IPv4 management IP";
-			ret.score = 240;
+			ret.score = 140;
 		} else if (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "") {
 			ret.why = "No IPv6 management IP";
-			ret.score = 239;
+			ret.score = 139;
 		}
 	} else {
 		ret.score = 1000;
@@ -618,13 +674,16 @@ function healthUpdater() {
 	for (var sw in nmsData.switches.switches) {
 		var worst = healthInfo(sw);
 		nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
-		nmsMap.setSwitchInfo(sw, worst.tag);
+		if (worst.score > 200)
+			nmsMap.setSwitchInfo(sw, worst.tag);
+		else
+			nmsMap.setSwitchInfo(sw, undefined);
 	}
 }
 
 function healthInit() {
 	nmsData.addHandler("ping", "mapHandler", healthUpdater);
-	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
+	nmsColor.drawGradient([nmsColor.green,nmsColor.lightgreen, nmsColor.orange,nmsColor.red]);
 	setLegend(1,nmsColor.getColorStop(0),"All good");
 	setLegend(2,nmsColor.getColorStop(250),"Ok-ish");
 	setLegend(3,nmsColor.getColorStop(600),"Ick-ish");

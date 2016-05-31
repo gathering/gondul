@@ -68,7 +68,6 @@ sub setwhen {
 	}
 	if (defined($get_params{'now'})) {
 		$now = "timestamp with time zone 'epoch' + " . db_safe_quote('now') . " * INTERVAL '1 second' ";
-		$cc{'max-age'} = "3600";
 	}
 	$now = "(" . $now . " - '" . $offset . "'::interval)";
 	$when = " time > " . $now . " - '".$window."'::interval and time < " . $now . " ";
@@ -85,6 +84,9 @@ sub finalize_output {
 
 	$json{'time'} = int($query->fetchrow_hashref()->{'time'});
 	$json{'hash'} = $hash;
+	if (defined($get_params{'now'})) {
+		$cc{'max-age'} = "3600";
+	}
 	
 	printcc;
 	

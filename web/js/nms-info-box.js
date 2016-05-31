@@ -22,7 +22,6 @@
  * - Take a critical look at what methods/variables should be marked as "_"
  * - Currently argument is assumed to be a switch, this should not be the case
  * - Add some basic styling to separate panels visually when in the same view
- * - Add some movement/placement/size options to info window
  *
  */
 
@@ -121,6 +120,15 @@ nmsInfoBox.showWindow = function (windowName,argument) {
 
 	this._windowHandler.showWindow(windowName,argument)
 	this._container.style.display = "block";
+
+	$(this._windowHandler.getTitleObj()).on('mousedown', function(e) {
+		var cont = $(nmsInfoBox._container);
+		var dimensions = nmsInfoBox._container.getBoundingClientRect();
+		var startLeft = dimensions.left;
+		var startTop = dimensions.top;
+		nmsInfoBox.startDrag(e.screenX, e.screenY, startLeft, startTop);
+	});
+	$(this._windowHandler.getTitleObj()).on('mouseup',nmsInfoBox.stopDrag);
 };
 
 /*
@@ -172,6 +180,35 @@ nmsInfoBox.hide = function() {
 		this._windowHandler.hide();
 		this._windowHandler.unloadWindow();
 	}
+	nmsInfoBox.resetDrag();
+};
+
+/*
+ * Start window drag
+ */
+nmsInfoBox.startDrag = function(mouseStartX, mouseStartY, startLeft, startTop) {
+	document.onmousemove = function(e) {
+		var mouseOffsetX = e.screenX - mouseStartX;
+		var mouseOffsetY = e.screenY - mouseStartY;
+		$(nmsInfoBox._container).css('left', startLeft + mouseOffsetX + 'px');
+		$(nmsInfoBox._container).css('top', startTop + mouseOffsetY + 'px');
+	};
+};
+
+/*
+ * Reset drag
+ */
+nmsInfoBox.resetDrag = function() {
+	nmsInfoBox.stopDrag();
+	$(nmsInfoBox._container).css('left','');
+	$(nmsInfoBox._container).css('top','');
+};
+
+/*
+ * Stop window drag
+ */
+nmsInfoBox.stopDrag = function() {
+	document.onmousemove = null;
 };
 
 /*
@@ -220,6 +257,9 @@ var windowHandler = function () {
 	};
 	this.setTitleObj = function (titleObj) {
 		this.titleObj = titleObj;
+	};
+	this.getTitleObj = function (titleObj) {
+		return this.titleObj;
 	};
 	this.setNavObj = function (navObj) {
 		this.navObj = navObj;
@@ -768,19 +808,38 @@ var switchEditPanel = function () {
 
 		content.sort();
 
-		var table = nmsInfoBox._makeTable(content, "edit");
+		var table = nmsInfoBox._makeTable(content);
 		domObj.appendChild(table);
+
+		var outputCont = document.createElement("div");
+		outputCont.id = "edit-output-cont";
+		outputCont.classList.add("collapse");
+		outputCont.innerHTML = "<h5>Request preview</h5>";
+		var output = document.createElement("output");
+		output.id = "edit-output";
+		outputCont.appendChild(output);
+		domObj.appendChild(outputCont);
+
+		var nav = document.createElement("nav");
+		nav.classList.add("nav","nav-pills");
 
 		var submit = document.createElement("button");
 		submit.innerHTML = "Save changes";
 		submit.classList.add("btn", "btn-primary");
 		submit.id = "edit-submit-" + this.sw;
 		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
-		domObj.appendChild(submit);
+		nav.appendChild(submit);
 
-		var output = document.createElement("output");
-		output.id = "edit-output";
-		domObj.appendChild(output);
+		var toggleDetails = document.createElement("button");
+		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
+		toggleDetails.classList.add("btn", "btn-default", "pull-right");
+		toggleDetails.dataset.toggle = "collapse";
+		toggleDetails.dataset.target = "#edit-output-cont";
+		toggleDetails.title = "Show request preview";
+		toggleDetails.id = "edit-toggle-details-" + this.sw;
+		nav.appendChild(toggleDetails);
+
+		domObj.appendChild(nav);
 
 		this._render(domObj);
 		if (place) {

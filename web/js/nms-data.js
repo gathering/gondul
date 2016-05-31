@@ -231,11 +231,12 @@ nmsData._genericUpdater = function(name, cacheok) {
 		dataType: "json",
 		success: function (data, textStatus, jqXHR) {
 			if (nmsData[name] == undefined ||  nmsData[name]['hash'] != data['hash']) {
-				if (name == "ping")
+				if (name == "ping") {
 					nmsData._last = data['time'];
+					nmsMap.drawNow();
+				}
 				nmsData.old[name] = nmsData[name];
 				nmsData[name] = data;
-				nmsMap.drawNow();
 				for (var i in nmsData._sources[name].cbs) {
 					var tmp2 = nmsData._sources[name].cbs[i];
 					if (tmp2.cb != undefined) {

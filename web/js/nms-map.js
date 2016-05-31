@@ -26,13 +26,16 @@ var nmsMap = nmsMap || {
 		resizeEvents:0,
 		switchInfoSame:0,
 		switchInfoUpdate:0,
-		highlightChange:0
+		highlightChange:0,
+		textSwitchDraws:0,
+		textInfoDraws:0,
+		textInfoClears:0
 	},
 	contexts: ["bg","link","blur","switch","text","textInfo","top","input","hidden"],
 	_info: {},
 	_settings: {
 		fontLineFactor: 2,
-		textMargin: 3,
+		textMargin: 4,
 		xMargin: 10,
 		yMargin: 20,
 		fontSize: 15,
@@ -50,7 +53,9 @@ var nmsMap = nmsMap || {
 	_linknets: {} ,
 	_highlight: { },
 	_highlightActive: false,
-	_c: {}
+	_c: {},
+	_lastName: {},
+	_lastInfo: {}
 };
 
 nmsMap._loadEvent = function(e) {
@@ -136,7 +141,17 @@ nmsMap._resizeEvent = function() {
 
 	var xScale = (width / (nmsMap._orig.width + nmsMap._settings.xMargin));
 	var yScale = (height / (nmsMap._orig.height + nmsMap._settings.yMargin));
-	
+
+	/*
+	 * We need to forget this. Because the rescale will blank the text
+	 * anyway it is safe to set it to undefined here. This is a special
+	 * case, if you set it to 'undefined' anywhere else to "reset" or
+	 * force a redraw of the text you will introduce a bug if a handler
+	 * then tries to _unset_ the text (which you do by setting the text
+	 * to undefined)
+	 */
+	nmsMap._lastName = {};
+	nmsMap._lastInfo = {};
 	if (xScale > yScale) {
 		nmsMap.scale = yScale;	
 	} else {
@@ -150,9 +165,9 @@ nmsMap._resizeEvent = function() {
 			continue;
 		nmsMap._c[a].c.height = nmsMap._canvas.height;
 		nmsMap._c[a].c.width = nmsMap._canvas.width;
-    if(a == 'bg') {
-      nmsMap._drawBG();
-    }
+		if(a == 'bg') {
+			nmsMap._drawBG();
+		}
 	}
 	if (nmsMap._init != true) {
 		nmsMap._blurDrawn = false;
@@ -296,7 +311,16 @@ nmsMap._drawSwitch = function(sw)
 	this._c.switch.ctx.fillStyle = color;
 	this._drawBox(this._c.switch.ctx, box['x'],box['y'],box['width'],box['height']);
 	this._c.switch.ctx.shadowBlur = 0;
-	this._drawText(this._c.text.ctx, sw,box);
+	var switchtext = sw;
+	var textl = switchtext.length;
+	if (textl > 10)
+		switchtext = switchtext.slice(0,5) + ".." + switchtext.slice(textl-2,textl);
+
+	if (this._lastName[sw] != switchtext) {
+		nmsMap.stats.textSwitchDraws++;
+		this._drawText(this._c.text.ctx, switchtext,box);
+		this._lastName[sw] = switchtext;
+	}
 
 	if(this._info[sw])
 		this._drawSwitchInfo(sw);
@@ -304,17 +328,24 @@ nmsMap._drawSwitch = function(sw)
 
 nmsMap._drawSwitchInfo = function(sw) {
 	var box = this._getBox(sw);
-	if (this._info[sw] == undefined) {
-		this._clearBox(this._c.textInfo.ctx, box);
-	} else {
+	if (this._lastInfo[sw] == this._info[sw])
+		return;
+	this._clearBox(this._c.textInfo.ctx, box, 3);
+	nmsMap.stats.textInfoClears++;
+	if (this._info[sw] != undefined) {
 		this._drawText(this._c.textInfo.ctx, this._info[sw], box, "right");
+		nmsMap.stats.textInfoDraws++;
 	}
+	this._lastInfo[sw] = this._info[sw];
 };
 
-nmsMap._clearBox = function(ctx,box) {
+nmsMap._clearBox = function(ctx,box,margin) {
+	if (margin == undefined)
+		margin = 0;
 	ctx.save();
+	margin = Math.floor(margin * this.scale );
 	ctx.scale(this.scale,this.scale);
-	ctx.clearRect(box['x'], box['y'], box['width'], box['height']);
+	ctx.clearRect(box['x'] - margin, box['y'] - margin, box['width'] + margin*2, box['height'] + margin*2);
 	ctx.restore();
 };
 
@@ -324,7 +355,7 @@ nmsMap._drawText = function(ctx, text, box, align) {
 	if ((box['width'] + 10 )< box['height'])
 		rotate = true;
 
-	this._clearBox(ctx,box);
+	this._clearBox(ctx,box, 1);
 	ctx.save();
 	ctx.scale(this.scale, this.scale);
 	ctx.font = "bold " + this._settings.fontSize + "px " + this._settings.fontFace;

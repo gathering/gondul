@@ -224,13 +224,31 @@ nmsData._genericUpdater = function(name, cacheok) {
 		heads['Cache-Control'] = "max-age=0, no-cache, stale-while-revalidate=0";
 	}
 
+	/*
+	 * Note that we intentionally set dataType: "text" here.
+	 *
+	 * We can be smarter than jQuery here. We know that the ETag can be
+	 * used to evaluate against our cached copy. If the ETag is a
+	 * match, we never have to do the potentially extensive JSON
+	 * parsing.
+	 *
+	 * Also note that we accept weakened ETags too (ETags with W/
+	 * prefixed). This is typically if the intermediate cache has
+	 * compressed the content for us, so this is fine.
+	 *
+	 * This is particularly important because we poll everything even
+	 * though we _know_ it will hit both browser cache and most likely
+	 * Varnish. JSON.Parse was one of the biggest CPU hogs before this.
+	 */
 	$.ajax({
 		type: "GET",
 		headers: heads,
 		url: this._sources[name].target + now,
-		dataType: "json",
-		success: function (data, textStatus, jqXHR) {
-			if (nmsData[name] == undefined ||  nmsData[name]['hash'] != data['hash']) {
+		dataType: "text",
+		success: function (indata, textStatus, jqXHR) {
+			let etag = jqXHR.getResponseHeader("ETag");
+			if (nmsData[name] == undefined ||  (nmsData[name]['hash'] != etag && nmsData[name]['hash'] != etag.slice(2))) {
+				var data = JSON.parse(indata);
 				if (name == "ping") {
 					nmsData._last = data['time'];
 					nmsMap.drawNow();

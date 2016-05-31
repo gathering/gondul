@@ -329,6 +329,7 @@ function tempInit()
 	setLegend(4,temp_color(30),"30 °C");	
 	setLegend(5,temp_color(35),"35 °C");	
 	nmsData.addHandler("switchstate","mapHandler",tempUpdater);
+	tempUpdater();
 }
 
 function pingUpdater()
@@ -401,8 +402,7 @@ function pingInit()
 	setLegend(4,nmsColor.getColorStop(1000),"100ms");	
 	setLegend(5,nmsColor.blue,"No response");	
 	nmsData.addHandler("ping","mapHandler",pingUpdater);
-	nmsData.addHandler("switches","mapHandler",pingUpdater);
-	nmsData.addHandler("ticker", "mapHandler", pingUpdater);
+	pingUpdater();
 }
 
 function getDhcpColor(stop)
@@ -474,6 +474,7 @@ function dhcpInit()
 	setLegend(3,getDhcpColor(300),"300 Seconds old");
 	setLegend(4,getDhcpColor(900),"900 Seconds old");
 	setLegend(5,getDhcpColor(1200),"1200 Seconds old");
+	dhcpUpdater();
 }
 
 /*
@@ -506,6 +507,7 @@ function discoInit()
 	setLegend(3,nmsColor.orange,"C");
 	setLegend(4,nmsColor.green, "A");
 	setLegend(5,"white","!");
+	discoDo();
 }
 
 function snmpUpdater() {
@@ -576,7 +578,7 @@ function snmpInit() {
 	setLegend(3,nmsColor.red,"No SNMP data");
 	setLegend(4,nmsColor.green, "");
 	setLegend(5,nmsColor.green,"");
-
+	snmpUpdater();
 }
 
 function cpuUpdater() {
@@ -645,6 +647,7 @@ function cpuInit() {
 	setLegend(3,getColorStop(600),"60 %");
 	setLegend(4,getColorStop(1000),"100 %");
 	setLegend(5,"white","N/A");
+	cpuUpdater();
 }
 
 function healthInfo(sw) {
@@ -682,11 +685,12 @@ function healthUpdater() {
 }
 
 function healthInit() {
-	nmsData.addHandler("ping", "mapHandler", healthUpdater);
+	nmsData.addHandler("ticker", "mapHandler", healthUpdater);
 	nmsColor.drawGradient([nmsColor.green,nmsColor.lightgreen, nmsColor.orange,nmsColor.red]);
 	setLegend(1,nmsColor.getColorStop(0),"All good");
 	setLegend(2,nmsColor.getColorStop(250),"Ok-ish");
 	setLegend(3,nmsColor.getColorStop(600),"Ick-ish");
 	setLegend(4,nmsColor.getColorStop(800),"Nasty");
 	setLegend(5,nmsColor.getColorStop(1000),"WTF?");
+	healthUpdater();
 }

@@ -76,7 +76,9 @@ sub setwhen {
 
 sub finalize_output {
 	my $query;
-	my $hash = Digest::SHA::sha512_base64(FreezeThaw::freeze(%json));
+	$Data::Dumper::Indent = 0;
+	$Data::Dumper::Sortkeys = 1;
+	my $hash = Digest::SHA::sha512_base64(Data::Dumper::Dumper(\%json));
 	$dbh->commit;
 	$query = $dbh->prepare('select extract(epoch from date_trunc(\'seconds\', ' . $now . ')) as time;');
 	$query->execute();

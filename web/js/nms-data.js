@@ -36,6 +36,7 @@ var nmsData = nmsData || {
 		newSource:0,
 		oldSource:0
 	},
+	_pulseBeat: 0,
 	/*
 	 * The last time stamp of any data received, regardless of source.
 	 *
@@ -119,10 +120,38 @@ nmsData.registerSource = function(name, target) {
 	} else {
 		this.stats.oldSource++;
 	}
-
 	this.stats.pollSets++;
 };
 
+/*
+ * Show sign-of-life to the user.
+ *
+ * Now that we don't show the date field constantly it is nice to indicate
+ * to the user that things are still running in some discreet manner.
+ *
+ * The actual html might not be the best choice, but I think the general
+ * idea of some sort of heartbeat is needed.
+ */
+nmsData._pulse = function() {
+	if (nmsData._pulseElement == undefined) {
+		try {
+			nmsData._pulseElement = document.getElementById("heartbeat");
+		} catch(e) {
+			nmsData._pulseElement = null;
+		}
+	}
+	if (nmsData._pulseElement == null)
+		return;
+	if (nmsData._pulseBeat > 20) {
+		if (nmsData._pulseElement.classList.contains("pulse-on")) {
+			nmsData._pulseElement.classList.remove("pulse-on");
+		} else {
+			nmsData._pulseElement.classList.add("pulse-on");
+		}
+		nmsData._pulseBeat = 0;
+	}
+	nmsData._pulseBeat++;
+}
 /*
  * Add a handler (callback) for a source, using an id.
  *
@@ -271,6 +300,7 @@ nmsData._genericUpdater = function(name, cacheok) {
 				}
 				nmsData.stats.identicalFetches++;
 			}
+			nmsData._pulse();
 		},
 		complete: function(jqXHR, textStatus) {
 			nmsData.stats.outstandingAjaxRequests--;

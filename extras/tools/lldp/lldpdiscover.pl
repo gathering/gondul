@@ -194,8 +194,9 @@ sub get_snmp_data {
 		$ret{'sysDescr'} = $session->get('sysDescr.0');
 		$ret{'lldpRemManAddrTable'} = $session->gettable("lldpRemManAddrTable");
 		$ret{'lldpRemTable'} = $session->gettable("lldpRemTable");
-		$ret{'lldpLocChassisIdParsed'} = nms::convert_mac($session->getnext('lldpLocChassisId'));
-		$ret{'lldpLocChassisId'} = $session->get('lldpLocChassisId.0');
+		$ret{'ipNetToMediaTable'} = $session->gettable('ipNetToMediaTable');
+		$ret{'ifTable'} = $session->gettable('ifTable');
+		$ret{'ifXTable'} = $session->gettable('ifXTable');
 		#print Dumper(\%ret);
 	};
 	if ($@) {
@@ -236,6 +237,21 @@ sub parse_snmp
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv4($addr);
 		} elsif ($addrtype == 2) {
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv6($addr);
+		}
+	}
+	while (my ($key, $value) = each %{$snmp->{ipNetToMediaTable}}) {
+		$value->{ipNetToMediaPhysAddress} = nms::convert_mac($value->{ipNetToMediaPhysAddress});
+		push @{$lol{$value->{ipNetToMediaIfIndex}}{ARP}}, $value;
+	}
+	while (my ($key, $value) = each %{$snmp->{ifTable}}) {
+		$value->{ifPhysAddress} = nms::convert_mac($value->{ifPhysAddress});
+		foreach my $key2 (keys %$value) {
+			$lol{$value->{ifIndex}}{$key2} = $value->{$key2};
+		}
+	}
+	while (my ($key, $value) = each %{$snmp->{ifXTable}}) {
+		foreach my $key2 (keys %$value) {
+			$lol{$key}{$key2} = $value->{$key2};
 		}
 	}
 	return \%lol;

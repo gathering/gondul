@@ -134,20 +134,19 @@ sub discover_lldp_neighbors {
 			$sysname = $chassis_id;
 		}
 
-		# Do not try to poll servers.
-		if (!filter(\%{$value})) {
-			mylog("Filtered out $sysname  ($local_sysname -> $sysname)");
-			next;
-		}
-		$sysname =~ s/\..*$//;
 		if (defined($value->{lldpRemManAddr})) {
-			mylog("Found $sysname ($local_sysname -> $sysname )");
-			mylog("$chassis_id");
+			$sysname =~ s/\..*$//;
 		} else {
 			next;
 		}
+		# Do not try to poll servers.
+		if (!filter(\%{$value})) {
+			mylog("\tFiltered out $sysname  ($local_sysname -> $sysname)");
+			next;
+		}
+		mylog("\tFound $sysname ($chassis_id) ($local_sysname -> $sysname )");
 		if (defined($assets{$chassis_id}{'sysName'})) {
-			mylog("Duplicate $sysname: \"$sysname\" vs \"$assets{$chassis_id}{'sysName'}\"");
+			mylog("\t\tDuplicate $sysname: \"$sysname\" vs \"$assets{$chassis_id}{'sysName'}\" - $value->{'lldpRemManAddr'} vs $assets{$chassis_id}{'ip'}");
 			if ($assets{$chassis_id}{'sysName'} eq "") {
 				$assets{$chassis_id}{'sysName'} = $sysname;
 			}
@@ -200,7 +199,9 @@ sub get_snmp_data {
 		#print Dumper(\%ret);
 	};
 	if ($@) {
-		mylog("Error during SNMP to $ip : $@");
+		my $tmp = "$@";
+		chomp($tmp);
+		mylog("\t" . $tmp);
 		return undef;
 	}
 	return \%ret;
@@ -228,14 +229,22 @@ sub parse_snmp
 		$lol{$value->{lldpRemIndex}}{'lldpRemSysCapEnabled'} = \%caps;
 	}
 	while (my ($key, $value) = each %{$snmp->{lldpRemManAddrTable}}) {
-		foreach my $key2 (keys %$value) {
-			$lol{$value->{lldpRemIndex}}{$key2} = $value->{$key2};
+		my $old = 0;
+		if (defined($lol{$value->{lldpRemIndex}}{lldpRemManAddr})) {
+			mylog("\t\tFound existing address: $lol{$value->{lldpRemIndex}}{lldpRemManAddr}");
+			$old = $lol{$value->{lldpRemIndex}}{lldpRemManAddrSubtype};
 		}
 		my $addr = $value->{'lldpRemManAddr'};
 		my $addrtype = $value->{'lldpRemManAddrSubtype'};
+		foreach my $key2 (keys %$value) {
+			if ($key2 eq 'lldpRemManAddr') {
+				next;
+			}
+			$lol{$value->{lldpRemIndex}}{$key2} = $value->{$key2};
+		}
 		if ($addrtype == 1) {
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv4($addr);
-		} elsif ($addrtype == 2) {
+		} elsif ($addrtype == 2 && $old == 0) {
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv6($addr);
 		}
 	}
@@ -255,7 +264,6 @@ sub parse_snmp
 		}
 	}
 	return \%lol;
-	print Dumper (\%lol);
 }
 
 # Add a chassis_id to the list to be checked, but only if it isn't there.
@@ -278,7 +286,8 @@ sub add_switch {
 	my $addr;
 	my $snmp = undef;
 	$addr = $assets{$chassis_id}{'ip'};
-	mylog("Probing $addr");
+	my $name = $assets{$chassis_id}{'sysName'} || "$addr";
+	mylog("\tProbing $addr ($name)");
 	$snmp = get_snmp_data($addr, $assets{$chassis_id}{'community'});
 	
 	return if (!defined($snmp));

@@ -34,6 +34,8 @@ my @ips_to_check;
 my $cmdline_community = shift;
 my @ips = @ARGV;
 
+my %lldpmap = ();
+
 sub mylog {
 	my $msg = shift;
 	my $time = POSIX::ctime(time);
@@ -45,9 +47,12 @@ sub mylog {
 
 my %ipmap = ();
 my %peermap = ();
+my %snmpresults = ();
 foreach my $target (@ips) {
 	my $snmp = get_snmp_data($target, $cmdline_community);
 	my $parsed = parse_snmp($snmp);
+	$snmpresults{$target} = $parsed;
+
 	#print Dumper(\$parsed);
 }
 #print Dumper(\%ipmap);
@@ -71,7 +76,7 @@ while (my ($ip, $value)  = each %peermap) {
 #print Dumper(\%hood);
 #print Dumper(\%extended);
 
-my %result = ( hood => \%hood, extended => \%extended, ipmap => \%ipmap, peermap => \%peermap);
+my %result = ( snmpresults => \%snmpresults, hood => \%hood, extended => \%extended, ipmap => \%ipmap, peermap => \%peermap, lldpmap => \%lldpmap);
 
 print JSON::XS::encode_json(\%result);
 exit;
@@ -177,6 +182,7 @@ sub get_snmp_data {
 		my $session = nms::snmp::snmp_open_session($ip, $community);
 		$ret{'sysName'} = $session->get('sysName.0');
 		$ret{'sysDescr'} = $session->get('sysDescr.0');
+		$ret{'lldpLocChassisId'} = $session->get('lldpLocChassisId.0');
 		$ret{'lldpRemManAddrTable'} = $session->gettable("lldpRemManAddrTable");
 		$ret{'lldpRemTable'} = $session->gettable("lldpRemTable");
 		$ret{'ipNetToMediaTable'} = $session->gettable('ipNetToMediaTable');
@@ -203,24 +209,62 @@ sub parse_snmp
 	my %result = ();
 	my %lol = ();
 	$result{sysName} = $snmp->{sysName};
+	my $sysname = $snmp->{sysName};
 	$result{sysDescr} = $snmp->{sysDescr};
+	$result{lldpLocChassisId} = nms::convert_mac($snmp->{lldpLocChassisId});
+	my $chassis_id = $result{lldpLocChassisId};
+	mylog("$sysname: $chassis_id");
+	my $bad_chassis_id = 0;
+	if (defined($chassis_id) and defined($lldpmap{$chassis_id}{sysName})) {
+		mylog("Spottet twin");
+		if ($lldpmap{$chassis_id}{sysName} ne $sysname) {
+			mylog("Spotted broken chassis id collision wtf omg lol");
+			mylog("stored $lldpmap{$chassis_id}{sysName} ne $sysname");
+			$bad_chassis_id = 1;
+		}
+	} else {
+		if (defined($chassis_id)) {
+			$lldpmap{$chassis_id}{sysName} = $sysname;
+		} else {
+			$bad_chassis_id = 1;
+		}
+	}
 	@{$result{ips}} = ();
 	@{$result{peers}} = ();
+	@{$result{lldppeers}} = ();
 	while (my ($key, $value) = each %{$snmp->{lldpRemTable}}) {
-		my $chassis_id = nms::convert_mac($value->{'lldpRemChassisId'});
+		my $idx = $value->{lldpRemLocalPortNum};
+		my $rem_chassis_id = nms::convert_mac($value->{'lldpRemChassisId'});
+		my $remname = $value->{lldpRemSysName};
 		foreach my $key2 (keys %$value) {
-			$lol{$value->{lldpRemIndex}}{$key2} = $value->{$key2};
+			$lol{$idx}{$key2} = $value->{$key2};
 		}
-		$lol{$value->{lldpRemIndex}}{'lldpRemChassisId'} = $chassis_id;
+		$lol{$idx}{key} = $key;
+		$lol{$idx}{'lldpRemChassisId'} = $rem_chassis_id;
 		my %caps = ();
 		nms::convert_lldp_caps($value->{'lldpRemSysCapEnabled'}, \%caps);
-		$lol{$value->{lldpRemIndex}}{'lldpRemSysCapEnabled'} = \%caps;
+		$lol{$idx}{'lldpRemSysCapEnabled'} = \%caps;
+		if ($bad_chassis_id == 1) {
+			mylog("Skipping lldp-coupling due to broken/nonexistent lldpLocChassisId");
+			next;
+		}
+		$lldpmap{$chassis_id}{peers}{$rem_chassis_id} = 1;
+		$lldpmap{$rem_chassis_id}{peers}{$chassis_id} = 1;
+		if (defined($lldpmap{$rem_chassis_id}{sysName})) {
+			if ($lldpmap{$rem_chassis_id}{sysName} ne $remname) {
+				mylog("Collision .... $rem_chassis_id: $remname vs $lldpmap{$rem_chassis_id}{sysName}");
+			}
+		} else {
+			$lldpmap{$rem_chassis_id}{sysName} = $remname;
+		}
 	}
 	while (my ($key, $value) = each %{$snmp->{lldpRemManAddrTable}}) {
 		my $old = 0;
-		if (defined($lol{$value->{lldpRemIndex}}{lldpRemManAddr})) {
-			mylog("\t\tFound existing address: $lol{$value->{lldpRemIndex}}{lldpRemManAddr}");
-			$old = $lol{$value->{lldpRemIndex}}{lldpRemManAddrSubtype};
+		my $idx = $value->{lldpRemLocalPortNum};
+		my $remname = $lol{$idx}{lldpRemSysName};
+		if (defined($lol{$idx}{lldpRemManAddr})) {
+			mylog("\t\tFound existing address: $lol{$idx}{lldpRemManAddr}");
+			$old = $lol{$idx}{lldpRemManAddrSubtype};
 		}
 		my $addr = $value->{'lldpRemManAddr'};
 		my $addrtype = $value->{'lldpRemManAddrSubtype'};
@@ -228,20 +272,18 @@ sub parse_snmp
 			if ($key2 eq 'lldpRemManAddr') {
 				next;
 			}
-			$lol{$value->{lldpRemIndex}}{$key2} = $value->{$key2};
+			$lol{$idx}{$key2} = $value->{$key2};
 		}
 		my $remip;
 		if ($addrtype == 1) {
 			$remip = nms::convert_ipv4($addr);
-			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv4($addr);
+			$lol{$idx}{lldpRemManAddr} = nms::convert_ipv4($addr);
 		} elsif ($addrtype == 2 && $old == 0) {
 			$remip = nms::convert_ipv6($addr);
-			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv6($addr);
+			$lol{$idx}{lldpRemManAddr} = nms::convert_ipv6($addr);
 		} else {
 			next;
 		}
-		my $idx = $value->{lldpRemIndex};
-		my $remname = $lol{$idx}{lldpRemSysName};
 		if (!defined($ipmap{$remip})) {
 			$ipmap{$remip} = $remname;
 		}

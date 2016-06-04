@@ -61,15 +61,16 @@ foreach my $target (@ips) {
 my %hood = ();
 my %extended = ();
 
+mylog("Building peermaps");
 while (my ($ip, $value)  = each %peermap) {
 	my $sys = $ipmap{$ip} || $ip;
 	my $real = defined($ipmap{$ip});
 	foreach my $sys2 (@{$value}) {
 		if ($real) {
-		$hood{$sys}{$sys2} = 1;
-		$hood{$sys2}{$sys} = 1;
+			$hood{$sys}{$sys2} = 1;
+			$hood{$sys2}{$sys} = 1;
 		} else {
-		$extended{$sys2}{$sys} = 1;
+			$extended{$sys2}{$sys} = 1;
 		}
 	}
 }
@@ -78,106 +79,15 @@ while (my ($ip, $value)  = each %peermap) {
 
 my %result = ( snmpresults => \%snmpresults, hood => \%hood, extended => \%extended, ipmap => \%ipmap, peermap => \%peermap, lldpmap => \%lldpmap);
 
+mylog("Done. Outputting JSON.");
 print JSON::XS::encode_json(\%result);
 exit;
 
-# Filter out stuff we don't scan. Return true if we care about it.
-# XXX: Several of these things are temporary to test (e.g.: AP).
-sub filter {
-	my %sys = %{$_[0]};
-	if (!defined($sys{'lldpRemSysCapEnabled'})) {
-		return 0;
-	}
-	my %caps = %{$sys{'lldpRemSysCapEnabled'}};
-	my $sysdesc = $sys{'lldpRemSysDesc'};
-	my $sysname = $sys{'lldpRemSysName'};
-
-	if ($caps{'cap_enabled_ap'}) {
-		return 1;
-	}
-	if ($caps{'cap_enabled_telephone'}) {
-		return 0;
-	}
-	if (!defined($sysdesc)) {
-		return 1;
-	}
-	if ($sysdesc =~ /\b(C1530|C3600|C3700)\b/) {
-		return 0;
-	}
-	if (!$caps{'cap_enabled_bridge'} && !$caps{'cap_enabled_router'}) {
-		return 1;
-	}
-	if ($sysname =~ /BCS-OSL/) {
-		return 1;
-	}
-	return 1;
-}
-
-# Discover neighbours of a switch. The data needed is already present int
-# %assets , so this shouldn't cause any extra SNMP requests. It will add
-# new devices as it finds them.
-sub discover_lldp_neighbors {
-	my $local_id = $_[0];
-	#print "local id: $local_id\n";
-	my $ip = $assets{$local_id}{mgmt};
-	my $local_sysname = $assets{$local_id}{snmp}{sysName};
-	my $community = $assets{$local_id}{community};
-	my $addrtable;
-	while (my ($key, $value) = each %{$assets{$local_id}{snmp_parsed}}) {
-		my $chassis_id = $value->{'lldpRemChassisId'};
-
-		my $sysname = $value->{'lldpRemSysName'};
-		if (!defined($sysname)) {
-			$sysname = $chassis_id;
-		}
-
-		if (defined($value->{lldpRemManAddr})) {
-			$sysname =~ s/\..*$//;
-		} else {
-			next;
-		}
-		# Do not try to poll servers.
-		if (!filter(\%{$value})) {
-			mylog("\tFiltered out $sysname  ($local_sysname -> $sysname)");
-			next;
-		}
-		mylog("\tFound $sysname ($chassis_id) ($local_sysname -> $sysname )");
-		if (defined($assets{$chassis_id}{'sysName'})) {
-			mylog("\t\tDuplicate $sysname: \"$sysname\" vs \"$assets{$chassis_id}{'sysName'}\" - $value->{'lldpRemManAddr'} vs $assets{$chassis_id}{'ip'}");
-			if ($assets{$chassis_id}{'sysName'} eq "") {
-				$assets{$chassis_id}{'sysName'} = $sysname;
-			}
-		} else {
-			$assets{$chassis_id}{'sysName'} = $sysname;
-		}
-
-		# FIXME: We should handle duplicates better and for more
-		# than just sysname. These happen every time we are at
-		# least one tier down (given A->{B,C,D,E}, switch B, C, D
-		# and E will all know about A, thus trigger this). We also
-		# want to _add_ information only, since two nodes might
-		# know about the same switch, but one might have incomplete
-		# information (as is the case when things start up).
-
-		# We simply guess that the community is the same as ours.
-		$assets{$chassis_id}{'community'} = $community;
-		$assets{$chassis_id}{'ip'} = $value->{lldpRemManAddr};
-
-		$assets{$chassis_id}{'neighbors'}{$local_id} = 1;
-		$assets{$local_id}{'neighbors'}{$chassis_id} = 1;
-		check_neigh($chassis_id);
-		#print "checking $chassis_id\n";
-	}
-}
-
-
 # Get raw SNMP data for an ip/community.
-# FIXME: This should be seriously improved. Three get()'s and four
-# gettables could definitely be streamlined, but then again, I doubt it
-# matters much unless we start running this tool constantly.
 sub get_snmp_data {
 	my ($ip, $community) = @_;
 	my %ret = ();
+	mylog("Polling $ip");
 	eval {
 		my $session = nms::snmp::snmp_open_session($ip, $community);
 		$ret{'sysName'} = $session->get('sysName.0');
@@ -208,34 +118,41 @@ sub parse_snmp
 	my $snmp = $_[0];
 	my %result = ();
 	my %lol = ();
-	$result{sysName} = $snmp->{sysName};
+	mylog("\tPost-processing SNMP");
 	my $sysname = $snmp->{sysName};
+	mylog("\tSysname: $sysname");
+	$result{sysName} = $sysname;
 	$result{sysDescr} = $snmp->{sysDescr};
-	$result{lldpLocChassisId} = nms::convert_mac($snmp->{lldpLocChassisId});
-	my $chassis_id = $result{lldpLocChassisId};
-	mylog("$sysname: $chassis_id");
+	my $chassis_id =  nms::convert_mac($snmp->{lldpLocChassisId});
 	my $bad_chassis_id = 0;
-	if (defined($chassis_id) and defined($lldpmap{$chassis_id}{sysName})) {
-		mylog("Spottet twin");
-		if ($lldpmap{$chassis_id}{sysName} ne $sysname) {
-			mylog("Spotted broken chassis id collision wtf omg lol");
-			mylog("stored $lldpmap{$chassis_id}{sysName} ne $sysname");
-			$bad_chassis_id = 1;
+	if (defined($chassis_id)) {
+		$result{lldpLocChassisId} = $chassis_id;
+		mylog("\tChassis id: $chassis_id");
+		if (defined($chassis_id) and defined($lldpmap{$chassis_id}{sysName})) {
+			mylog("\t\tSwitch/chassis already known?");
+			if ($lldpmap{$chassis_id}{sysName} ne $sysname) {
+				mylog("\t\tXXX: Likely chassis ID collision");
+				mylog("\t\tXXX: Chassis ID previously seen as $lldpmap{$chassis_id}{sysName}");
+				mylog("\t\tXXX: But we are $sysname! This will dampen the mood.");
+				$bad_chassis_id = 1;
+			}
+		} else {
+				mylog("\t\tNew chassis");
+				$lldpmap{$chassis_id}{sysName} = $sysname;
 		}
 	} else {
-		if (defined($chassis_id)) {
-			$lldpmap{$chassis_id}{sysName} = $sysname;
-		} else {
-			$bad_chassis_id = 1;
-		}
+		mylog("\t\tNo lldpLocChassisId found. Bummer. Enable LLDP?");
+		$bad_chassis_id = 1;
 	}
 	@{$result{ips}} = ();
 	@{$result{peers}} = ();
 	@{$result{lldppeers}} = ();
+	mylog("\tParsing lldp neighbors");
 	while (my ($key, $value) = each %{$snmp->{lldpRemTable}}) {
 		my $idx = $value->{lldpRemLocalPortNum};
 		my $rem_chassis_id = nms::convert_mac($value->{'lldpRemChassisId'});
 		my $remname = $value->{lldpRemSysName};
+		mylog("\t\tSpotted $rem_chassis_id / $remname");
 		foreach my $key2 (keys %$value) {
 			$lol{$idx}{$key2} = $value->{$key2};
 		}
@@ -245,25 +162,25 @@ sub parse_snmp
 		nms::convert_lldp_caps($value->{'lldpRemSysCapEnabled'}, \%caps);
 		$lol{$idx}{'lldpRemSysCapEnabled'} = \%caps;
 		if ($bad_chassis_id == 1) {
-			mylog("Skipping lldp-coupling due to broken/nonexistent lldpLocChassisId");
+			mylog("\t\tXXX:Skipping lldp-coupling due to broken/nonexistent lldpLocChassisId");
 			next;
 		}
 		$lldpmap{$chassis_id}{peers}{$rem_chassis_id} = 1;
 		$lldpmap{$rem_chassis_id}{peers}{$chassis_id} = 1;
 		if (defined($lldpmap{$rem_chassis_id}{sysName})) {
 			if ($lldpmap{$rem_chassis_id}{sysName} ne $remname) {
-				mylog("Collision .... $rem_chassis_id: $remname vs $lldpmap{$rem_chassis_id}{sysName}");
+				mylog("\t\t\tXXX: Collision .... $rem_chassis_id: $remname vs $lldpmap{$rem_chassis_id}{sysName}");
 			}
 		} else {
 			$lldpmap{$rem_chassis_id}{sysName} = $remname;
 		}
 	}
+	mylog("\tParsing lldp neighbors management interfaces");
 	while (my ($key, $value) = each %{$snmp->{lldpRemManAddrTable}}) {
 		my $old = 0;
 		my $idx = $value->{lldpRemLocalPortNum};
 		my $remname = $lol{$idx}{lldpRemSysName};
 		if (defined($lol{$idx}{lldpRemManAddr})) {
-			mylog("\t\tFound existing address: $lol{$idx}{lldpRemManAddr}");
 			$old = $lol{$idx}{lldpRemManAddrSubtype};
 		}
 		my $addr = $value->{'lldpRemManAddr'};
@@ -277,25 +194,37 @@ sub parse_snmp
 		my $remip;
 		if ($addrtype == 1) {
 			$remip = nms::convert_ipv4($addr);
-			$lol{$idx}{lldpRemManAddr} = nms::convert_ipv4($addr);
-		} elsif ($addrtype == 2 && $old == 0) {
+		} elsif ($addrtype == 2) {
 			$remip = nms::convert_ipv6($addr);
-			$lol{$idx}{lldpRemManAddr} = nms::convert_ipv6($addr);
 		} else {
 			next;
+		}
+		if ($old != 0) {
+			if ($old != $addrtype) {
+				mylog("\t\tTwo management IPs discovered on port. v4 vs v6.");
+				mylog("\t\t\t$lol{$idx}{lldpRemManAddr} vs $remip");
+			}
+			if ($old > $addrtype) {
+				$lol{$idx}{lldpRemManAddr} = $remip;
+			}
+		} else {
+			$lol{$idx}{lldpRemManAddr} = $remip;
 		}
 		if (!defined($ipmap{$remip})) {
 			$ipmap{$remip} = $remname;
 		}
+		mylog("\t\tPeer added: $remip");
 		push @{$result{peers}}, $remip;
 		push @{$lol{$idx}{peers}}, $remip;
 	}
+	mylog("\tParsing local interfaces");
 	while (my ($key, $value) = each %{$snmp->{ifTable}}) {
 		$value->{ifPhysAddress} = nms::convert_mac($value->{ifPhysAddress});
 		foreach my $key2 (keys %$value) {
 			$lol{$value->{ifIndex}}{$key2} = $value->{$key2};
 		}
 	}
+	mylog("\tParsing ARP table");
 	while (my ($key, $value) = each %{$snmp->{ipNetToMediaTable}}) {
 		my $mac = nms::convert_mac($value->{ipNetToMediaPhysAddress});
 		my $idx = $value->{ipNetToMediaIfIndex};
@@ -305,6 +234,7 @@ sub parse_snmp
 			push @{$lol{$idx}{ips}}, $value->{ipNetToMediaNetAddress};
 			push @{$result{ips}}, $value->{ipNetToMediaNetAddress};
 		} else {
+			mylog("\t\tAdding peer: $value->{ipNetToMediaNetAddress}");
 			push @{$lol{$idx}{peers}}, $value->{ipNetToMediaNetAddress};
 			push @{$result{peers}}, $value->{ipNetToMediaNetAddress};
 		}
@@ -314,6 +244,7 @@ sub parse_snmp
 			$lol{$key}{$key2} = $value->{$key2};
 		}
 	}
+	mylog("\tParsing ipAddressTable");
 	while (my ($key, $value) = each %{$snmp->{ipAddressTable}}) {
 		my $addr = $value->{ipAddressAddr};
 		my $addrtype = $value->{ipAddressAddrType};
@@ -322,8 +253,10 @@ sub parse_snmp
 		} elsif ($addrtype == 2) {
 			$addr = nms::convert_ipv6($addr);
 		} else {
+			mylog("\t\tSkipping unknown addrtype: $addrtype");
 			next;
 		}
+		mylog("\t\tLocal IP added: $addr");
 		push @{$result{ips}}, $addr;
 	}
 	@{$result{peers}} = sort @{$result{peers}};
@@ -339,73 +272,4 @@ sub parse_snmp
 		push @{$peermap{$peer}}, $result{sysName};
 	}
 	return \%result;
-}
-
-# Add a chassis_id to the list to be checked, but only if it isn't there.
-# I'm sure there's some better way to do this, but meh, perl. Doesn't even
-# have half-decent prototypes.
-sub check_neigh {
-	my $n = $_[0];
-	for my $v (@ips_to_check) {
-		if ($v eq $n) {
-			return 0;
-		}
-	}
-	push @ips_to_check,$n;
-	return 1;
-}
-
-# We've got a switch. Populate it with SNMP data (if we can).
-sub add_switch {
-	my $chassis_id = shift;
-	my $addr;
-	my $snmp = undef;
-	$addr = $assets{$chassis_id}{'ip'};
-	my $name = $assets{$chassis_id}{'sysName'} || "$addr";
-	mylog("\tProbing $addr ($name)");
-	$snmp = get_snmp_data($addr, $assets{$chassis_id}{'community'});
-	
-	return if (!defined($snmp));
-	my $sysname = $snmp->{sysName};
-	$sysname =~ s/\..*$//;
-	$assets{$chassis_id}{'sysName'} = $sysname;
-	$assets{$chassis_id}{'ip'} = $addr;
-	$assets{$chassis_id}{'snmp'} = $snmp;
-	populate_arp($chassis_id);
-	return;
-}
-
-sub populate_arp {
-	my ($id) = @_;
-	while (my ($key, $value) = each %{$assets{$id}{snmp_parsed}}) {
-		my $mac = $value->{'ifPhysAddress'};
-		if (!defined($mac) || $mac eq "") {
-			next;
-		}
-		mylog("mac: $mac - $assets{$id}{sysName}");
-		$arp{$mac}{chassis_id} = $id;
-		$arp{$mac}{port} = $key;
-		$arp{$mac}{sysName} = $assets{$id}{sysName};
-		if (!defined($value->{ARP})) {
-			next;
-		}
-		for my $entry (@{$value->{ARP}}) {
-			my $nmac = $entry->{ipNetToMediaPhysAddress};
-			if (!defined($arp{$nmac}{neighbors})) {
-				@{$arp{$nmac}{neighbors}} = ();
-			}
-			$entry->{'origin'} = $id;
-			$entry->{'origin_sysname'} = $assets{$id}{sysName};
-			$entry->{'origin_mgmt'} = $assets{$id}{ip};
-			push @{$arp{$nmac}{neighbors}}, $entry;
-		}
-	}
-}
-
-sub get_lldp_chassis_id {
-	my ($session) = @_;
-	my $response;
-	$response = $session->get('lldpLocChassisId.0');
-	my $real = nms::convert_mac($response);
-	return $real;
 }

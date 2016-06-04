@@ -35,6 +35,7 @@ my $cmdline_community = shift;
 my @ips = @ARGV;
 
 my %lldpmap = ();
+my %lldpresolver = ();
 
 sub mylog {
 	my $msg = shift;
@@ -135,10 +136,21 @@ sub parse_snmp
 				mylog("\t\tXXX: Chassis ID previously seen as $lldpmap{$chassis_id}{sysName}");
 				mylog("\t\tXXX: But we are $sysname! This will dampen the mood.");
 				$bad_chassis_id = 1;
+				if (defined($lldpresolver{$sysname})) {
+					mylog("\t\tXXX: Using magic backup based on sysname and neighbors. Flaky.");
+					$chassis_id = $lldpresolver{$sysname};
+					if (defined($lldpmap{$chassis_id}{sysName})) {
+						mylog("\t\t\tFuc... it already existed?");
+						if ($lldpmap{$chassis_id}{sysName} eq $sysname) {
+							mylog("\t\t\tOk, it's a match? We might have polled the same box multiple times?");
+						}
+					}
+					$bad_chassis_id = 0;
+				}
 			}
 		} else {
-				mylog("\t\tNew chassis");
-				$lldpmap{$chassis_id}{sysName} = $sysname;
+			mylog("\t\tNew chassis");
+			$lldpmap{$chassis_id}{sysName} = $sysname;
 		}
 	} else {
 		mylog("\t\tNo lldpLocChassisId found. Bummer. Enable LLDP?");
@@ -161,6 +173,7 @@ sub parse_snmp
 		my %caps = ();
 		nms::convert_lldp_caps($value->{'lldpRemSysCapEnabled'}, \%caps);
 		$lol{$idx}{'lldpRemSysCapEnabled'} = \%caps;
+		$lldpresolver{$remname} = $rem_chassis_id;
 		if ($bad_chassis_id == 1) {
 			mylog("\t\tXXX:Skipping lldp-coupling due to broken/nonexistent lldpLocChassisId");
 			next;

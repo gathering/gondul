@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-
-DATE="$(date +%s)"
-if [ -z "$1" ] || [ -z "$2" ]; then
-	echo "Usage: $0 <ip> <community>"
-	exit 1;
-fi
-./lldpdiscover.pl $1 $2 | ./draw-neighbors.pl | dot -Tpng > dotnet-${DATE}.png
-echo File name: dotnet-${DATE}.png
+set -xe
+DATE="$(date --iso-8601=second | sed s/:/./g)"
+JSON=lolwhat-${DATE}.json
+./lolwhat.pl $* > ${JSON}
+./draw-neighbors.pl < ${JSON} | dot -Tpng > lolwhat-${DATE}.png
+./draw-neighbors.pl full < ${JSON} | dot -Tpng > lolwhat-${DATE}-full.png
+echo File name: lolwhat-${DATE}*png

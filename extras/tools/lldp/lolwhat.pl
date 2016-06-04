@@ -1,28 +1,15 @@
 #! /usr/bin/perl
 # 
-# Basic tool to discover your neighbourhood systems, using LLDP, as seen
-# through SNMP.
+# What? WHAAAAT? What's going on?
 #
-# Usage: ./lldpdiscover.pl <ip> <community>
+# Simple to to figure out what those tools in the network department have
+# actually done. Uses SNMP to gather information about your network, using
+# multiple techniques to father information about "next hop".
+#
+# Usage: ./lolwhat.pl <ip> <community>
 #
 # This will connect to <ip> and poll it for SNMP-data, then add that to an
-# asset database. After that's done, we parse the LLDP neighbor table
-# provided over SNMP and add those systems to assets, then try to probe
-# THEM with SNMP, using the same community, and so on.
-#
-# If the entire internet exposed LLDP and SNMP in a public domain, we could
-# theoretically map the whole shebang.
-#
-# Note that leaf nodes do NOT need to reply to SNMP to be added, but
-# without SNMP, there'll obviously be some missing data.
-#
-# The output is a JSON blob of all assets, indexed by chassis id. It also
-# includes a neighbor table for each asset which can be used to generate a
-# map (See dotnet.sh or draw-neighbors.pl for examples). It can also be
-# used to add the assets to NMS.
-#
-# A sensible approach might be to run this periodically, store the results
-# to disk, then have multiple tools parse the results.
+# asset database. 
 use POSIX;
 use Time::HiRes;
 use strict;
@@ -39,85 +26,56 @@ my %assets;
 my %arp;
 
 # Tracking arrays. Continue scanning until they are of the same length.
-my @chassis_ids_checked;
-my @chassis_ids_to_check;
+my @ips_checked;
+my @ips_to_check;
+
 
 # If we are given one switch on the command line, add that and then exit.
-my ($cmdline_ip, $cmdline_community) = @ARGV;
-if (defined($cmdline_ip) && defined($cmdline_community)) {
-	my $chassis_id;
-	eval {
-	# Special-case for the first switch is to fetch chassis id
-	# directly. Everything else is fetched from a neighbour
-	# table.
-		my $session = nms::snmp::snmp_open_session($cmdline_ip, $cmdline_community);
-		$chassis_id = get_lldp_chassis_id($session);
-		$assets{$chassis_id}{'community'} = $cmdline_community;
-		$assets{$chassis_id}{'ip'} = $cmdline_ip;
-		push @chassis_ids_to_check, $chassis_id;
-	};
-	if ($@) {
-		mylog("Error during SNMP  : $@");
-		exit 1;
-	}
+my $cmdline_community = shift;
+my @ips = @ARGV;
 
-	# Welcome to the main loop!
-	while (scalar @chassis_ids_to_check > scalar @chassis_ids_checked) {
-		# As long as you call it something else, it's not really a
-		# goto-statement, right!?
-		OUTER: for my $id (@chassis_ids_to_check) {
-		       for my $id2 (@chassis_ids_checked) {
-			       if ($id2 eq $id) {
-				       next OUTER;
-			       }
-		       }
-		       mylog("Adding $id");
-		       add_switch($id);
-		       mylog("Discovering neighbors for $id");
-		       discover_lldp_neighbors($id);
-		       push @chassis_ids_checked,$id;
-	       }
-	}
-	while (my ($mac, $entry) = each %arp) {
-		if (!defined($entry->{'neighbors'})) {
-			delete $arp{$mac};
-			next;
-		}
-		my $sysn = $entry->{sysName};
-		for my $aentry (@{$entry->{'neighbors'}}) {
-			if (defined($entry->{chassis_id}) and $aentry->{origin} eq $entry->{chassis_id}) {
-				next;
-			}
-                        if ($aentry->{ipNetToMediaType} eq "static") {
-				next;
-			}
-			$arp{$mac}{ips}{$aentry->{ipNetToMediaNetAddress}} = 1;
-			if (!defined($arp{$mac}{sysName})) {
-				$arp{$mac}{sysName}= $aentry->{ipNetToMediaNetAddress};
-				$arp{$mac}{namefromip} = 1;
-			}
-			$arp{$mac}{nsystems}{$aentry->{origin_sysname}} = 1;
-		}
-	}
-	my %map = ();
-	while (my ($mac, $entry) = each %arp) {
-		while (my ($sys, $ientry) = each %{$entry->{nsystems}}) {
-			$map{$entry->{sysName}}{$sys} = 1;
-			$map{$sys}{$entry->{sysName}} = 1;
-		}
-	}
-
-	my %major = ();
-	$major{assets} = \%assets;
-	$major{arp} = \%arp;
-	$major{map} = \%map;
-	print JSON::XS::encode_json(\%major);
-# Creates corrupt output, hooray.
-#	print JSON::XS->new->pretty(1)->encode(\%assets);
-	exit;
-} else {
-	print "RTFSC\n";
+sub mylog {
+	my $msg = shift;
+	my $time = POSIX::ctime(time);
+	$time =~ s/\n.*$//;
+	printf STDERR "[%s] %s\n", $time, $msg;
 }
+
+
+
+my %ipmap = ();
+my %peermap = ();
+foreach my $target (@ips) {
+	my $snmp = get_snmp_data($target, $cmdline_community);
+	my $parsed = parse_snmp($snmp);
+	#print Dumper(\$parsed);
+}
+#print Dumper(\%ipmap);
+#print Dumper(\%peermap);
+
+my %hood = ();
+my %extended = ();
+
+while (my ($ip, $value)  = each %peermap) {
+	my $sys = $ipmap{$ip} || $ip;
+	my $real = defined($ipmap{$ip});
+	foreach my $sys2 (@{$value}) {
+		if ($real) {
+		$hood{$sys}{$sys2} = 1;
+		$hood{$sys2}{$sys} = 1;
+		} else {
+		$extended{$sys2}{$sys} = 1;
+		}
+	}
+}
+#print Dumper(\%hood);
+#print Dumper(\%extended);
+
+my %result = ( hood => \%hood, extended => \%extended, ipmap => \%ipmap, peermap => \%peermap);
+
+print JSON::XS::encode_json(\%result);
+exit;
+
 # Filter out stuff we don't scan. Return true if we care about it.
 # XXX: Several of these things are temporary to test (e.g.: AP).
 sub filter {
@@ -207,12 +165,6 @@ sub discover_lldp_neighbors {
 	}
 }
 
-sub mylog {
-	my $msg = shift;
-	my $time = POSIX::ctime(time);
-	$time =~ s/\n.*$//;
-	printf STDERR "[%s] %s\n", $time, $msg;
-}
 
 # Get raw SNMP data for an ip/community.
 # FIXME: This should be seriously improved. Three get()'s and four
@@ -230,6 +182,7 @@ sub get_snmp_data {
 		$ret{'ipNetToMediaTable'} = $session->gettable('ipNetToMediaTable');
 		$ret{'ifTable'} = $session->gettable('ifTable');
 		$ret{'ifXTable'} = $session->gettable('ifXTable');
+		$ret{'ipAddressTable'} = $session->gettable('ipAddressTable');
 		#print Dumper(\%ret);
 	};
 	if ($@) {
@@ -249,9 +202,10 @@ sub parse_snmp
 	my $snmp = $_[0];
 	my %result = ();
 	my %lol = ();
-	while (my ($key, $value) = each %{$snmp}) {
-		$result{$key} = $value;
-	}
+	$result{sysName} = $snmp->{sysName};
+	$result{sysDescr} = $snmp->{sysDescr};
+	@{$result{ips}} = ();
+	@{$result{peers}} = ();
 	while (my ($key, $value) = each %{$snmp->{lldpRemTable}}) {
 		my $chassis_id = nms::convert_mac($value->{'lldpRemChassisId'});
 		foreach my $key2 (keys %$value) {
@@ -276,15 +230,23 @@ sub parse_snmp
 			}
 			$lol{$value->{lldpRemIndex}}{$key2} = $value->{$key2};
 		}
+		my $remip;
 		if ($addrtype == 1) {
+			$remip = nms::convert_ipv4($addr);
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv4($addr);
 		} elsif ($addrtype == 2 && $old == 0) {
+			$remip = nms::convert_ipv6($addr);
 			$lol{$value->{lldpRemIndex}}{lldpRemManAddr} = nms::convert_ipv6($addr);
+		} else {
+			next;
 		}
-	}
-	while (my ($key, $value) = each %{$snmp->{ipNetToMediaTable}}) {
-		$value->{ipNetToMediaPhysAddress} = nms::convert_mac($value->{ipNetToMediaPhysAddress});
-		push @{$lol{$value->{ipNetToMediaIfIndex}}{ARP}}, $value;
+		my $idx = $value->{lldpRemIndex};
+		my $remname = $lol{$idx}{lldpRemSysName};
+		if (!defined($ipmap{$remip})) {
+			$ipmap{$remip} = $remname;
+		}
+		push @{$result{peers}}, $remip;
+		push @{$lol{$idx}{peers}}, $remip;
 	}
 	while (my ($key, $value) = each %{$snmp->{ifTable}}) {
 		$value->{ifPhysAddress} = nms::convert_mac($value->{ifPhysAddress});
@@ -292,12 +254,49 @@ sub parse_snmp
 			$lol{$value->{ifIndex}}{$key2} = $value->{$key2};
 		}
 	}
+	while (my ($key, $value) = each %{$snmp->{ipNetToMediaTable}}) {
+		my $mac = nms::convert_mac($value->{ipNetToMediaPhysAddress});
+		my $idx = $value->{ipNetToMediaIfIndex};
+		$value->{ipNetToMediaPhysAddress} = $mac;
+		push @{$lol{$idx}{ARP}}, $value;
+		if ($lol{$idx}{ifPhysAddress} eq $mac) {
+			push @{$lol{$idx}{ips}}, $value->{ipNetToMediaNetAddress};
+			push @{$result{ips}}, $value->{ipNetToMediaNetAddress};
+		} else {
+			push @{$lol{$idx}{peers}}, $value->{ipNetToMediaNetAddress};
+			push @{$result{peers}}, $value->{ipNetToMediaNetAddress};
+		}
+	}
 	while (my ($key, $value) = each %{$snmp->{ifXTable}}) {
 		foreach my $key2 (keys %$value) {
 			$lol{$key}{$key2} = $value->{$key2};
 		}
 	}
-	return \%lol;
+	while (my ($key, $value) = each %{$snmp->{ipAddressTable}}) {
+		my $addr = $value->{ipAddressAddr};
+		my $addrtype = $value->{ipAddressAddrType};
+		if ($addrtype == 1) {
+			$addr = nms::convert_ipv4($addr);
+		} elsif ($addrtype == 2) {
+			$addr = nms::convert_ipv6($addr);
+		} else {
+			next;
+		}
+		push @{$result{ips}}, $addr;
+	}
+	@{$result{peers}} = sort @{$result{peers}};
+	@{$result{ips}} = sort @{$result{ips}};
+	$result{interfaces} = \%lol;
+	foreach my $localip (@{$result{ips}}) {
+		$ipmap{$localip} = $result{sysName};
+	}
+	foreach my $peer (@{$result{peers}}) {
+		if (!defined($peermap{$peer})) {
+			@{$peermap{$peer}} = ();
+		}
+		push @{$peermap{$peer}}, $result{sysName};
+	}
+	return \%result;
 }
 
 # Add a chassis_id to the list to be checked, but only if it isn't there.
@@ -305,12 +304,12 @@ sub parse_snmp
 # have half-decent prototypes.
 sub check_neigh {
 	my $n = $_[0];
-	for my $v (@chassis_ids_to_check) {
+	for my $v (@ips_to_check) {
 		if ($v eq $n) {
 			return 0;
 		}
 	}
-	push @chassis_ids_to_check,$n;
+	push @ips_to_check,$n;
 	return 1;
 }
 
@@ -330,7 +329,6 @@ sub add_switch {
 	$assets{$chassis_id}{'sysName'} = $sysname;
 	$assets{$chassis_id}{'ip'} = $addr;
 	$assets{$chassis_id}{'snmp'} = $snmp;
-	$assets{$chassis_id}{'snmp_parsed'} = parse_snmp($snmp);
 	populate_arp($chassis_id);
 	return;
 }
@@ -365,25 +363,7 @@ sub populate_arp {
 sub get_lldp_chassis_id {
 	my ($session) = @_;
 	my $response;
-	#printf "get lldpLocChassisId.0\n";
 	$response = $session->get('lldpLocChassisId.0');
-	#print "\tconverted: " . nms::convert_mac($response) . "\n";
-	#print "\tstring: " . $response . "\n";
 	my $real = nms::convert_mac($response);
-	#printf "getnext lldpLocChassisId.0\n";
-	$response = $session->getnext('lldpLocChassisId.0');
-	#print "\tconverted: " . nms::convert_mac($response) . "\n";
-	#print "\tstring: " . $response . "\n";
-
-	#printf "get lldpLocChassisId\n";
-	$response = $session->get('lldpLocChassisId');
-	#print "\tconverted: " . nms::convert_mac($response) . "\n";
-	#print "\tstring: " . $response . "\n";
-
-	#printf "getnext lldpLocChassisId\n";
-	$response = $session->getnext('lldpLocChassisId');
-	#print "\tconverted: " . nms::convert_mac($response) . "\n";
-	#print "\tstring: " . $response . "\n";
-	
 	return $real;
 }

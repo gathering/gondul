@@ -10,43 +10,35 @@ while (<STDIN>) {
 }
 
 my %assets = %{JSON::XS::decode_json($in)};
-my %map = %{$assets{hood}};
-my %map2 = %{$assets{extended}};
-my %map3 = %{$assets{lldpmap}};
+my %peermap = %{$assets{peermap}};
+my %map2 = %{$assets{lldpmap}};
+my %ipmap = %{$assets{ipmap}};
 
 print "strict graph network {\n";
 if ($full ne "lldp") {
-	while (my ($key, $value) = each %map) {
+	while (my ($key, $value) = each %peermap) {
 		print_tree ($key,0,undef);
 	}
-	if ($full eq "full") {
-		while (my ($key, $value) = each %map2) {
-			print_tree2 ($key,0,undef);
-		}
-	}
 } else {
-	while (my ($key, $value) = each %map3) {
-		print_tree3 ($key, 0, undef);
+	while (my ($key, $value) = each %map2) {
+		print_lldp ($key, 0, undef);
 	}
 }
 print "}\n";
 
-sub print_tree3
+sub print_lldp
 {
 	my ($id,$indent,$parent,$max) = @_;
 	my $name = $id;
-	if (defined($map3{$id}{sysName}) and $map3{$id}{sysName} ne "") {
-		$name = $map3{$id}{sysName};
-	}
-	if ($indent > 50) {
-		die "Possible loop detected.";
+	if (defined($assets{lldppeers}{$id}{name}) and $assets{lldppeers}{$id}{name} ne "") {
+		$name = $assets{lldppeers}{$id}{name};
 	}
 	print " \"$name\" -- {";
 	my @n;
-	while (my ($key, $value) = each %{$map3{$id}{peers}}) {
+	while (my ($key, $value) = each %{$map2{$id}}) {
 		my $peer = $key;
-		if (defined($map3{$key}{sysName}) and $map3{$key}{sysName} ne "") {
-			$peer = $map3{$key}{sysName};
+		if (defined($assets{lldppeers}{$key}{name}) and $assets{lldppeers}{$key}{name} ne "") {
+			$peer = $assets{lldppeers}{$key}{name};
 		}
 		push @n, "\"$peer\"";
 	}
@@ -54,34 +46,29 @@ sub print_tree3
 }
 sub print_tree
 {
-	my ($name,$indent,$parent,$max) = @_;
-	if (!defined($parent)) {
-		$parent = "";
-	}
-	if ($indent > 50) {
-		die "Possible loop detected.";
+	my ($ip) = @_;
+	my $name = $ip;
+	if ($assets{snmpresults}{$ip}{sysName}) {
+		$name = $assets{snmpresults}{$ip}{sysName};
 	}
 	print " \"$name\" -- {";
 	my @n;
-	while (my ($key, $value) = each %{$map{$name}}) {
-		push @n, "\"$key\"";
+	while(my ($peer, $garbage) = each %{$peermap{$ip}}) {
+		$peer = get_name($peer);
+		push @n, "\"$peer\"";
 	}
 	print join(",",@n) . "};\n";
 }
 
-sub print_tree2
-{
-	my ($name,$indent,$parent,$max) = @_;
-	if (!defined($parent)) {
-		$parent = "";
+sub get_name {
+	my ($ip) = @_;
+	if (defined($ipmap{$ip})) {
+		$ip = $ipmap{$ip};
 	}
-	if ($indent > 50) {
-		die "Possible loop detected.";
+	my $name = $ip;
+	if (defined($assets{snmpresults}{$ip}{sysName})) {
+		$name = $assets{snmpresults}{$ip}{sysName};
+		return $name;
 	}
-	print " \"$name\" -- {";
-	my @n;
-	while (my ($key, $value) = each %{$map2{$name}}) {
-		push @n, "\"$key\"";
-	}
-	print join(",",@n) . "};\n";
+	return $name;
 }

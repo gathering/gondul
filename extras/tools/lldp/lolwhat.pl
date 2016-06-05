@@ -33,11 +33,11 @@ my %snmpresults = ();
 my %lldppeers = ();
 
 my %lldpmap = ();
+my %lldpnamemap = ();
+
 my %lldpresolver = ();
 my %ipmap = ();
 my %peermap = ();
-my %hood = ();
-my %extended = ();
 
 # tracking for log indentation
 my $mylogindent = "";
@@ -78,21 +78,11 @@ mylog("Probing complete. Trying to make road in the velling");
 
 deduplicate();
 
-mylog("Building peermaps");
-while (my ($ip, $value)  = each %peermap) {
-	my $sys = $ipmap{$ip} || $ip;
-	my $real = defined($ipmap{$ip});
-	foreach my $sys2 (@{$value}) {
-		if ($real) {
-			$hood{$sys}{$sys2} = 1;
-			$hood{$sys2}{$sys} = 1;
-		} else {
-			$extended{$sys2}{$sys} = 1;
-		}
-	}
-}
+populate_lldpmap();
+populate_ipmap();
+populate_peermap();
 
-my %result = ( snmpresults => \%snmpresults, hood => \%hood, extended => \%extended, ipmap => \%ipmap, peermap => \%peermap, lldpmap => \%lldpmap);
+my %result = ( snmpresults => \%snmpresults, ipmap => \%ipmap, peermap => \%peermap, lldpmap => \%lldpmap, lldppeers => \%lldppeers);
 
 mylog("Done. Outputting JSON.");
 print JSON::XS::encode_json(\%result);
@@ -243,22 +233,49 @@ sub deduplicate
 	mylog("Checking for chassis id's with duplicate systems");
 	logindent(1);
 	my %fixlist = ();
+	my %tested = ();
 	while (my ($id, $value) = each %locmap) {
 		if (@$value > 1) {
 			mylog("Duplicate or collision: chassis id ($id) : " . join(", ", @$value));
-			my @checked = ();
+			logindent(1);
+			my @removed = ();
 			foreach my $test (@$value) {
+				foreach my $isremoved1 (@removed) {
+					if ($isremoved1 eq $test) {
+						next;
+					}
+				}
 				foreach my $test2 (@$value) {
 					if ($test2 eq $test) {
 						next;
 					}
-					if (compare_targets($test, $test2) != 2) {
+					foreach my $isremoved2 (@removed) {
+						if ($isremoved2 eq $test2) {
+							next;
+						}
+					}
+					if (defined($tested{$test}{$test2}) or defined($tested{$test2}{$test})) {
+						next;
+					} elsif (compare_targets($test, $test2) != 2) {
 						mylog("Collision between $test and $test2. Adding to fixlist.");
+						$tested{$test}{$test2} = 1;
+						$tested{$test2}{$test} = 1;
 						$fixlist{$test} = 1;
 						$fixlist{$test2} = 1;
+					} else {
+						$tested{$test}{$test2} = 1;
+						$tested{$test2}{$test} = 1;
+						push @removed, $test2;
 					}
 				}
 			}
+			foreach my $old (@removed) {
+				delete $snmpresults{$old};
+			}
+			if (@removed > 0) {
+				mylog("Removed duplicates: " . join(", ", @removed));
+			}
+			logindent(-1);
 		}
 	}
 	logindent(-1);
@@ -312,7 +329,6 @@ sub parse_snmp
 	}
 	@{$result{ips}} = ();
 	@{$result{peers}} = ();
-	@{$result{lldppeers}} = ();
 	mylog("Parsing lldp neighbors");
 	logindent(1);
 	while (my ($key, $value) = each %{$snmp->{lldpRemTable}}) {
@@ -456,4 +472,57 @@ sub probe_sys
 	my $snmp = get_snmp_data($target, $community);
 	my $parsed = parse_snmp($snmp);
 	$snmpresults{$target} = $parsed;
+}
+sub populate_lldpmap
+{
+	mylog("Populate LLDP map");
+	while (my ($ip, $value) = each %snmpresults) {
+		my $sysname = $value->{sysName};
+		my $id = $value->{lldpLocChassisId};
+		while (my ($if, $data) = each %{$value->{interfaces}}) {
+			if (!defined($data->{lldpRemSysName})) {
+				next;
+			} else {
+				$lldpmap{$id}{$data->{lldpRemChassisId}} = 1;
+				$lldpnamemap{$sysname}{$data->{lldpRemSysName}} = 1;
+			}
+		}
+	}
+}
+
+sub populate_ipmap
+{
+	mylog("Populate ipmap");
+	my @conflicts = ();
+	while (my ($ip, $value) = each %snmpresults) {
+		my $sysname = $value->{sysName};
+		if (defined($ipmap{$ip})) {
+			mylog("Conflict for ip $ip");
+		}
+		$ipmap{$ip} = $ip;
+		foreach my $localip (@{$value->{ips}}) {
+			if (!defined($localip)) {
+				next;
+			} elsif (defined($ipmap{$localip}) and $ipmap{$localip} ne $ip) {
+				mylog("IP conflict: $localip ($ipmap{$localip} vs $ip)");
+				push @conflicts, $localip;
+			}
+			$ipmap{$localip} = $ip;
+		}
+	}
+	mylog("Removing conflicting IPs");
+	foreach my $contested (@conflicts) {
+		delete $ipmap{$contested};
+	}
+}
+
+sub populate_peermap
+{
+	mylog("Populate layer3 peermap");
+	while (my ($ip, $value) = each %snmpresults) {
+		my $sysname = $value->{sysName};
+		foreach my $peer (@{$value->{peers}}) {
+			$peermap{$ip}{$peer} = 1;
+		}
+	}
 }

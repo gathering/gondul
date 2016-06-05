@@ -54,8 +54,10 @@ sub print_tree
 	print " \"$name\" -- {";
 	my @n;
 	while(my ($peer, $garbage) = each %{$peermap{$ip}}) {
-		$peer = get_name($peer);
-		push @n, "\"$peer\"";
+		my $name = get_name($peer);
+		if ($name ne $peer or $full eq "full") {
+			push @n, "\"$name\"";
+		}
 	}
 	print join(",",@n) . "};\n";
 }
@@ -68,6 +70,9 @@ sub get_name {
 	my $name = $ip;
 	if (defined($assets{snmpresults}{$ip}{sysName})) {
 		$name = $assets{snmpresults}{$ip}{sysName};
+		if ($name eq "") {
+			$name = $assets{snmpresults}{$ip}{lldpLocChassisId} || $ip;
+		}
 		return $name;
 	}
 	return $name;

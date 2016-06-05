@@ -76,6 +76,7 @@ while (scalar keys %lldppeers > scalar @chassis_ids_checked) {
 }
 mylog("Probing complete. Trying to make road in the velling");
 
+pad_snmp_results();
 deduplicate();
 
 populate_lldpmap();
@@ -492,8 +493,9 @@ sub populate_lldpmap
 
 sub populate_ipmap
 {
-	mylog("Populate ipmap");
+	mylog("Populating ipmap");
 	my @conflicts = ();
+	logindent(1);
 	while (my ($ip, $value) = each %snmpresults) {
 		my $sysname = $value->{sysName};
 		if (defined($ipmap{$ip})) {
@@ -504,7 +506,7 @@ sub populate_ipmap
 			if (!defined($localip)) {
 				next;
 			} elsif (defined($ipmap{$localip}) and $ipmap{$localip} ne $ip) {
-				mylog("IP conflict: $localip ($ipmap{$localip} vs $ip)");
+				mylog("IP conflict: $localip found multiple places ($ipmap{$localip} vs $ip)");
 				push @conflicts, $localip;
 			}
 			$ipmap{$localip} = $ip;
@@ -514,8 +516,24 @@ sub populate_ipmap
 	foreach my $contested (@conflicts) {
 		delete $ipmap{$contested};
 	}
+	logindent(-1);
 }
 
+sub pad_snmp_results
+{
+	mylog("Checking if there are peers from LLDP with no basic SNMP info");
+	logindent(1);
+	while (my ($id, $value) = each %lldppeers) {
+		if (!defined($value->{ip}) or defined($snmpresults{$value->{ip}}{sysName})) {
+			next;
+		}
+		mylog("Adding basic info for $value->{ip} / $value->{name} to snmp results");
+		$snmpresults{$value->{ip}}{sysName} = $value->{name}; 
+		$snmpresults{$value->{ip}}{lldpLocChassisId} = $value->{id};
+		push @{$snmpresults{$value->{ip}}{ips}}, $value->{ip};
+	}
+	logindent(-1);
+}
 sub populate_peermap
 {
 	mylog("Populate layer3 peermap");

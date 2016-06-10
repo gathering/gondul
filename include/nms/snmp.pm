@@ -21,6 +21,7 @@ BEGIN {
 	
 	SNMP::loadModules('SNMPv2-MIB');
 	SNMP::loadModules('ENTITY-MIB');
+	SNMP::loadModules('JUNIPER-MIB');
 	SNMP::loadModules('IF-MIB');
 	SNMP::loadModules('LLDP-MIB');
 	SNMP::loadModules('IP-MIB');

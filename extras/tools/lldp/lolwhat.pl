@@ -38,6 +38,7 @@ my %lldpnamemap = ();
 my %lldpresolver = ();
 my %ipmap = ();
 my %peermap = ();
+my %claimedips = ();
 
 # tracking for log indentation
 my $mylogindent = "";
@@ -145,6 +146,9 @@ sub get_snmp_data {
 		mylog($tmp);
 		return undef;
 	}
+	if (!defined($ret{sysName})) {
+		return undef;
+	}
 	return \%ret;
 }
 
@@ -201,6 +205,37 @@ sub deduplicate
 	my %remmap = ();
 	my %syscollisions = ();
 	my %locmap = ();
+	my %okips = ();
+	mylog("Building inventory of decent results/ips");
+	logindent(1);
+	while (my ($target, $value) = each %snmpresults) {
+		if (defined($value->{fakeSnmp}) and $value->{fakeSnmp} eq "yes") {
+			next;
+		}
+		if (defined($value->{sysName}) and defined($value->{ips})) {
+			mylog("Ok: $target");
+			foreach my $ip (@{$value->{ips}}) {
+				$okips{$ip} = 1;
+			}
+		}
+	}
+	logindent(-1);
+	mylog("Checking for empty SNMP results that are covered by other results");
+	logindent(1);
+	my @removals = ();
+	while (my ($target, $value) = each %snmpresults) {
+		if (defined($value->{fakeSnmp}) and $value->{fakeSnmp} eq "yes") {
+			if (defined($okips{$target})) {
+				push @removals,$target;
+			}
+		}
+	}
+	mylog("Removing " . join(", ", @removals));
+	foreach my $removal (@removals) {
+		delete $snmpresults{$removal};
+	}
+	logindent(-1);
+
 	mylog("Checking for duplicated/corrupt chassis ids");
 	logindent(1);
 	mylog("Building sysname -> chassis id table where possible");
@@ -259,6 +294,7 @@ sub deduplicate
 						next;
 					} elsif (compare_targets($test, $test2) != 2) {
 						mylog("Collision between $test and $test2. Adding to fixlist.");
+						mylog("a: " . $snmpresults{$test}{sysName} . " b: ". $snmpresults{$test2}{sysName});
 						$tested{$test}{$test2} = 1;
 						$tested{$test2}{$test} = 1;
 						$fixlist{$test} = 1;
@@ -310,6 +346,7 @@ sub deduplicate
 sub parse_snmp
 {
 	my $snmp = $_[0];
+	my $targetip = $_[1];
 	my %result = ();
 	my %lol = ();
 	if (!defined($snmp)) {
@@ -444,10 +481,30 @@ sub parse_snmp
 	@{$result{peers}} = sort @{$result{peers}};
 	@{$result{ips}} = sort @{$result{ips}};
 	$result{interfaces} = \%lol;
+	mylog("Ensuring some sanity: Checking if the $targetip is among claimed IPs for the SNMP results");
+	logindent(1);
+	my $sanitytest = 0;
+	foreach my $ip (@{$result{ips}}) {
+		if ($ip eq $targetip) {
+			mylog("Phew, it is...");
+			$sanitytest = 1;
+		}
+	}
+	if ($sanitytest == 0) {
+		mylog("Didn't find the polled IP among owned ips... Discarding this result as possible bogus (broadcast IP? who knows.");
+		logindent(-1);
+		logindent(-1);
+		return undef;
+	}
 	logindent(-1);
+	mylog("Registering known ips for " . ($sysname || "?" ));
+	foreach my $ip (@{$result{ips}}) {
+		$claimedips{$ip} = $sysname || "?";
+	}
+	logindent(-1);
+	
 	return \%result;
 }
-
 sub logindent {
 	my $change = $_[0];
 	if ($change > 0) {
@@ -470,8 +527,18 @@ sub probe_sys
 		mylog("Already probed $target. Skipping.");
 		return;
 	}
+	if (defined($claimedips{$target})) {
+		mylog("IP claimed by $claimedips{$target}. Skipping.");
+		return;
+	}
 	my $snmp = get_snmp_data($target, $community);
-	my $parsed = parse_snmp($snmp);
+	if (!defined($snmp)) {
+		return;
+	}
+	my $parsed = parse_snmp($snmp,$target);
+	if (!defined($parsed)) {
+		return;
+	}
 	$snmpresults{$target} = $parsed;
 }
 sub populate_lldpmap
@@ -484,7 +551,9 @@ sub populate_lldpmap
 			if (!defined($data->{lldpRemSysName})) {
 				next;
 			} else {
-				$lldpmap{$id}{$data->{lldpRemChassisId}} = 1;
+				if (defined($id)) {
+					$lldpmap{$id}{$data->{lldpRemChassisId}} = 1;
+				}
 				$lldpnamemap{$sysname}{$data->{lldpRemSysName}} = 1;
 			}
 		}
@@ -530,6 +599,7 @@ sub pad_snmp_results
 		mylog("Adding basic info for $value->{ip} / $value->{name} to snmp results");
 		$snmpresults{$value->{ip}}{sysName} = $value->{name}; 
 		$snmpresults{$value->{ip}}{lldpLocChassisId} = $value->{id};
+		$snmpresults{$value->{ip}}{fakeSnmp} = "yes";
 		push @{$snmpresults{$value->{ip}}{ips}}, $value->{ip};
 	}
 	logindent(-1);

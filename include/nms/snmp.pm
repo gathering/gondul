@@ -33,7 +33,7 @@ sub snmp_open_session {
 
 	$async //= 0;
 
-	my %options = (UseEnums => 1);
+	my %options = (UseEnums => 1, Retries => 0);
 	if ($ip =~ /:/) {
 		$options{'DestHost'} = "udp6:$ip";
 	} else {

@@ -90,6 +90,35 @@ mylog("Done. Outputting JSON.");
 print JSON::XS::encode_json(\%result);
 exit;
 
+sub compare_targets_depth {
+	my ($t1, $t2)  = @_;
+	my $res = 0;
+	my $matches = 0;
+	while (my ($port, $data) = each %{$snmpresults{$t1}{interfaces}}) {
+		my $one = $data->{ifPhysAddress};
+		my $two = $snmpresults{$t2}{interfaces}{$port}{ifPhysAddress};
+		if (!defined($one) and !defined($two)) {
+			next;
+		}
+		if ($one ne $two) {
+			$res++;
+		} else {
+			if ($one ne "" and $two ne "") {
+				if ($one ne "00:00:00:00:00:00") {
+					$matches++;
+				}
+			}
+		}
+	}
+	if ($matches > 10 and $res == 0) {
+		mylog("$matches interfaces share MAC address. Calling it OK.");
+		return $res;
+	} else {
+		mylog("$res mismatched interfaces versus $matches matched. Not enough for confidence.");
+		$res++;
+	}
+	return $res;
+}
 sub compare_targets {
 	my ($t1, $t2)  = @_;
 	my $res = 0;
@@ -118,6 +147,19 @@ sub compare_targets {
 	}
 	if ($res == 1) {
 		mylog("... So there are two systems that look 50% similar. $bad (But not the other way around)");
+	}
+	if ($res != 2) {
+		mylog("Lacking confidence. Doing in-depth comparison instead");
+		logindent(1);
+		$res = compare_targets_depth($t1, $t2);
+		if ($res == 0) {
+			$res = 2;
+			mylog("Gained confidence. Injecting missing IPs to both canidates.");
+			logindent(1);
+			inject_ips($t1, $t2);
+			logindent(-1);
+		}
+		logindent(-1);
 	}
 	return $res;
 }
@@ -382,6 +424,9 @@ sub parse_snmp
 		my %caps = ();
 		nms::convert_lldp_caps($value->{'lldpRemSysCapEnabled'}, \%caps);
 		$lol{$idx}{'lldpRemSysCapEnabled'} = \%caps;
+		my %caps2 = ();
+		nms::convert_lldp_caps($value->{'lldpRemSysCapSupported'}, \%caps2);
+		$lol{$idx}{'lldpRemSysCapSupported'} = \%caps2;
 	}
 	logindent(-1);
 	mylog("Parsing lldp neighbors management interfaces");
@@ -491,10 +536,8 @@ sub parse_snmp
 		}
 	}
 	if ($sanitytest == 0) {
-		mylog("Didn't find the polled IP among owned ips... Discarding this result as possible bogus (broadcast IP? who knows.");
-		logindent(-1);
-		logindent(-1);
-		return undef;
+		mylog("Didn't find myself. Hoping deduplication will take care of it?");
+		$result{badSelf} = 1;
 	}
 	logindent(-1);
 	mylog("Registering known ips for " . ($sysname || "?" ));
@@ -504,6 +547,13 @@ sub parse_snmp
 	logindent(-1);
 	
 	return \%result;
+}
+sub inject_ips {
+	my ($t1, $t2) = @_;
+	push @{$snmpresults{$t1}{ips}}, $t1;
+	push @{$snmpresults{$t1}{ips}}, $t2;
+	push @{$snmpresults{$t2}{ips}}, $t1;
+	push @{$snmpresults{$t2}{ips}}, $t2;
 }
 sub logindent {
 	my $change = $_[0];

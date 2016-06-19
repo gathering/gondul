@@ -26,7 +26,7 @@ Some facts from The Gathering 2016:
 
 - Non-profit.
 - 5000+ participants, 400 volunteers/crew, plus numerous visitors.
-- Lasted 5 days during the easter of 2106. Tech crew arrived on-site 5 days
+- Lasted 5 days during the easter of 2016. Tech crew arrived on-site 5 days
   before.
 - Total of 10500+ unique network devices seen (unique mac addresses).
 - Active network devices at 2016-03-22T12:00:00: 206

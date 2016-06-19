@@ -145,7 +145,9 @@ magic.
 APIs
 ----
 
-See doc/API.rst.
+See `doc/API.rst`__. 
+
+__ https://github.com/tech-server/gondul/blob/master/doc/API.rst
 
 On the topic of the front-end....
 ---------------------------------

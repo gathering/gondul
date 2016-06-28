@@ -62,8 +62,8 @@ sub guess_placement_dx {
 
 	my $name = $_[0];
 	my $src = "unknown";
-	if ($name =~ /^row\d+-\d+$/) {
-		$name =~ /row(\d+)-(\d+)/;
+	if ($name =~ /^e\d+-\d+$/) {
+		$name =~ /e(\d+)-(\d+)/;
 		my ($e, $s) = ($1, $2);
 		$src = "main";
 

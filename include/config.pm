@@ -35,6 +35,7 @@ our @snmp_objects = [
 	['ifInUnknownProtos'],
 	['ifOutQLen'],
 	['sysUpTime'],
+	['ciscoEnvMonTemperatureStatusValue'],
 	['jnxOperatingTemp'],
 	['jnxOperatingCPU'],
 	['jnxOperatingDescr'],

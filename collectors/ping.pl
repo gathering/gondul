@@ -58,8 +58,8 @@ while (1) {
 	}
 
 	my $result = $ping->ping();
-	my %dropped = %{$ping->get_dropped()};
 	die $ping->get_error if (!defined($result));
+	my %dropped = %{$ping->get_dropped()};
 
 	$dbh->do('COPY ping (switch, latency_ms) FROM STDIN');  # date is implicitly now.
 	my $drops = 0;

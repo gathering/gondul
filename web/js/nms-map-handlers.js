@@ -350,8 +350,8 @@ function pingUpdater()
 function pingInfo(sw)
 {
 	var ret = new handlerInfo("ping","Latency(ms)");
-	ret.why = "Latency";
-	ret.score = 999;
+	ret.why = "Latency (?)";
+	ret.score =0;
 	if (testTree(nmsData,['ping','switches',sw])) {
 		var v4 = nmsData.ping.switches[sw].latency4;
 		var v6 = nmsData.ping.switches[sw].latency6;
@@ -375,8 +375,8 @@ function pingInfo(sw)
 			ret.why = "No IPv4 ping reply";
 		}
 
-		v4 = parseFloat(v4) * 10;
-		v6 = parseFloat(v6) * 10;
+		v4 = parseFloat(v4) ;
+		v6 = parseFloat(v6) ;
 		if (v4 > ret.score || v6 > ret.score) {
 			ret.why = "Latency";
 			ret.score = parseInt(v4 > v6 ? v4 : v6);
@@ -544,7 +544,7 @@ function snmpInfo(sw) {
 		ret.score = 500;
 		ret.why = "No SNMP data";
 		ret.data[0].value = "No data";
-	} else if (nmsData.snmp.snmp[sw].misc.sysName[0] != sw) {
+	} else if (nmsData.snmp.snmp[sw].misc.sysName[0].indexOf(sw) != 0) {
 		ret.score = 200;
 		ret.why = "SNMP sysName doesn't match Gondul sysname";
 		ret.data[0].value = ret.why;

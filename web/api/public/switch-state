@@ -45,7 +45,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		}
 		$json{'switches'}{$sysname}{totals}{'total'} += 1;
 	}
-	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'};
+	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'};
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
 

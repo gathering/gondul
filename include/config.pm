@@ -41,4 +41,9 @@ our @snmp_objects = [
 	['jnxBoxSerialNo']
 ];
 
+BEGIN {
+	eval {
+		require "/opt/gondul/include/config.local.pm";
+	};
+}
 1;

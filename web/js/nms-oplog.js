@@ -85,7 +85,7 @@ nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 		tr = table.insertRow(-1);
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);
-		var date = new Date(nmsData.oplog.oplog[v]['timestamp']);
+		var date = new Date(nmsData.oplog.oplog[v]['timestamp'].replace(" ","T").replace("+00",""));
 		if (timefield == "time") {
 			td1.textContent = date.toTimeString().replace(/:\d\d .*$/,"");
 		} else {

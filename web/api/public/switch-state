@@ -22,12 +22,13 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		if ($porti =~ m/\.0$/) {
 			next;
 		}
-		if (not $smallport =~ m/^ae/ and not $smallport =~ m/^et/) {
+		if ($data{'ports'}{$porti}{'ifAlias'} =~ m/client/) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /Gi1\/0\/4[78]$/) {
+		if ($porti =~  /Gi1\/0\/4[78]$/ ||
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/uplink/) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -35,17 +36,17 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 			}
 			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
 		}
-		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
-		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
+		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
+		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
+		$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
 		if ($port{'ifOperStatus'} eq "up") {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'live'} += 1;
 			$json{'switches'}{$sysname}{totals}{'live'} += 1;
 		}
 		$json{'switches'}{$sysname}{totals}{'total'} += 1;
 	}
-	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'};
+	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1008'};
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
 
@@ -65,12 +66,13 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 		if ($porti =~ m/\.0$/) {
 			next;
 		}
-		if (not $smallport =~ m/^ae/ and not $smallport =~ m/^et/) {
+		if ($data{'ports'}{$porti}{'ifAlias'} =~ m/client/) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /Gi1\/0\/4[78]$/) {
+		if ($porti =~  /Gi1\/0\/4[78]$/ ||
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/uplink/) {
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -79,17 +81,17 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 			$json{'then'}{$sysname}{'uplinks'}{'total'} += 1;
 		}
 
-		$json{'then'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'then'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
-		$json{'then'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'};
-		$json{'then'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+		$json{'then'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
+		$json{'then'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
+		$json{'then'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
+		$json{'then'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
 		if ($port{'ifOperStatus'} eq "up") {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'live'} += 1;
 			$json{'then'}{$sysname}{totals}{'live'} += 1;
 		}
 		$json{'then'}{$sysname}{totals}{'total'} += 1;
 	}
-	$json{'then'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'};
+	$json{'then'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1008'};
 	$json{'then'}{$sysname}{'time'} = $ref->{'time'};
 }
 $nms::web::cc{'max-age'} = "5";

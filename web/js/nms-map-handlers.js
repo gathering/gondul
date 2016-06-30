@@ -444,7 +444,7 @@ function dhcpInfo(sw) {
 		var diff = now - then;
 		ret.data[0].value = diff;
 		ret.why = "DHCP freshness";
-		ret.score = diff/2> 800 ? 800 : parseInt(diff/2);
+		ret.score = diff/2> 600 ? 600 : parseInt(diff/2);
 	} else {
 		ret.data[0].value = "No DHCP data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
@@ -454,7 +454,7 @@ function dhcpInfo(sw) {
 				ret.score = 0;
 				ret.why = "No subnet registered";
 			} else {
-				ret.score = 800;
+				ret.score = 600;
 				ret.why = "No DHCP data";
 			}
 		} else {
@@ -544,6 +544,14 @@ function snmpInfo(sw) {
 		ret.score = 500;
 		ret.why = "No SNMP data";
 		ret.data[0].value = "No data";
+		if (testTree(nmsData,['smanagement','switches',sw])) {
+			if (nmsData.smanagement.switches[sw].community  == undefined ||
+			    nmsData.smanagement.switches[sw].community  == "disable") {
+				ret.score = 0;
+				ret.why = "SNMP disabled";
+				ret.data[0].value = "SNMP disabled";
+			}
+		}
 	} else if (nmsData.snmp.snmp[sw].misc.sysName[0].indexOf(sw) != 0) {
 		ret.score = 200;
 		ret.why = "SNMP sysName doesn't match Gondul sysname";

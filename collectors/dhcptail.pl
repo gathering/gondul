@@ -1,17 +1,13 @@
 #! /usr/bin/perl
 use DBI;
 use POSIX;
-use lib '../include';
+use lib '/opt/gondul/include';
 use nms;
 use strict;
 use Data::Dumper;
 use warnings;
 
-BEGIN {
-        require "../include/config.pm";
-}
-
-my (undef,undef,undef,undef,undef,$year,undef,undef,undef) = gmtime(time);
+my $year = 2016;
 
 my %months = (
 	Jan => 1,
@@ -31,10 +27,10 @@ my %months = (
 my $realtime = 0;
 my ($dbh, $q,$check);
 $dbh = nms::db_connect();
-$q = $dbh->prepare("INSERT INTO dhcp (switch,time,ip,mac) VALUES((SELECT switch FROM switches WHERE ?::inet << subnet4 ORDER BY sysname LIMIT 1),?,?,?)");
-$check = $dbh->prepare("SELECT max(time)::timestamp - ?::timestamp < '0s'::interval as doit FROM dhcp;");
+$q = $dbh->prepare("INSERT INTO dhcp (dhcp_server,switch,time,ip,mac) VALUES($nms::config::dhcp_id,(SELECT switch FROM switches WHERE ?::inet << subnet4 ORDER BY sysname LIMIT 1),?,?,?)");
+$check = $dbh->prepare("SELECT max(time)::timestamp - ?::timestamp < '0s'::interval as doit FROM dhcp where dhcp_server = $nms::config::dhcp_id;");
 
-open(SYSLOG, "tail -n 9999999 -F /var/log/syslog |") or die "Unable to tail syslog: $!";
+open(SYSLOG, "tail -n 9999999 -F /var/log/messages |") or die "Unable to tail syslog: $!";
 while (<SYSLOG>) {
 	/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d+)\s+(\d+:\d+:\d+).*DHCPACK on (\d+\.\d+\.\d+\.\d+) to (\S+) / or next;
 	my $date = $year . "-" . $months{$1} . "-" . $2 . " " . $3 . " Europe/Oslo";

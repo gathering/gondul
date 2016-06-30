@@ -4,7 +4,7 @@
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET client_encoding = 'SQL_ASCII';
+SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
@@ -86,7 +86,8 @@ CREATE TABLE dhcp (
     switch integer,
     "time" timestamp with time zone,
     mac macaddr,
-    ip inet
+    ip inet,
+    dhcp_server integer
 );
 
 

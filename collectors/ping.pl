@@ -19,7 +19,7 @@ my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr)
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();
-my $target = 0.2;
+my $target = 0.7;
 while (1) {
 	my $now = time();
 	my $elapsed = ($now - $last);
@@ -29,7 +29,7 @@ while (1) {
 	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;
-	$ping->timeout(0.2);
+	$ping->timeout(0.4);
 
 	$q->execute;
 	my %ip_to_switch = ();
@@ -93,7 +93,7 @@ while (1) {
 	$dbh->commit;
 	# ping linknets
 	$ping = Net::Oping->new;
-	$ping->timeout(0.2);
+	$ping->timeout(0.4);
 
 	$lq->execute;
 	my @linknets = ();

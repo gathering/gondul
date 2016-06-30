@@ -60,7 +60,6 @@ nmsScoreCard._buildTable = function(content,caption) {
 		td2 = tr.insertCell(1);
 		td3 = tr.insertCell(2);
 		td1.innerHTML = content[v][0];
-		console.log("<p class=\"fakelink\" onclick=\"nmsUi.setActive(\"map\"); nmsInfoBox.click(\"" + content[v][1] + "\");\">" + content[v][1] + "</p>");
 		td2.innerHTML = "<p class=\"fakelink\" onclick='nmsUi.setActive(\"map\"); nmsInfoBox.click(\"" + content[v][1] + "\");'>" + content[v][1] + "</p>";
 		td3.innerHTML = content[v][2];
 	}

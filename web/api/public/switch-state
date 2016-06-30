@@ -27,7 +27,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		} else {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /ge-0\/0\/4[4-7]$/) {
+		if ($porti =~  /Gi1\/0\/4[78]$/) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -70,7 +70,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 		} else {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /ge-0\/0\/4[4-7]$/) {
+		if ($porti =~  /Gi1\/0\/4[78]$/) {
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -89,7 +89,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 		}
 		$json{'then'}{$sysname}{totals}{'total'} += 1;
 	}
-	$json{'then'}{$sysname}{'temp'} = $data{'misc'}{'enterprises.2636.3.1.13.1.7.7.1.0.0'}{''};
+	$json{'then'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'};
 	$json{'then'}{$sysname}{'time'} = $ref->{'time'};
 }
 $nms::web::cc{'max-age'} = "5";

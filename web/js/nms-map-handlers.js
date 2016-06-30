@@ -15,6 +15,7 @@
 
 var handler_uplinks = {
 	init:uplinkInit,
+	getInfo:uplinkInfo,
 	tag:"uplink",
 	name:"Uplink"
 };
@@ -127,6 +128,33 @@ var handlers = [
 	handler_cpu
 	];
 
+function uplinkInfo(sw)
+{
+	var ret = new handlerInfo("uplink","Uplinks");
+	ret.why = "Uplinks";
+	ret.score =0;
+	if (testTree(nmsData,['switchstate','switches',sw,'uplinks'])) {
+		var u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
+		ret.data[0].value = u;
+		ret.data[0].description = "Uplinks";
+		if (nmsData.switches.switches[sw].subnet4 == undefined ||
+		    nmsData.switches.switches[sw].subnet4 == null) {
+			if (u == 0) {
+				ret.score = 700
+				ret.why = "0 uplinks with clientnet?";
+			} else if (u == 1) {
+				ret.score = 600;
+				ret.why = "Only 1 uplink";
+			} else if (u == 2) {
+				ret.score = 0;
+			} else {
+				ret.score = 500;
+				ret.why = u + " uplinks";
+			}
+		}
+	}
+	return ret;
+}
 /*
  * Update function for uplink map
  */
@@ -162,6 +190,7 @@ function uplinkUpdater()
 		}
 	}
 }
+
 
 /*
  * Init-function for uplink map

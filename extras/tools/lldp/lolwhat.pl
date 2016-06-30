@@ -48,11 +48,13 @@ mylog("Polling initial systems");
 logindent(1);
 foreach my $target (@ips) {
 	probe_sys($target, $cmdline_community);
+	pad_snmp_results();
 }
 logindent(-1);
 
 
 peerdetect();
+pad_snmp_results();
 
 # List of chassis IDs checked.
 # Note that we deliberately don't add the chassis id's from systems prboed
@@ -72,6 +74,7 @@ while (scalar keys %lldppeers > scalar @chassis_ids_checked) {
 	       probe_sys($lldppeers{$id}{ip}, $cmdline_community);
 	       push @chassis_ids_checked,$id;
 	}
+	pad_snmp_results();
 	peerdetect();
 	logindent(-1);
 }
@@ -79,6 +82,7 @@ mylog("Probing complete. Trying to make road in the velling");
 
 pad_snmp_results();
 deduplicate();
+pad_snmp_results();
 
 populate_lldpmap();
 populate_ipmap();
@@ -100,7 +104,9 @@ sub compare_targets_depth {
 		if (!defined($one) and !defined($two)) {
 			next;
 		}
-		if ($one ne $two) {
+		if (!defined($one) or !defined($two)) {
+			$res++;
+		}  elsif ($one ne $two) {
 			$res++;
 		} else {
 			if ($one ne "" and $two ne "") {
@@ -364,7 +370,7 @@ sub deduplicate
 		my $sysname = $snmpresults{$ip};
 		if (defined($syscollisions{$sysname})) {
 			mylog("Can't really fix $ip because there's also a sysname collision for that sysname");
-			$snmpresults{$ip}{lldpLocChassisId} = undef;
+			#$snmpresults{$ip}{lldpLocChassisId} = undef;
 		} elsif (defined($remmap{$sysname})) {
 			if ($remmap{$sysname} eq $snmpresults{$ip}{lldpLocChassisId}) {
 				mylog("Couldn't fix $ip / $sysname. The extrapolated chassis id seen from remote is the same as the colliding one.... ");
@@ -402,8 +408,16 @@ sub parse_snmp
 	$result{sysDescr} = $snmp->{sysDescr};
 	my $chassis_id =  nms::convert_mac($snmp->{lldpLocChassisId});
 	if (defined($chassis_id)) {
-		$result{lldpLocChassisId} = $chassis_id;
-		mylog("Chassis id: $chassis_id");
+		if (defined($result{lldpLocChassisId})) {
+			if ($result{lldpLocChassisId} eq $chassis_id) {
+				mylog("Chassis id matched remote...");
+			} else {
+				mylog("Bad chassis id.... Fudge. Ignoring direct result.");
+			}
+		} else {
+			$result{lldpLocChassisId} = $chassis_id;
+			mylog("Chassis id: $chassis_id");
+		}
 	} else {
 		mylog("XXX: No lldpLocChassisId found. Bummer. Enable LLDP?");
 	}
@@ -573,7 +587,7 @@ sub mylog {
 sub probe_sys
 {
 	my ($target, $community) = @_;
-	if (defined($snmpresults{$target})) {
+	if (defined($snmpresults{$target}) and defined($snmpresults{$target}{'probed'})) {
 		mylog("Already probed $target. Skipping.");
 		return;
 	}
@@ -582,6 +596,7 @@ sub probe_sys
 		return;
 	}
 	my $snmp = get_snmp_data($target, $community);
+	$snmpresults{$target}{'probed'} = 1;
 	if (!defined($snmp)) {
 		return;
 	}
@@ -590,6 +605,7 @@ sub probe_sys
 		return;
 	}
 	$snmpresults{$target} = $parsed;
+	$snmpresults{$target}{'probed'} = 1;
 }
 sub populate_lldpmap
 {

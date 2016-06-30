@@ -50,6 +50,10 @@ var nmsInfoBox = nmsInfoBox || {
 				'name': 'SNMP - Misc',
 				'panels': ['switchSNMP:misc']
 			},
+			'graphs': {
+				'name': 'Graphs',
+				'panels': ['graphs']
+			},
 			'details': {
 				'name': 'Settings',
 				'panels': ['switchDetails']
@@ -618,6 +622,50 @@ var switchDetailsPanel = function() {
 	};
 };
 nmsInfoBox.addPanelType("switchDetails",switchDetailsPanel);
+var switchGraphsPanel = function() {
+	nmsInfoPanel.call(this,"switchDetails");
+	this.refresh = function(reason) {
+		var swi = [];
+		var swm = [];
+		try {
+			swi = nmsData.switches["switches"][this.sw];
+		} catch(e) {}
+		try {
+			swm = nmsData.smanagement.switches[this.sw];
+		} catch(e) {}
+		var zoomTime = 86400;
+		var device = this.sw;
+		var topel = document.createElement("div");
+		var interfaces = [];
+		for (var i in nmsData.switchstate.switches[this.sw].ifs) {
+			interfaces.push(i);
+		}
+		interfaces.sort();
+		var totalHead = document.createElement("h3");
+		totalHead.innerHTML = device + " total";
+		var total = document.createElement("img");
+		total.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime +'%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + device + '%2Ftotals.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + device + '%2Ftotals.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+		topel.appendChild(totalHead);
+		topel.appendChild(total);
+		for (var ii in interfaces) {
+			var img = document.createElement("img");
+			var head = document.createElement("h3");
+			var i = interfaces[ii];
+			if (nmsData.switchstate.switches[this.sw].ifs[i].ifHCInOctets == 0 
+			 && nmsData.switchstate.switches[this.sw].ifs[i].ifHCOutOctets == 0) {
+				continue;
+			}
+			head.innerHTML = device + " - " + i;
+			i = i.replace(/\//g , "");
+			img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + device + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + device + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+			topel.appendChild(head);
+			topel.appendChild(img);
+		}
+
+		this._render(topel);
+	};
+};
+nmsInfoBox.addPanelType("graphs",switchGraphsPanel);
 
 var searchHelpPanel = function() {
 	nmsInfoPanel.call(this,"searchHelp");

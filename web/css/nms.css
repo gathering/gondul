@@ -19,6 +19,11 @@ canvas {
 	background-color: #333333;
 	color: #ADADAD;
 }
+.fakelink {
+	text-decoration: underline;
+	cursor: pointer;
+}
+	
 .left {
 	width:  22ch;
 }

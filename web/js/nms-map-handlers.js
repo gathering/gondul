@@ -397,10 +397,10 @@ function pingInfo(sw)
 			ret.score = 1000;
 			ret.why = "No IPv4 or IPv6 ping reply";
 		} else if(v6 == undefined) {
-			ret.score = 100;
+			ret.score = 250;
 			ret.why = "No IPv6 ping reply";
 		} else if (v4 == undefined) {
-			ret.score = 99;
+			ret.score = 249;
 			ret.why = "No IPv4 ping reply";
 		}
 

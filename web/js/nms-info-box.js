@@ -526,7 +526,6 @@ var nmsInfoPanel = function nmsInfoPanel(name,id) {
 var switchSNMPPanel = function () {
 	nmsInfoPanel.call(this,"switchSNMP");
 	this.init = function() {
-		this.addHandler("snmp");
 		this.refresh();
 	};
 	this.refresh = function(reason) {

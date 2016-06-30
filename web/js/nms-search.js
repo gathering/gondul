@@ -80,6 +80,22 @@ nmsSearch.searchTest = function(id, sw) {
 				return true;
 			}
 		} catch (e) {}
+		try {
+			for (var x in nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum) {
+				if (nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x] == null) {
+					continue;
+				}
+				if (nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x] == undefined) {
+					continue;
+				}
+				if (nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x] == "") {
+					continue;
+				}
+				if (re.test(nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x])) {
+					return true;
+				}
+			}
+		} catch (e) {}
 		if (re.test(nmsData.snmp.snmp[sw].misc.sysDescr[0])) {
 			return true;
 		}

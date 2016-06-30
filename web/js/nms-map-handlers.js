@@ -133,7 +133,7 @@ function uplinkInfo(sw)
 	var ret = new handlerInfo("uplink","Uplinks");
 	ret.why = "Uplinks";
 	ret.score =0;
-	if (testTree(nmsData,['switchstate','switches',sw,'uplinks'])) {
+	if (testTree(nmsData,['switchstate','switches',sw,'uplinks','live'])) {
 		var u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
 		ret.data[0].value = u;
 		ret.data[0].description = "Uplinks";
@@ -182,9 +182,9 @@ function uplinkUpdater()
 		} else if (uplinks == 1) {
 			nmsMap. setSwitchColor(sw, nmsColor.red);
 		} else if (uplinks == 2) {
-			nmsMap.setSwitchColor(sw, nmsColor.orange);
-		} else if (uplinks == 3) {
 			nmsMap.setSwitchColor(sw, nmsColor.green);
+		} else if (uplinks == 3) {
+			nmsMap.setSwitchColor(sw, nmsColor.orange);
 		} else if (uplinks > 3) {
 			nmsMap.setSwitchColor(sw, nmsColor.blue);
 		}
@@ -201,8 +201,8 @@ function uplinkInit()
 	nmsData.addHandler("switchstate","mapHandler",uplinkUpdater);
 	setLegend(1,"white","0 uplinks");	
 	setLegend(2,nmsColor.red,"1 uplink");	
-	setLegend(3,nmsColor.orange,"2 uplinks");	
-	setLegend(4,nmsColor.green,"3 uplinks");	
+	setLegend(3,nmsColor.green,"2 uplinks");	
+	setLegend(4,nmsColor.orange,"3 uplinks");	
 	setLegend(5,nmsColor.blue,"4 uplinks");	
 }
 
@@ -473,7 +473,7 @@ function dhcpInfo(sw) {
 		var diff = now - then;
 		ret.data[0].value = diff;
 		ret.why = "DHCP freshness";
-		ret.score = diff/2> 600 ? 600 : parseInt(diff/2);
+		ret.score = diff/4> 500 ? 500 : parseInt(diff/4);
 	} else {
 		ret.data[0].value = "No DHCP data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
@@ -483,7 +483,7 @@ function dhcpInfo(sw) {
 				ret.score = 0;
 				ret.why = "No subnet registered";
 			} else {
-				ret.score = 600;
+				ret.score = 500;
 				ret.why = "No DHCP data";
 			}
 		} else {

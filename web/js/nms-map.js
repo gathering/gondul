@@ -313,8 +313,8 @@ nmsMap._drawSwitch = function(sw)
 	this._c.switch.ctx.shadowBlur = 0;
 	var switchtext = sw;
 	var textl = switchtext.length;
-	if (textl > 10)
-		switchtext = switchtext.slice(0,5) + ".." + switchtext.slice(textl-2,textl);
+	if (textl > 12)
+		switchtext = switchtext.slice(0,7) + ".." + switchtext.slice(textl-2,textl);
 
 	if (this._lastName[sw] != switchtext) {
 		nmsMap.stats.textSwitchDraws++;

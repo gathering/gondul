@@ -15,7 +15,9 @@ nmsOplog._reset = function() {
 	document.getElementById('searchbox').oninput();
 }
 
-nmsOplog.getUser = function(force = false) {
+nmsOplog.getUser = function(force) {
+	if (force == undefined)
+		force = false;
 	var user = nms.user;
 	if (user == undefined || force) {
 		user = prompt("Who are you? Short nick for the record.");
@@ -36,6 +38,9 @@ nmsOplog.commit = function() {
 	var user = nmsOplog.getUser();
 	if (user == undefined) {
 		nmsOplog._reset();
+		return;
+	}
+	if (d == undefined || d == null || d == "") {
 		return;
 	}
 
@@ -64,8 +69,10 @@ nmsOplog.getSwitchLogs = function(sw) {
 		return [];
 	for (var v in nmsData['oplog']['oplog']) {
 		var log = nmsData['oplog']['oplog'][v];
-		if (nmsSearch.searchTest(log['systems'],sw)) {
-			logs.push(log);
+		if (log['systems'] != "" && log['systems'] != undefined) {
+			if (nmsSearch.searchTest(log['systems'],sw)) {
+				logs.push(log);
+			}
 		}
 	}
 	return logs;
@@ -89,13 +96,13 @@ nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 		if (timefield == "time") {
 			td1.textContent = date.toTimeString().replace(/:\d\d .*$/,"");
 		} else {
-			let month = date.getMonth() + 1;
-			let day = date.getDate();
-			let tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
+			var month = date.getMonth() + 1;
+			var day = date.getDate();
+			var tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
 			td1.textContent = tmp;
 		}
 		td1.classList.add("left");
-		let data = nmsData['oplog']['oplog'][v]['log'];
+		var data = nmsData['oplog']['oplog'][v]['log'];
 		if (cutoff && data.length > cutoff) {
 			data = data.slice(0,cutoff);
 			data = data + "(...)";

@@ -234,8 +234,11 @@ function ensureAnchorHas(view) {
  * stopTv esnures that we don't conflict with the tvmode thing. If a
  * user-initiated map is selected, tvmode is disabled.
  */
-function setUpdater(fo, stopTv = true)
+function setUpdater(fo, stopTv )
 {
+	if (stopTv == undefined) {
+		stopTv = true;
+	}
 	if (stopTv)
 		nms.tvmode.stop();
 	nmsMap.reset();

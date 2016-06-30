@@ -275,7 +275,7 @@ nmsData._genericUpdater = function(name, cacheok) {
 		url: this._sources[name].target + now,
 		dataType: "text",
 		success: function (indata, textStatus, jqXHR) {
-			let etag = jqXHR.getResponseHeader("ETag");
+			var etag = jqXHR.getResponseHeader("ETag");
 			if (nmsData[name] == undefined ||  (nmsData[name]['hash'] != etag && nmsData[name]['hash'] != etag.slice(2))) {
 				var data = JSON.parse(indata);
 				if (name == "ping") {

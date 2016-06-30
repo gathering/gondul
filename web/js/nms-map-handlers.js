@@ -332,7 +332,7 @@ function tempInfo(sw)
 	ret.score = 0;
 	ret.data[0].value = "N/A";
 	if (testTree(nmsData,['switchstate','switches',sw,'temp'])) {
-		let temp = nmsData.switchstate.switches[sw].temp;
+		var temp = nmsData.switchstate.switches[sw].temp;
 		if (temp == undefined) {
 			ret.data[0].value = "N/A";
 		} else {
@@ -400,7 +400,7 @@ function pingInfo(sw)
 			ret.score = 250;
 			ret.why = "No IPv6 ping reply";
 		} else if (v4 == undefined) {
-			ret.score = 249;
+			ret.score = 800;
 			ret.why = "No IPv4 ping reply";
 		}
 

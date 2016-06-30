@@ -46,7 +46,7 @@ nmsSearch.searchTest = function(id, sw) {
 			limit = limit.replace("active=","");
 			var operator = id.replace("active","")[0];
 			if (limit == parseInt(limit)) {
-				var ports = parseInt(nmsData.switchstate.switches[sw].ifs.ge.live);
+				var ports = parseInt(nmsData.switchstate.switches[sw].totals.live);
 				limit = parseInt(limit);
 				if (operator == ">" ) {
 					if (ports > limit) {

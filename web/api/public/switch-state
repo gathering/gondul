@@ -7,9 +7,20 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my $q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where '
-        . $nms::web::when . 'group by switch);');
+print "Content-type: text/plain\n\n";
+my $target = $ENV{REQUEST_URI};
+$target =~ s/$ENV{SCRIPT_NAME}//;
+$target =~ s/^\///;
+my ($switch, $port) = split(/\//,$target,2);
+my $q;
 
+if (!defined($switch)) {
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch);');
+} else {
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+}
+
+print "s: $switch, p: $port\n";
 $q->execute();
 while ( my $ref = $q->fetchrow_hashref() ) {
 	my $sysname = $ref->{'sysname'};
@@ -17,6 +28,9 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 	my %data = %{JSON::XS::decode_json($ref->{'data'})};
 	
 	for my $porti (keys %{$data{'ports'}}) {
+		if (defined($port) and $port ne "" and $port ne $porti) {
+			next;
+		}
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
 		if ($porti =~ m/\.0$/) {
@@ -51,8 +65,12 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 }
 
 nms::web::setwhen('15m','10m');
-my $q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where '
-        . $nms::web::when . 'group by switch);');
+my $q2;
+if (!defined($switch)) {
+	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch);');
+} else {
+	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+}
 
 $q2->execute();
 while ( my $ref = $q2->fetchrow_hashref() ) {
@@ -61,6 +79,9 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 	my %data = %{JSON::XS::decode_json($ref->{'data'})};
 	
 	for my $porti (keys %{$data{'ports'}}) {
+		if (defined($port) and $port ne "" and $port ne $porti) {
+			next;
+		}
 		my %port = %{$data{'ports'}{$porti}};
 		my $smallport = $porti;
 		if ($porti =~ m/\.0$/) {

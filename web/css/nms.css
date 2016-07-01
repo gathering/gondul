@@ -52,6 +52,7 @@ h1.map-mode-title {
 	transform: rotate(-90deg);
 }
 .nightmode { color: #ddd; }
+.score { color: black; }
 .nightmode h1.map-mode-title {
 	text-shadow: -4px -4px 5px black,-4px 0px 5px black,0px -4px 5px black,0px 0px 5px black,4px 4px 5px black,4px 0px 5px black,0px 4px 5px black;
 }

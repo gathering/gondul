@@ -104,10 +104,11 @@ nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 		td1.classList.add("left");
 		var data = nmsData['oplog']['oplog'][v]['log'];
 		if (cutoff && data.length > cutoff) {
+			td2.title = data;
 			data = data.slice(0,cutoff);
 			data = data + "(...)";
 		}
-		td2.textContent = "[" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
+		td2.textContent = nmsData['oplog']['oplog'][v]['systems'] + " [" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
 		td2.hiddenthing = v;
 		td2.onclick = function(e){ var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
 		if (++i == limit)

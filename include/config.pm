@@ -38,6 +38,7 @@ our @snmp_objects = [
 	['ciscoEnvMonTemperatureStatusValue'],
 	['ipIfStatsHCInOctets'],
 	['ipIfStatsHCOutOctets'],
+	['ipIfStatsIPVersion'],
 	['entPhysicalSerialNum'],
 	['entPhysicalName'],
 	['entPhysicalHardwareRev'],

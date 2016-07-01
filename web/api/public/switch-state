@@ -7,7 +7,6 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-print "Content-type: text/plain\n\n";
 my $target = $ENV{REQUEST_URI};
 $target =~ s/$ENV{SCRIPT_NAME}//;
 $target =~ s/^\///;
@@ -20,7 +19,6 @@ if (!defined($switch)) {
 	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
 }
 
-print "s: $switch, p: $port\n";
 $q->execute();
 while ( my $ref = $q->fetchrow_hashref() ) {
 	my $sysname = $ref->{'sysname'};

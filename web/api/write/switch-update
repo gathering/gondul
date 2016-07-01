@@ -23,7 +23,7 @@ my @dups;
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
 
-my @fields = ( 'community', 'current_mac', 'distro_name', 'distro_phy_port', 'lldp_chassis_id', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v4_netsize', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_v6_netsize', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'switchtype', 'sysname', 'traffic_vlan');
+my @fields = ( 'community', 'tags','current_mac', 'distro_name', 'distro_phy_port', 'lldp_chassis_id', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v4_netsize', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_v6_netsize', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'switchtype', 'sysname', 'traffic_vlan');
 
 sub convertplace
 {
@@ -82,7 +82,7 @@ foreach my $tmp2 (@tmp) {
 		} keys %switch;
 		
 
-		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, last_updated, locked, poll_frequency, community, lldp_chassis_id, secondary_ip, placement,subnet4,subnet6,distro)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro'});");
+		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, last_updated, locked, poll_frequency, tags, community, lldp_chassis_id, secondary_ip, placement,subnet4,subnet6,distro)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'tags'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'secondary_ip'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro'});");
 		push @added, $switch{'sysname'};
 	} else {
 		if (defined($switch{'placement'})) {
@@ -99,6 +99,9 @@ foreach my $tmp2 (@tmp) {
 			$y2 = $placement{'yy'};
 			$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
 			push @dups, "not really, but: " . $switch{'placement'};
+		}
+		if (defined($switch{'tags'})) {
+			$switch{'tags'} =~ s/'/"/g;
 		}
 		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
 			$switch{'ip'} = $switch{'mgtmt4'};

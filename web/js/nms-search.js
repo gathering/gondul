@@ -91,7 +91,7 @@ nmsSearch.searchTest = function(id, sw) {
 				if (nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x] == "") {
 					continue;
 				}
-				if (re.test(nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x])) {
+				if (re.test("serial:" + nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x])) {
 					return true;
 				}
 			}

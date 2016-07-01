@@ -12,7 +12,7 @@ use Data::Dumper;
 
 $nms::web::cc{'max-age'} = "60";
 
-my $q2 = $nms::web::dbh->prepare('select switch,sysname,distro_name,placement,mgmt_v4_addr,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,last_config_fetch,current_mac,poll_frequency,community,last_updated,switchtype from switches where placement is not null');
+my $q2 = $nms::web::dbh->prepare('select switch,sysname,tags,distro_name,placement,mgmt_v4_addr,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,last_config_fetch,current_mac,poll_frequency,community,last_updated,switchtype from switches where placement is not null');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {
@@ -24,6 +24,8 @@ while (my $ref = $q2->fetchrow_hashref()) {
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'placement'}{'width'} = $x1 - $x2;
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'placement'}{'height'} = $y1 - $y2;
 	$nms::web::json{'switches'}{$ref->{'sysname'}}{'distro_name'} = $ref->{'distro_name'};
+	my $data = JSON::XS::decode_json($ref->{'tags'});
+	$nms::web::json{'switches'}{$ref->{'sysname'}}{'tags'} = $data;
 }
 
 my $q4 = $nms::web::dbh->prepare('select linknet, (select sysname from switches where switch = switch1) as sysname1, (select sysname from switches where switch = switch2) as sysname2 from linknets');

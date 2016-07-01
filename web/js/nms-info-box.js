@@ -833,10 +833,16 @@ var switchEditPanel = function () {
 
 		nmsInfoBox._editValues = {};
 		var place;
+		var tags;
 		for (var v in swi) {
 			if (v == "placement") {
 				place = JSON.stringify(swi[v]);
 				template[v] = place;
+				continue;
+			}
+			if (v == "tags") {
+				tags = JSON.stringify(swi[v]);
+				template[v] = tags;
 				continue;
 			}
 			template[v] = nmsInfoBox._nullBlank(swi[v]);
@@ -893,6 +899,12 @@ var switchEditPanel = function () {
 			var pval = document.getElementById("edit-" + this.sw + "-placement");
 			if (pval) {
 				pval.value = place;
+			}
+		}
+		if (tags) {
+			var ptags = document.getElementById("edit-" + this.sw + "-tags");
+			if (ptags) {
+				ptags.value = tags;
 			}
 		}
 

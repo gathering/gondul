@@ -22,13 +22,13 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		if ($porti =~ m/\.0$/) {
 			next;
 		}
-		if ($data{'ports'}{$porti}{'ifAlias'} =~ m/client/) {
+		if ($data{'ports'}{$porti}{'ifAlias'} =~ m/client/i) {
 			$smallport =~ s/[0-9-].*$//;
 		} else {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /Gi1\/0\/4[78]$/ ||
-		    $data{'ports'}{$porti}{'ifAlias'} =~ m/uplink/) {
+		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/trunk/i) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
@@ -71,8 +71,8 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 		} else {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
-		if ($porti =~  /Gi1\/0\/4[78]$/ ||
-		    $data{'ports'}{$porti}{'ifAlias'} =~ m/uplink/) {
+		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/trunk/i) {
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {

@@ -135,21 +135,23 @@ function uplinkInfo(sw)
 	ret.score =0;
 	if (testTree(nmsData,['switchstate','switches',sw,'uplinks','live'])) {
 		var u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
+		var t = parseInt(nmsData.switchstate.switches[sw].uplinks.total);
 		ret.data[0].value = u;
-		ret.data[0].description = "Uplinks";
+		ret.data[0].description = "Active uplinks";
+		ret.data[1] = {};
+		ret.data[1].value = t;
+		ret.data[1].description = "Configured uplinks";
 		if (nmsData.switches.switches[sw].subnet4 == undefined ||
 		    nmsData.switches.switches[sw].subnet4 == null) {
-			if (u == 0) {
-				ret.score = 700
-				ret.why = "0 uplinks with clientnet?";
+			if (u == t) {
+				ret.score = 0
+				ret.why = "All uplinks up";
 			} else if (u == 1) {
-				ret.score = 600;
-				ret.why = "Only 1 uplink";
-			} else if (u == 2) {
-				ret.score = 0;
+				ret.score = 800;
+				ret.why = "Only 1 of " + t + " uplinks alive";
 			} else {
-				ret.score = 500;
-				ret.why = u + " uplinks";
+				ret.score = 650;
+				ret.why = u + " of " + t + " uplinks alive";
 			}
 		}
 	}
@@ -396,8 +398,8 @@ function pingInfo(sw)
 		if (v4 == undefined && v6 == undefined) {
 			ret.score = 1000;
 			ret.why = "No IPv4 or IPv6 ping reply";
-		} else if(v6 == undefined) {
-			ret.score = 250;
+		} else if(v6 == undefined && !tagged(sw,'ignorev6')) {
+			ret.score = 450;
 			ret.why = "No IPv6 ping reply";
 		} else if (v4 == undefined) {
 			ret.score = 800;
@@ -406,6 +408,9 @@ function pingInfo(sw)
 
 		v4 = parseFloat(v4) ;
 		v6 = parseFloat(v6) ;
+		if (tagged(sw,'ignorev6')) {
+			v6 = 0;
+		}
 		if (v4 > ret.score || v6 > ret.score) {
 			ret.why = "Latency";
 			ret.score = parseInt(v4 > v6 ? v4 : v6);
@@ -489,6 +494,20 @@ function dhcpInfo(sw) {
 		} else {
 			ret.score = 100;
 			ret.why = "No management data for DHCP";
+		}
+	}
+	if (testTree(nmsData,['dhcp','switches',sw,'clients'])) {
+		ret.data[1] = {};
+		ret.data[1].value = nmsData.dhcp.switches[sw].clients;
+		ret.data[1].description = "Active clients";
+		ret.data[2] = {};
+		ret.data[2].value = nmsData.dhcp.switches[sw].addresses;
+		ret.data[2].description = "Active IPs";
+	}
+	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
+		if (nmsData.switches.switches[sw].tags.includes('ignoredhcp')) {
+			ret.score = 0;
+			ret.why += "(Ignored)";
 		}
 	}
 	return ret;
@@ -635,6 +654,15 @@ function cpuUpdater() {
 	}
 }
 
+function tagged(sw, tag) {
+	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
+		if (nmsData.switches.switches[sw].tags.includes(tag)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function mgmtInfo(sw) {
 	var ret = new handlerInfo("mgmt","Management info");
 	ret.score = 0;
@@ -643,16 +671,16 @@ function mgmtInfo(sw) {
 		var mg = nmsData.smanagement.switches[sw];
 		ret.data =
 			[{
-				value: mg.mgmt_v4_addr || "",
+				value: mg.mgmt_v4_addr || "N/A",
 				description: "Management IP (v4)"
 			}, {
-				value: mg.mgmt_v6_addr || "",
+				value: mg.mgmt_v6_addr || "N/A",
 				description: "Management IP (v6)"
 			}, {
-				value: mg.subnet4 || "",
+				value: mg.subnet4 || "N/A",
 				description: "Subnet (v4)"
 			}, {
-				value: mg.subnet6 || "",
+				value: mg.subnet6 || "N/A",
 				description: "Subnet (v6)"
 			}];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
@@ -660,10 +688,13 @@ function mgmtInfo(sw) {
 			ret.score = 1000;
 		} else if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
 			ret.why = "No IPv4 management IP";
-			ret.score = 140;
+			ret.score = 550;
 		} else if (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "") {
 			ret.why = "No IPv6 management IP";
-			ret.score = 139;
+			ret.score = 550;
+			if (tagged(sw,'ignorev6')) {
+				ret.score = 0;
+			}
 		}
 	} else {
 		ret.score = 1000;
@@ -673,7 +704,6 @@ function mgmtInfo(sw) {
 		ret.data[0].description = "Management info";
 	};
 	return ret;
-
 }
 
 function cpuInit() {

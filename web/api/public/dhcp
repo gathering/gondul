@@ -14,6 +14,11 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 	my $sysname = $ref->{'sysname'};
 	$json{'dhcp'}{$ref->{'sysname'}} = $ref->{'time'};
 }
+my $q2 = $nms::web::dbh->prepare("select sysname,count(distinct mac) as clients,count(distinct ip) as addresses,count(mac) as acks from dhcp natural join switches where $nms::web::when group by switches.sysname;");
+$q2->execute();
+while (my $ref = $q2->fetchrow_hashref()) {
+	$nms::web::json{'switches'}{$ref->{sysname}} = $ref;
+}
 
 $nms::web::cc{'max-age'} = "10";
 $nms::web::cc{'stale-while-revalidate'} = "30";

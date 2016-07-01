@@ -36,6 +36,8 @@ our @snmp_objects = [
 	['ifOutQLen'],
 	['sysUpTime'],
 	['ciscoEnvMonTemperatureStatusValue'],
+	['ipIfStatsHCInOctets'],
+	['ipIfStatsHCOutOctets'],
 	['entPhysicalSerialNum'],
 	['entPhysicalName'],
 	['entPhysicalHardwareRev'],

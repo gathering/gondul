@@ -81,6 +81,7 @@ var handler_health = {
 
 var handler_mgmt = {
 	getInfo:mgmtInfo,
+	tag:"mgmt",
 	name:"Management info"
 };
 
@@ -132,15 +133,12 @@ function uplinkInfo(sw)
 {
 	var ret = new handlerInfo("uplink","Uplinks");
 	ret.why = "Uplinks";
-	ret.score =0;
+	ret.score = 0;
 	if (testTree(nmsData,['switchstate','switches',sw,'uplinks','live'])) {
 		var u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
 		var t = parseInt(nmsData.switchstate.switches[sw].uplinks.total);
-		ret.data[0].value = u;
-		ret.data[0].description = "Active uplinks";
-		ret.data[1] = {};
-		ret.data[1].value = t;
-		ret.data[1].description = "Configured uplinks";
+		ret.data[0].value = u + " / " + t;
+		ret.data[0].description = "Uplinks (live/configured)";
 		if (nmsData.switches.switches[sw].subnet4 == undefined ||
 		    nmsData.switches.switches[sw].subnet4 == null) {
 			if (u == t) {
@@ -499,10 +497,7 @@ function dhcpInfo(sw) {
 	if (testTree(nmsData,['dhcp','switches',sw,'clients'])) {
 		ret.data[1] = {};
 		ret.data[1].value = nmsData.dhcp.switches[sw].clients;
-		ret.data[1].description = "Active clients";
-		ret.data[2] = {};
-		ret.data[2].value = nmsData.dhcp.switches[sw].addresses;
-		ret.data[2].description = "Active IPs";
+		ret.data[1].description = "DHCP clients";
 	}
 	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
 		if (nmsData.switches.switches[sw].tags.includes('ignoredhcp')) {
@@ -719,6 +714,7 @@ function cpuInit() {
 
 function healthInfo(sw) {
 	var worst = new handlerInfo("health", "Health");
+	var realdata = {};
 	worst.score = 0;
 	worst.why = "All good";
 	for (var h in handlers) {
@@ -727,6 +723,7 @@ function healthInfo(sw) {
 		if (handlers[h].getInfo == undefined)
 			continue;
 		var ret = handlers[h].getInfo(sw);
+		realdata[handlers[h].tag] = ret.data;
 		if (ret.score > worst.score) {
 			worst = ret;
 		}
@@ -735,6 +732,8 @@ function healthInfo(sw) {
 		description: "Health (lower is better)",
 		value: worst.score + " (" + worst.why + ")"
 	}];
+	realdata['health'] = worst.data;
+	worst.realdata = realdata;
 	return worst;
 }
 
@@ -746,8 +745,14 @@ function healthUpdater() {
 		nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
 		if (worst.score > 200)
 			nmsMap.setSwitchInfo(sw, worst.tag);
-		else
-			nmsMap.setSwitchInfo(sw, undefined);
+		else {
+			if (nms.legendPick != undefined && 
+				testTree(worst.realdata,[nms.legendPick.handler,nms.legendPick.idx])) {
+				nmsMap.setSwitchInfo(sw,worst.realdata[nms.legendPick.handler][nms.legendPick.idx].value);
+			} else {
+				nmsMap.setSwitchInfo(sw, undefined);
+			}
+		}
 	}
 }
 

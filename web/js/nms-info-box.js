@@ -246,6 +246,7 @@ var windowHandler = function () {
 	this.bodyObj = false;
 	this._panels = {};
 	this._view = "";
+	this._viewId = {};
 	this._window = {};
 	this.windowTypes = false;
 	this.panelTypes = false;
@@ -337,8 +338,15 @@ var windowHandler = function () {
 		this.show();
 	};
 	this.showView = function (viewId) {
-		if(!viewId || viewId == '')
-			viewId = "initial";
+		if(!viewId || viewId == '') {
+			console.log(this);
+			if (this._viewId[this._window.id] == undefined)
+				viewId = "initial";
+			else
+				viewId = this._viewId[this._window.id];
+		} else {
+			this._viewId[this._window.id] = viewId;
+		}
 		if(!this._window.views || !this._window.views[viewId])
 			return;
 		this.unloadView();
@@ -633,8 +641,6 @@ var switchPortsPanel = function () {
 					traffic = "<small>" + byteCount(nowin) + "B in | " + byteCount(nowout) + "B out </small>";
 				}
 			} catch(e) {};
-
-
 
 			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifDescr + ' </a><small>' + snmpJson[obj].ifAlias + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
 
@@ -1077,7 +1083,10 @@ var switchSummaryPanel = function() {
 			if (handlers[h].getInfo != undefined) {
 				var tmp = handlers[h].getInfo(this.sw);
 				for (var x in tmp.data) {
-					content.push([tmp.data[x].description, tmp.data[x].value]);
+					if (tmp.data[x].value != undefined) {
+						var d = "<div class=\"clickable\" onclick='nmsInfoBox.setLegendPick(\""+ handlers[h].tag + "\", " + x + ");'>" + tmp.data[x].value + '</div>';
+						content.push([tmp.data[x].description, d]);
+					}
 				}
 			}
 		}
@@ -1086,8 +1095,6 @@ var switchSummaryPanel = function() {
 		for(var i in content) {
 			if(content[i][1] == '' || content[i][1] == null)
 				continue;
-			if(content[i][1] == undefined || content[i][1])
-				content[i][1] == "No data";
 			contentCleaned.push(content[i]);
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
@@ -1095,6 +1102,15 @@ var switchSummaryPanel = function() {
 		this._render(table);
 	};
 };
+nmsInfoBox.setLegendPick = function(tag,id) {
+	if (nms.legendPick != undefined) {
+		if (nms.legendPick.handler == tag && nms.legendPick.idx == id) {
+			nms.legendPick = undefined;
+			return;
+		}
+	}
+	nms.legendPick = {handler: tag, idx: id};
+}
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
 
 /*

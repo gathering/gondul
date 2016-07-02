@@ -114,6 +114,11 @@ nmsMap.reset = function() {
 };
 
 nmsMap.setSwitchInfo = function(sw,info) {
+	if (info != undefined) {
+		var textl = info.length;
+		if (textl > 15)
+			info = info.slice(0,15);
+	}
 	if (this._info[sw] != info) {
 		this._info[sw] = info;
 		this._drawSwitchInfo(sw);

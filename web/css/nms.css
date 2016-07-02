@@ -23,6 +23,9 @@ canvas {
 	text-decoration: underline;
 	cursor: pointer;
 }
+.clickable {
+	cursor: pointer;
+}
 	
 .left {
 	width:  22ch;

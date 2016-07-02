@@ -100,3 +100,24 @@ div.map-mode-legend button {
 }
 
 .pulse-on { color: #a00; }
+.panel-heading small {
+	font-size: x-small;
+}
+.nightmode .panel .panel-heading small {
+	color: #999;
+}
+// Classes
+.pull-left {
+	  float: left !important;
+}
+.pull-right {
+	  float: right !important;
+}
+
+.nms-panel-small .panel-heading {
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+.panel-group .panel+ .nms-panel-small  {
+	margin-top: 1px;
+}

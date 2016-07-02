@@ -43,15 +43,15 @@ var nmsInfoBox = nmsInfoBox || {
 				'panels': ['switchSummary','switchComments']
 			},
 			'ports': {
-				'name': 'SNMP - Ports',
-				'panels': ['switchSNMP:ports']
+				'name': 'Ports',
+				'panels': ['switchPorts']
 			},
 			'misc': {
-				'name': 'SNMP - Misc',
+				'name': 'SNMP',
 				'panels': ['switchSNMP:misc']
 			},
 			'graphs': {
-				'name': 'Graphs',
+				'name': 'Traffic',
 				'panels': ['graphs']
 			},
 			'details': {
@@ -548,7 +548,7 @@ var switchSNMPPanel = function () {
 			var cleanObj = obj.replace(/\W+/g, "");
 
 			var groupObj = document.createElement("div");
-			groupObj.classList.add("panel","panel-default");
+			groupObj.classList.add("panel","panel-default","nms-panel-small");
 			groupObj.innerHTML = '<a class="panel-heading collapse-controller" style="display:block;" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + obj + '</a>';
 
 			var groupObjCollapse = document.createElement("div");
@@ -581,6 +581,93 @@ var switchSNMPPanel = function () {
 	};
 };
 nmsInfoBox.addPanelType("switchSNMP",switchSNMPPanel);
+var switchPortsPanel = function () {
+	nmsInfoPanel.call(this,"switchPorts");
+	this.init = function() {
+		this.refresh();
+	};
+	this.refresh = function(reason) {
+		var domObj = document.createElement("div");
+		domObj.classList.add("panel-group");
+
+		try {
+			var snmpOldJson;
+			var snmpJson = nmsData.snmp.snmp[this.sw]['ports'];
+			if (nmsData.old.snmp != undefined) {
+				snmpOldJson = nmsData.old.snmp.snmp[this.sw]['ports'];
+			}
+		} catch(e) {
+			this._renderError("Waiting for data.");
+			return;
+		}
+		var indicies = [];
+		for (var obj in snmpJson) {
+			indicies.push(obj);
+		}
+		indicies.sort(function(a,b) {
+			return snmpJson[a].ifIndex - snmpJson[b].ifIndex;
+		});
+		for(var obji in indicies) {
+			var obj = indicies[obji];
+			var cleanObj = obj.replace(/\W+/g, "");
+			var groupObj = document.createElement("div");
+			groupObj.classList.add("panel","panel-default","nms-panel-small");
+			var glyphicon = "glyphicon-remove";
+			var button = "btn-danger";
+			var title = "link down";
+			if (snmpJson[obj].ifOperStatus == "up") {
+				glyphicon = "glyphicon-ok";
+				button = "btn-success";
+				title = "link up";
+			}
+			if (snmpJson[obj].ifAdminStatus == "down") {
+				glyphicon = "glyphicon-ban-circle";
+				title = "admin down";
+				button = "btn-info";
+			}
+			var traffic = "";
+			try {
+				var nowin = parseInt(snmpJson[obj].ifHCInOctets);
+				var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
+				if (!isNaN(nowin) && !isNaN(nowout)) {
+					traffic = "<small>" + byteCount(nowin) + "B in | " + byteCount(nowout) + "B out </small>";
+				}
+			} catch(e) {};
+
+
+
+			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifDescr + ' </a><small>' + snmpJson[obj].ifAlias + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
+
+			var groupObjCollapse = document.createElement("div");
+			groupObjCollapse.id = cleanObj + "-group";
+			groupObjCollapse.classList.add("collapse");
+
+			var panelBodyObj = document.createElement("div");
+			panelBodyObj.classList.add("panel-body");
+
+			var tableObj = document.createElement("table");
+			tableObj.classList.add("table","table-condensed");
+
+			var tbody = document.createElement("tbody");
+
+			for(var prop in snmpJson[obj]) {
+				var propObj = document.createElement("tr");
+				propObj.innerHTML = '<td>' + prop + '</td><td>' + snmpJson[obj][prop] + '</td>';
+				tbody.appendChild(propObj);
+			}
+
+			tableObj.appendChild(tbody);
+			panelBodyObj.appendChild(tableObj);
+			groupObjCollapse.appendChild(panelBodyObj);
+			groupObj.appendChild(groupObjCollapse);
+			domObj.appendChild(groupObj);
+
+		}
+
+		this._render(domObj);
+	};
+};
+nmsInfoBox.addPanelType("switchPorts",switchPortsPanel);
 
 /*
  * Panel type: Switch details

@@ -11,9 +11,6 @@
     - name: "gondul-varnish-test"
       links: [ "gondul-front-test:gondul-front" ]
       ports: "{{ varnish_ports }}"
-    - name: "gondul-collector-test"
-      links: [ ]
-      ports: []
     - name: "gondul-snmp-test"
       links: [ ]
       ports: []

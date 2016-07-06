@@ -339,7 +339,6 @@ var windowHandler = function () {
 	};
 	this.showView = function (viewId) {
 		if(!viewId || viewId == '') {
-			console.log(this);
 			if (this._viewId[this._window.id] == undefined)
 				viewId = "initial";
 			else
@@ -608,6 +607,19 @@ var switchPortsPanel = function () {
 			this._renderError("Waiting for data.");
 			return;
 		}
+				var img = document.createElement("img");
+				var i = "totals";
+				var zoomTime = 86400;
+				img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D100%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+				domObj.appendChild(img);
+				var intxt = document.createElement("div");
+				intxt.innerHTML = "In ";
+				intxt.classList.add("text-success");	
+				var outtxt = document.createElement("div");
+				outtxt.innerHTML = "Out ";
+				outtxt.classList.add("text-primary");
+				domObj.appendChild(intxt);
+				domObj.appendChild(outtxt);
 		var indicies = [];
 		for (var obj in snmpJson) {
 			indicies.push(obj);
@@ -655,14 +667,41 @@ var switchPortsPanel = function () {
 			tableObj.classList.add("table","table-condensed");
 
 			var tbody = document.createElement("tbody");
-
-			for(var prop in snmpJson[obj]) {
+			var props = [];
+			for (var prop in snmpJson[obj]) {
+				props.push(prop);
+			}
+			props.sort();
+			for(var index in props) {
+				var prop = props[index];
 				var propObj = document.createElement("tr");
 				propObj.innerHTML = '<td>' + prop + '</td><td>' + snmpJson[obj][prop] + '</td>';
 				tbody.appendChild(propObj);
 			}
 
 			tableObj.appendChild(tbody);
+			if (snmpJson[obj].ifHCInOctets != 0 
+			 || snmpJson[obj].ifHCOutOctets != 0) {
+				var img = document.createElement("img");
+				var i = obj;
+				var zoomTime = 86400;
+				i = i.replace(/\//g , "");
+				img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+				panelBodyObj.appendChild(img);
+				var nowin = parseInt(snmpJson[obj].ifHCInOctets);
+				var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
+				if (!isNaN(nowin) && !isNaN(nowout)) {
+					traffic = "<small>" + byteCount(nowin) + "B in | " + byteCount(nowout) + "B out </small>";
+				}
+				var intxt = document.createElement("div");
+				intxt.innerHTML = "Total in: " + byteCount(nowin) + "B";
+				intxt.classList.add("text-success");	
+				var outtxt = document.createElement("div");
+				outtxt.innerHTML = "Total out: " + byteCount(nowout) + "B";
+				outtxt.classList.add("text-primary");	
+				panelBodyObj.appendChild(intxt);
+				panelBodyObj.appendChild(outtxt);
+			}
 			panelBodyObj.appendChild(tableObj);
 			groupObjCollapse.appendChild(panelBodyObj);
 			groupObj.appendChild(groupObjCollapse);

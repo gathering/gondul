@@ -134,9 +134,11 @@ function uplinkInfo(sw)
 	var ret = new handlerInfo("uplink","Uplinks");
 	ret.why = "Uplinks";
 	ret.score = 0;
+	var u = 0;
+	var t  = 0;
 	if (testTree(nmsData,['switchstate','switches',sw,'uplinks','live'])) {
-		var u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
-		var t = parseInt(nmsData.switchstate.switches[sw].uplinks.total);
+		u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
+		t = parseInt(nmsData.switchstate.switches[sw].uplinks.total);
 		ret.data[0].value = u + " / " + t;
 		ret.data[0].description = "Uplinks (live/configured)";
 		if (nmsData.switches.switches[sw].subnet4 == undefined ||
@@ -152,6 +154,13 @@ function uplinkInfo(sw)
 				ret.why = u + " of " + t + " uplinks alive";
 			}
 		}
+	}
+	if (testTree(nmsData,['switchstate','switches',sw,'totals','live'])) {
+		var tu = parseInt(nmsData.switchstate.switches[sw].totals.live);
+		var tt = parseInt(nmsData.switchstate.switches[sw].totals.total);
+		ret.data[1] = {};
+		ret.data[1].value = (tu-u) + " / " + (tt-t);
+		ret.data[1].description = "Non-uplink ports (live/total)";
 	}
 	return ret;
 }

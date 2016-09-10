@@ -6,7 +6,7 @@
   - test
 - name: make all
   docker_image:
-      state: build
+      state: present
       name: "{{ item.name }}"
       docker_api_version: 1.18
       dockerfile: build/test/{{ item.name }}.Dockerfile

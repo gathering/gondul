@@ -309,6 +309,7 @@ CREATE TABLE switches (
     mgmt_vlan integer DEFAULT 666,
     traffic_vlan integer,
     last_config_fetch timestamp with time zone,
+    tags jsonb,
     current_mac macaddr
 );
 

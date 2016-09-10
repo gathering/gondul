@@ -8,7 +8,6 @@
   docker_image:
       state: present
       name: "{{ item.name }}"
-      docker_api_version: 1.18
       dockerfile: build/test/{{ item.name }}.Dockerfile
       path: "{{ pwd.stdout }}"
   with_items: "{{ images }}"
@@ -20,7 +19,6 @@
       name: "{{ item.name }}"
       state: stopped
       image: "{{ item.name }}"
-      docker_api_version: 1.18
       stop_timeout: 2
   with_items: "{{ images }}"
   tags:
@@ -30,7 +28,6 @@
   docker: 
       name: "{{ item.name }}"
       image: "{{ item.name }}"
-      docker_api_version: 1.18
       state: started
       net: bridge
       ports: "{{ item.ports }}"

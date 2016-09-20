@@ -7,17 +7,26 @@
   vars:
   - images:
     - name: "gondul-db-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
       links: []
       ports: []
+    - name: "gondul-graphite-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" , "{{ pwd.stdout }}/data/graphite:/var/lib/graphite" ]
+      links: []
+      ports: []
+    - name: "gondul-collector-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
+      links: [ "gondul-db-test:db" ]
+      ports: []
     - name: "gondul-front-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
       links: [ "gondul-db-test:db" ]
       ports: "{{ front_ports }}"
     - name: "gondul-varnish-test"
-      links: [ "gondul-front-test:gondul-front" ]
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
+      links: [ "gondul-front-test:gondul-front", "gondul-graphite-test:gondul-graphite" ]
       ports: "{{ varnish_ports }}"
-    - name: "gondul-collector-test"
-      links: [ "gondul-db-test:db" ]
-      ports: []
     - name: "gondul-snmp-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
       links: [ "gondul-db-test:db" ]
       ports: []

@@ -18,3 +18,4 @@ RUN apt-get -y install          \
 RUN mkdir -p /opt/gondul
 COPY build/test/snmpd.conf /etc/snmp/
 CMD /opt/gondul/build/test/snmpfetch-misc.sh
+EXPOSE 1111

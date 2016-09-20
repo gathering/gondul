@@ -2,14 +2,18 @@
   register: pwd
   tags:
   - build
+  - stop
   - start
   - test
 - name: make all
   docker_image:
       state: present
+      docker_api_version: 1.18
       name: "{{ item.name }}"
       dockerfile: build/test/{{ item.name }}.Dockerfile
       path: "{{ pwd.stdout }}"
+      force: true
+      rm: false
   with_items: "{{ images }}"
   tags: 
   - build
@@ -17,6 +21,7 @@
 - name: stop all
   docker:
       name: "{{ item.name }}"
+      docker_api_version: 1.18
       state: stopped
       image: "{{ item.name }}"
       stop_timeout: 2
@@ -25,14 +30,17 @@
   - stop
 
 - name: start all
-  docker: 
+  docker_container: 
       name: "{{ item.name }}"
       image: "{{ item.name }}"
+      docker_api_version: 1.18
       state: started
-      net: bridge
-      ports: "{{ item.ports }}"
+      network_mode: bridge
+      recreate: true
+      restart: true
+      published_ports: "{{ item.ports }}"
       links: "{{ item.links  }}"
-      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
+      volumes: "{{ item.volumes }}"
   with_items: "{{ images }}"
   tags: 
   - start

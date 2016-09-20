@@ -15,3 +15,4 @@ RUN apt-get -y install          \
     perl-modules 
 RUN mkdir -p /opt/gondul
 CMD /opt/gondul/collectors/ping.pl
+EXPOSE 1111

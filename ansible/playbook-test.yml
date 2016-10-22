@@ -16,7 +16,7 @@
       ports: []
     - name: "gondul-collector-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
-      links: [ "gondul-db-test:db" ]
+      links: [ "gondul-db-test:db", "gondul-graphite-test:graphite" ]
       ports: []
     - name: "gondul-front-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]

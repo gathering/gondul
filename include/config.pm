@@ -8,6 +8,8 @@ our $db_name = "nms";
 our $db_host = "db";
 our $db_username = "nms";
 our $db_password = "risbrod";
+our $graphite_host = "graphite";
+our $graphite_port = "2003";
 
 # Max SNMP polls to fire off at the same time.
 our $snmp_max = 20;

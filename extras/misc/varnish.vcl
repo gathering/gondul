@@ -7,6 +7,11 @@ backend default {
     .port = "80";
 }
 
+backend graphite {
+    .host = "gondul-graphite";
+    .port = "80";
+}
+
 sub vcl_recv {
     if (req.url ~ "^/where" || req.url ~ "^/location") {
 	set req.url = "/api/public/location";
@@ -25,6 +30,10 @@ sub vcl_recv {
     if (req.method != "GET" && req.method != "HEAD") {
         /* We only deal with GET and HEAD by default */
         return (pass);
+    }
+
+    if (req.url ~ "/render") {
+        set req.backend_hint = graphite;
     }
 
     # Brukes ikke. Cookies er for nubs.
@@ -47,6 +56,15 @@ sub vcl_backend_response {
     set beresp.http.x-url = bereq.url;
     if (beresp.http.x-ban) {
         ban("obj.http.x-url ~ " + beresp.http.x-ban);
+    }
+    if (bereq.url ~ "/render") {
+        # Graphite claims "no-cache", which is dumb.
+        # Let's blindly cache for 5+10s. Which is 10000 times better.
+        set beresp.http.Cache-Control = "max-age=5s";
+        unset beresp.http.Pragma;
+        set beresp.uncacheable = false;
+        set beresp.grace = 10s;
+        set beresp.ttl = 5s;
     }
     if (beresp.status != 200) {
         set beresp.uncacheable = false;

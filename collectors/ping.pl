@@ -6,6 +6,7 @@ use Net::Oping;
 use strict;
 use warnings;
 use Data::Dumper;
+use IO::Socket::IP;
 
 use lib '/opt/gondul/include';
 use nms;
@@ -15,11 +16,17 @@ my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
-my $q = $dbh->prepare("SELECT switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random();");
+my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random();");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();
 my $target = 0.7;
+my $sock = IO::Socket::IP->new(
+       PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
+        Timeout => 20,
+       ) or die "Cannot connect - $@";
+ 
+ $sock->blocking( 0 );
 while (1) {
 	my $now = time();
 	my $elapsed = ($now - $last);
@@ -34,10 +41,13 @@ while (1) {
 	$q->execute;
 	my %ip_to_switch = ();
 	my %secondary_ip_to_switch = ();
+	my %sw_to_sysname = ();
 	my $affected = 0;
 	while (my $ref = $q->fetchrow_hashref) {
 		$affected++;
 		my $switch = $ref->{'switch'};
+		my $sysname = $ref->{'sysname'};
+		$sw_to_sysname{$switch} = $sysname;
 
 		my $ip = $ref->{'ip'};
 		if (defined($ip) ) {
@@ -63,8 +73,10 @@ while (1) {
 
 	$dbh->do('COPY ping (switch, latency_ms) FROM STDIN');  # date is implicitly now.
 	my $drops = 0;
+	my $now_graphite = time();
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
+		my $sysname = $sw_to_sysname{$switch};
 		if (!defined($switch)) {
 			next;
 		}
@@ -72,9 +84,12 @@ while (1) {
 		if (!defined($latency)) {
 			$drops += $dropped{$ip};
 		}
+		print $sock "ping.$sysname.ipv4 " . ($latency || "NaN") . " $now_graphite\n";
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}
+ 
+
 	if ($drops > 0) {
 		print "$drops ";
 	}
@@ -84,7 +99,9 @@ while (1) {
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $secondary_ip_to_switch{$ip};
 		next if (!defined($switch));
+		my $sysname = $sw_to_sysname{$switch};
 
+		print $sock "ping.$sysname.ipv6 " . ($latency || "NaN") . " $now_graphite\n";
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}

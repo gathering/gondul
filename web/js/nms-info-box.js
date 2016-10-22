@@ -475,11 +475,11 @@ var nmsInfoPanel = function nmsInfoPanel(name,id) {
 		if(!this.me)
 			return;
 		this.me.remove();
+		this.removeHandlers();
 		this.sw = false;
 		this.container = false;
 		this.me = false;
 		this.id = false;
-		this.removeHandlers();
 	};
 
 	//Method for loading new data and triggering a _render if needed
@@ -507,12 +507,14 @@ var nmsInfoPanel = function nmsInfoPanel(name,id) {
 			targetFunction = "refresh";
 		nmsData.addHandler(dataType,this.id,(this[targetFunction]).bind(this),"handler-"+dataType);
 		this.handlers.push(dataType);
+		console.log("Pushing " + this.id + " handler");
 	};
 
 	//Method for removing all handlers we have registered
 	this.removeHandlers = function () {
 		for(var i in this.handlers) {
 			nmsData.unregisterHandler(this.handlers[i],this.id);
+			console.log("Nuking " + this.handlers[i] + " / "  + this.id + " handler");
 		}
 	};
 
@@ -610,7 +612,7 @@ var switchPortsPanel = function () {
 				var img = document.createElement("img");
 				var i = "totals";
 				var zoomTime = 86400;
-				img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D100%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+				img.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
 				domObj.appendChild(img);
 				var intxt = document.createElement("div");
 				intxt.innerHTML = "In ";
@@ -686,7 +688,7 @@ var switchPortsPanel = function () {
 				var i = obj;
 				var zoomTime = 86400;
 				i = i.replace(/\//g , "");
-				img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + this.sw + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+				img.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
 				panelBodyObj.appendChild(img);
 				var nowin = parseInt(snmpJson[obj].ifHCInOctets);
 				var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
@@ -755,7 +757,7 @@ var switchDetailsPanel = function() {
 };
 nmsInfoBox.addPanelType("switchDetails",switchDetailsPanel);
 var switchGraphsPanel = function() {
-	nmsInfoPanel.call(this,"switchDetails");
+	nmsInfoPanel.call(this,"graphs");
 	this.refresh = function(reason) {
 		var swi = [];
 		var swm = [];
@@ -776,7 +778,7 @@ var switchGraphsPanel = function() {
 		var totalHead = document.createElement("h3");
 		totalHead.innerHTML = device + " total";
 		var total = document.createElement("img");
-		total.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime +'%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + device + '%2Ftotals.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + device + '%2Ftotals.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+		total.src = '/render/?from=-5min&target=ping.' + device + '.ipv4' ;
 		topel.appendChild(totalHead);
 		topel.appendChild(total);
 		for (var ii in interfaces) {
@@ -789,7 +791,7 @@ var switchGraphsPanel = function() {
 			}
 			head.innerHTML = device + " - " + i;
 			i = i.replace(/\//g , "");
-			img.src = 'http://monitor.dx16.sorlanet.net/graph--start%3D-' + zoomTime + '%20--end%3D-60%20--width%3D530%20--height%3D150%20--rigid%20--slope-mode%20DEF%3Ab%3D%2F' + device + '%2F' + i + '.rrd%3Atraffic_in%3AAVERAGE%20DEF%3Ac%3D%2F' + device + '%2F' + i + '.rrd%3Atraffic_out%3AAVERAGE%20CDEF%3Acdefb%3Db%2C8%2C*%20CDEF%3Acdefg%3Dc%2C8%2C*%20AREA%3Acdefb%2300CF0033%20LINE1%3Acdefb%2300CF00FF%20AREA%3Acdefg%23002A9733%20LINE1%3Acdefg%23002A97FF';
+			total.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
 			topel.appendChild(head);
 			topel.appendChild(img);
 		}
@@ -1118,6 +1120,11 @@ var switchSummaryPanel = function() {
 	};
 	this.refresh = function(reason) {
 		var content = [];
+		if (this.sw == false) {
+			console.log("ugh, cleanup failed?");
+			return;
+		}
+		var topper = document.createElement("div");
 		for ( var h in handlers ) {
 			if (handlers[h].getInfo != undefined) {
 				var tmp = handlers[h].getInfo(this.sw);
@@ -1137,8 +1144,12 @@ var switchSummaryPanel = function() {
 			contentCleaned.push(content[i]);
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
+		var latency = document.createElement("img");
+		latency.src = '/render/?height=200&width=600&from=-5min&vTitle=Latenc&hideLegend=true&target=movingAverage(ping.' + this.sw + '.ipv4,10)' ;
+		topper.appendChild(latency);
+		topper.appendChild(table);
 
-		this._render(table);
+		this._render(topper);
 	};
 };
 nmsInfoBox.setLegendPick = function(tag,id) {

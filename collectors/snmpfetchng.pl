@@ -8,6 +8,7 @@ use SNMP;
 use Data::Dumper;
 use lib '/opt/gondul/include';
 use nms qw(convert_mac);
+use IO::Socket::IP;
 
 SNMP::initMib();
 SNMP::addMibDirs("/opt/gondul/mibs/StandardMibs");
@@ -54,6 +55,13 @@ sub mylog
 	$time =~ s/\n.*$//;
 	printf STDERR "[%s] %s\n", $time, $msg;
 }
+
+my $sock = IO::Socket::IP->new(
+       PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
+        Timeout => 20,
+       ) or die "Cannot connect - $@";
+ 
+ $sock->blocking( 0 );
 
 sub populate_switches
 {
@@ -110,6 +118,7 @@ sub callback{
 	my %nics;
 	my @nicids;
 	my $total = 0;
+	my $now_graphite = time();
 
 	for my $ret (@top) {
 		for my $var (@{$ret}) {
@@ -130,6 +139,16 @@ sub callback{
 	my %tree2;
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
+		for my $tmp_key (keys $tree{$nic}) {
+			my $path = "snmp.$switch{'sysname'}.$tree{$nic}{'ifName'}.$tmp_key";
+			my $value = $tree{$nic}{$tmp_key};
+			if ($value =~ m/^\d+$/) {
+				print $sock "$path $value $now_graphite\n";
+			} else {
+				mylog ("??? $path $value $now_graphite");
+			}
+
+		}
 		delete $tree{$nic};
 	}
 	for my $iid (keys %tree) {

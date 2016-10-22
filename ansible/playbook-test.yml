@@ -14,6 +14,10 @@
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" , "{{ pwd.stdout }}/data/graphite:/var/lib/graphite" ]
       links: []
       ports: []
+    - name: "gondul-grafana-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" , "{{ pwd.stdout }}/data/grafana:/var/lib/grafana" ]
+      links: ["gondul-graphite-test:graphite" ]
+      ports: []
     - name: "gondul-collector-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
       links: [ "gondul-db-test:db", "gondul-graphite-test:graphite" ]
@@ -28,5 +32,5 @@
       ports: "{{ varnish_ports }}"
     - name: "gondul-snmp-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
-      links: [ "gondul-db-test:db" ]
+      links: [ "gondul-db-test:db", "gondul-graphite-test:graphite" ]
       ports: []

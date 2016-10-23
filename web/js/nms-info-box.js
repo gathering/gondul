@@ -50,10 +50,6 @@ var nmsInfoBox = nmsInfoBox || {
 				'name': 'SNMP',
 				'panels': ['switchSNMP:misc']
 			},
-			'graphs': {
-				'name': 'Traffic',
-				'panels': ['graphs']
-			},
 			'details': {
 				'name': 'Settings',
 				'panels': ['switchDetails']
@@ -609,19 +605,19 @@ var switchPortsPanel = function () {
 			this._renderError("Waiting for data.");
 			return;
 		}
-				var img = document.createElement("img");
-				var i = "totals";
-				var zoomTime = 86400;
-				img.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
-				domObj.appendChild(img);
-				var intxt = document.createElement("div");
-				intxt.innerHTML = "In ";
-				intxt.classList.add("text-success");	
-				var outtxt = document.createElement("div");
-				outtxt.innerHTML = "Out ";
-				outtxt.classList.add("text-primary");
-				domObj.appendChild(intxt);
-				domObj.appendChild(outtxt);
+		var img = document.createElement("img");
+		var i = "totals";
+		var zoomTime = 86400;
+		img.src = '/render/?width=600&from=-12h&target=derivative(sum(snmp.' + this.sw + '.*.ifHCOutOctets))&target=derivative(sum(snmp.' + this.sw + '.*.ifHCInOctets))' ;
+		domObj.appendChild(img);
+		var intxt = document.createElement("div");
+		intxt.innerHTML = "In ";
+		intxt.classList.add("text-success");	
+		var outtxt = document.createElement("div");
+		outtxt.innerHTML = "Out ";
+		outtxt.classList.add("text-primary");
+		domObj.appendChild(intxt);
+		domObj.appendChild(outtxt);
 		var indicies = [];
 		for (var obj in snmpJson) {
 			indicies.push(obj);
@@ -688,7 +684,7 @@ var switchPortsPanel = function () {
 				var i = obj;
 				var zoomTime = 86400;
 				i = i.replace(/\//g , "");
-				img.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
+				img.src = '/render/?width=600&from=-12h&target=derivative(snmp.' + this.sw + '.' + obj + '.ifHCOutOctets)&target=derivative(snmp.' + this.sw + '.' + obj + '.ifHCInOctets)&target=secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors})' ;
 				panelBodyObj.appendChild(img);
 				var nowin = parseInt(snmpJson[obj].ifHCInOctets);
 				var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
@@ -756,50 +752,6 @@ var switchDetailsPanel = function() {
 	};
 };
 nmsInfoBox.addPanelType("switchDetails",switchDetailsPanel);
-var switchGraphsPanel = function() {
-	nmsInfoPanel.call(this,"graphs");
-	this.refresh = function(reason) {
-		var swi = [];
-		var swm = [];
-		try {
-			swi = nmsData.switches["switches"][this.sw];
-		} catch(e) {}
-		try {
-			swm = nmsData.smanagement.switches[this.sw];
-		} catch(e) {}
-		var zoomTime = 86400;
-		var device = this.sw;
-		var topel = document.createElement("div");
-		var interfaces = [];
-		for (var i in nmsData.switchstate.switches[this.sw].ifs) {
-			interfaces.push(i);
-		}
-		interfaces.sort();
-		var totalHead = document.createElement("h3");
-		totalHead.innerHTML = device + " total";
-		var total = document.createElement("img");
-		total.src = '/render/?from=-5min&target=ping.' + device + '.ipv4' ;
-		topel.appendChild(totalHead);
-		topel.appendChild(total);
-		for (var ii in interfaces) {
-			var img = document.createElement("img");
-			var head = document.createElement("h3");
-			var i = interfaces[ii];
-			if (nmsData.switchstate.switches[this.sw].ifs[i].ifHCInOctets == 0 
-			 && nmsData.switchstate.switches[this.sw].ifs[i].ifHCOutOctets == 0) {
-				continue;
-			}
-			head.innerHTML = device + " - " + i;
-			i = i.replace(/\//g , "");
-			total.src = '/render/?from=-5min&target=ping.' + this.sw + '.ipv4' ;
-			topel.appendChild(head);
-			topel.appendChild(img);
-		}
-
-		this._render(topel);
-	};
-};
-nmsInfoBox.addPanelType("graphs",switchGraphsPanel);
 
 var searchHelpPanel = function() {
 	nmsInfoPanel.call(this,"searchHelp");

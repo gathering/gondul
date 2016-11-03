@@ -140,6 +140,8 @@ function byteCount(bytes,precision) {
 		bytes = bytes / 1024;
 		i++;
 	}
+	if (i == 0)
+		return bytes;
 	return bytes.toFixed(precision) + units[i];
 }
 

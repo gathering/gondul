@@ -608,16 +608,13 @@ var switchPortsPanel = function () {
 		var img = document.createElement("img");
 		var i = "totals";
 		var zoomTime = 86400;
-		img.src = '/render/?width=600&from=-12h&target=derivative(sum(snmp.' + this.sw + '.*.ifHCOutOctets))&target=derivative(sum(snmp.' + this.sw + '.*.ifHCInOctets))' ;
+		img.src = '/render/?title=' + this.sw + ' totals&width=600&from=-12h&target=aliasByMetric(derivative(sum(snmp.' + this.sw + '.*.ifHCOutOctets)))&target=aliasByMetric(derivative(sum(snmp.' + this.sw + '.*.ifHCInOctets)))' + nmsInfoBox._graphDefaults();
+		var expanderButton = document.createElement("a");
+		expanderButton.innerHTML = "Toggle all";
+		expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
+		expanderButton.setAttribute("role","button");
 		domObj.appendChild(img);
-		var intxt = document.createElement("div");
-		intxt.innerHTML = "In ";
-		intxt.classList.add("text-success");	
-		var outtxt = document.createElement("div");
-		outtxt.innerHTML = "Out ";
-		outtxt.classList.add("text-primary");
-		domObj.appendChild(intxt);
-		domObj.appendChild(outtxt);
+		domObj.appendChild(expanderButton);
 		var indicies = [];
 		for (var obj in snmpJson) {
 			indicies.push(obj);
@@ -657,6 +654,7 @@ var switchPortsPanel = function () {
 			var groupObjCollapse = document.createElement("div");
 			groupObjCollapse.id = cleanObj + "-group";
 			groupObjCollapse.classList.add("collapse");
+			groupObjCollapse.classList.add("collapse-top");
 
 			var panelBodyObj = document.createElement("div");
 			panelBodyObj.classList.add("panel-body");
@@ -673,7 +671,16 @@ var switchPortsPanel = function () {
 			for(var index in props) {
 				var prop = props[index];
 				var propObj = document.createElement("tr");
-				propObj.innerHTML = '<td>' + prop + '</td><td>' + snmpJson[obj][prop] + '</td>';
+				var append = "";
+				var value = snmpJson[obj][prop];
+				if (!isNaN(parseInt(value))) {
+					append = byteCount(value, 2);
+					if (append != value)
+						append = " (" + append + ")";
+					else
+						append = "";
+				}
+				propObj.innerHTML = '<td>' + prop + '</td><td>' + value + append + '</td>';
 				tbody.appendChild(propObj);
 			}
 
@@ -684,23 +691,19 @@ var switchPortsPanel = function () {
 				var i = obj;
 				var zoomTime = 86400;
 				i = i.replace(/\//g , "");
-				img.src = '/render/?width=600&from=-12h&target=derivative(snmp.' + this.sw + '.' + obj + '.ifHCOutOctets)&target=derivative(snmp.' + this.sw + '.' + obj + '.ifHCInOctets)&target=secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors})' ;
+				img.src = '/render/?width=600&from=-12h&target=aliasByMetric(derivative(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets}))&target=aliasByMetric(secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))' + nmsInfoBox._graphDefaults();
 				panelBodyObj.appendChild(img);
-				var nowin = parseInt(snmpJson[obj].ifHCInOctets);
-				var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
-				if (!isNaN(nowin) && !isNaN(nowout)) {
-					traffic = "<small>" + byteCount(nowin) + "B in | " + byteCount(nowout) + "B out </small>";
-				}
-				var intxt = document.createElement("div");
-				intxt.innerHTML = "Total in: " + byteCount(nowin) + "B";
-				intxt.classList.add("text-success");	
-				var outtxt = document.createElement("div");
-				outtxt.innerHTML = "Total out: " + byteCount(nowout) + "B";
-				outtxt.classList.add("text-primary");	
-				panelBodyObj.appendChild(intxt);
-				panelBodyObj.appendChild(outtxt);
 			}
-			panelBodyObj.appendChild(tableObj);
+			var tableTopObj = document.createElement("div");
+			tableTopObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-table-group">Details</a></span>';
+			var tableTopObjCollapse = document.createElement("div");
+			tableTopObjCollapse.id = cleanObj + "-table-group";
+			tableTopObjCollapse.classList.add("collapse");
+			tableTopObjCollapse.classList.add("collapse-detail");
+			tableTopObjCollapse.appendChild(tableObj);
+			tableTopObj.appendChild(tableTopObjCollapse);
+			panelBodyObj.appendChild(tableTopObj);
+			//panelBodyObj.appendChild(tableObj);
 			groupObjCollapse.appendChild(panelBodyObj);
 			groupObj.appendChild(groupObjCollapse);
 			domObj.appendChild(groupObj);
@@ -1097,7 +1100,8 @@ var switchSummaryPanel = function() {
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
-		latency.src = '/render/?height=200&width=600&from=-5min&vTitle=Latenc&hideLegend=true&target=movingAverage(ping.' + this.sw + '.ipv4,10)' ;
+		latency.src = '/render/?height=200&width=600&from=-30min&title=' + this.sw + ' health&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency")&target=alias(secondYAxis(derivative(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(derivative(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults();
+		
 		topper.appendChild(latency);
 		topper.appendChild(table);
 
@@ -1114,7 +1118,14 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 	nms.legendPick = {handler: tag, idx: id};
 }
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
-
+nmsInfoBox._graphDefaults = function() {
+	// FIXME: When we bump graphite to 0.9.15, switch to svg
+	if (nms.nightMode) {
+		return "&bgcolor=222222&fgcolor=white&format=png";
+	} else {
+		return "&format=png";
+	}
+}
 /*
  * General-purpose table-maker?
  *

@@ -607,8 +607,7 @@ var switchPortsPanel = function () {
 		}
 		var img = document.createElement("img");
 		var i = "totals";
-		var zoomTime = 86400;
-		img.src = '/render/?title=' + this.sw + ' totals&width=600&from=-12h&target=aliasByMetric(derivative(sum(snmp.' + this.sw + '.*.ifHCOutOctets)))&target=aliasByMetric(derivative(sum(snmp.' + this.sw + '.*.ifHCInOctets)))' + nmsInfoBox._graphDefaults();
+		img.src = '/render/?title=' + this.sw + ' totals&width=600&from=-12h&target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCOutOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCInOctets)))),"binary")' + nmsInfoBox._graphDefaults();
 		var expanderButton = document.createElement("a");
 		expanderButton.innerHTML = "Toggle all";
 		expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
@@ -688,10 +687,7 @@ var switchPortsPanel = function () {
 			if (snmpJson[obj].ifHCInOctets != 0 
 			 || snmpJson[obj].ifHCOutOctets != 0) {
 				var img = document.createElement("img");
-				var i = obj;
-				var zoomTime = 86400;
-				i = i.replace(/\//g , "");
-				img.src = '/render/?width=600&from=-12h&target=aliasByMetric(derivative(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets}))&target=aliasByMetric(secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))' + nmsInfoBox._graphDefaults();
+				img.src = '/render/?width=600&from=-12h&target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors})),"binary")' + nmsInfoBox._graphDefaults();
 				panelBodyObj.appendChild(img);
 			}
 			var tableTopObj = document.createElement("div");
@@ -1100,7 +1096,7 @@ var switchSummaryPanel = function() {
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
-		latency.src = '/render/?height=200&width=600&from=-30min&title=' + this.sw + ' health&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency")&target=alias(secondYAxis(derivative(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(derivative(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults();
+		latency.src = '/render/?height=240&width=600&from=-60min&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults();
 		
 		topper.appendChild(latency);
 		topper.appendChild(table);
@@ -1118,14 +1114,6 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 	nms.legendPick = {handler: tag, idx: id};
 }
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
-nmsInfoBox._graphDefaults = function() {
-	// FIXME: When we bump graphite to 0.9.15, switch to svg
-	if (nms.nightMode) {
-		return "&bgcolor=222222&fgcolor=white&format=png";
-	} else {
-		return "&format=png";
-	}
-}
 /*
  * General-purpose table-maker?
  *
@@ -1163,6 +1151,23 @@ nmsInfoBox._nullBlank = function(x) {
 		return "";
 	return x;
 };
+
+/*
+ * Provide common defaults for graph renders.
+ *
+ * Kept on the URL to avoid having to manage templates since we need to
+ * manage night mode anyway for now.
+ */
+nmsInfoBox._graphDefaults = function() {
+	// Copied from nms-color-util.js. Could do with expanding.
+	var colorlist = "337ab7,5cb85c,5bc0de,f0ad4e,d9534f,ffffff";
+	var base = "&yUnitSystem=binary&format=svg&colorList=" + colorlist;
+	if (nms.nightMode) {
+		return "&bgcolor=222222&fgcolor=dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
+	} else {
+		return base;
+	}
+}
 
 nmsInfoBox._editChange = function(sw, v) {
 	var el = document.getElementById("edit-" + sw + "-" + v);

@@ -1,7 +1,11 @@
-FROM debian:jessie
+FROM ubuntu:yakkety
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y graphite-carbon graphite-web apache2
 RUN apt-get install -y libapache2-mod-wsgi
 RUN cp /usr/share/graphite-web/apache2-graphite.conf /etc/apache2/sites-available/graphite-web.conf
+RUN sed -i 's/<\/VirtualHost>//' /etc/apache2/sites-available/graphite-web.conf
+RUN echo 'WSGIApplicationGroup %{GLOBAL}' >> /etc/apache2/sites-available/graphite-web.conf
+RUN echo '</VirtualHost>' >> /etc/apache2/sites-available/graphite-web.conf
+
 RUN a2ensite graphite-web
 RUN a2dissite 000-default
 RUN a2enmod wsgi

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 if [ ! -r /var/lib/graphite/graphite.db ]; then
-	graphite-manage migrate
-	graphite-manage createsuperuser --noinput --username=admin --email root@localhost.localdomain
-	chown -R _graphite:_graphite /var/lib/graphite/
+	# graphite-manage migrate
+	django-admin migrate --settings=graphite.settings
+	# graphite-manage createsuperuser --noinput --username=admin --email root@localhost.localdomain
+	django-admin createsuperuser --settings=graphite.settings  --noinput --username=admin --email root@localhost.localdomain
 fi
+chown -R _graphite:_graphite /var/lib/graphite/
 service apache2 start
 service carbon-cache start
 while true; do sleep 10; done

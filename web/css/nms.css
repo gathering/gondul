@@ -124,3 +124,7 @@ div.map-mode-legend button {
 .panel-group .panel+ .nms-panel-small  {
 	margin-top: 1px;
 }
+.graph {
+	max-width: 100%;
+	width: 100%;
+}

@@ -606,6 +606,7 @@ var switchPortsPanel = function () {
 		var img = document.createElement("img");
 		var i = "totals";
 		img.src = '/render/?title=' + this.sw + ' totals&width=600&from=-12h&target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCOutOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCInOctets)))),"binary")' + nmsInfoBox._graphDefaults();
+		img.classList.add("graph");
 		var expanderButton = document.createElement("a");
 		expanderButton.innerHTML = "Toggle all";
 		expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
@@ -686,6 +687,7 @@ var switchPortsPanel = function () {
 			 || snmpJson[obj].ifHCOutOctets != 0) {
 				var img = document.createElement("img");
 				img.src = '/render/?width=600&from=-12h&target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors})),"binary")' + nmsInfoBox._graphDefaults();
+				img.classList.add("graph");
 				panelBodyObj.appendChild(img);
 			}
 			var tableTopObj = document.createElement("div");
@@ -1095,6 +1097,7 @@ var switchSummaryPanel = function() {
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
 		latency.src = '/render/?height=240&width=600&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
+		latency.classList.add("graph");
 		
 		latency.setAttribute("onclick","nmsInfoBox._graphZoom();");
 		latency.setAttribute("role","button");

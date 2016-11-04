@@ -503,14 +503,12 @@ var nmsInfoPanel = function nmsInfoPanel(name,id) {
 			targetFunction = "refresh";
 		nmsData.addHandler(dataType,this.id,(this[targetFunction]).bind(this),"handler-"+dataType);
 		this.handlers.push(dataType);
-		console.log("Pushing " + this.id + " handler");
 	};
 
 	//Method for removing all handlers we have registered
 	this.removeHandlers = function () {
 		for(var i in this.handlers) {
 			nmsData.unregisterHandler(this.handlers[i],this.id);
-			console.log("Nuking " + this.handlers[i] + " / "  + this.id + " handler");
 		}
 	};
 
@@ -1096,8 +1094,10 @@ var switchSummaryPanel = function() {
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
-		latency.src = '/render/?height=240&width=600&from=-60min&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults();
+		latency.src = '/render/?height=240&width=600&target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
 		
+		latency.setAttribute("onclick","nmsInfoBox._graphZoom();");
+		latency.setAttribute("role","button");
 		topper.appendChild(latency);
 		topper.appendChild(table);
 
@@ -1158,10 +1158,30 @@ nmsInfoBox._nullBlank = function(x) {
  * Kept on the URL to avoid having to manage templates since we need to
  * manage night mode anyway for now.
  */
-nmsInfoBox._graphDefaults = function() {
+nmsInfoBox._graphZoom = function() {
+	if (nmsInfoBox._graphFrom == "-60min") {
+		nmsInfoBox._graphFrom = "-6h";
+	} else if (nmsInfoBox._graphFrom == "-6h") {
+		nmsInfoBox._graphFrom = "-24h";
+	} else if (nmsInfoBox._graphFrom == "-24h") {
+		nmsInfoBox._graphFrom = "-7days";
+	} else {
+		nmsInfoBox._graphFrom = "-60min";
+	}
+
+
+}
+nmsInfoBox._graphFrom = "-60min";
+nmsInfoBox._graphUntil = "now";
+nmsInfoBox._graphDefaults = function(title) {
 	// Copied from nms-color-util.js. Could do with expanding.
 	var colorlist = "337ab7,5cb85c,5bc0de,f0ad4e,d9534f,ffffff";
-	var base = "&yUnitSystem=binary&format=svg&colorList=" + colorlist;
+	if (title != undefined) {
+		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil + " (" + title + ")";
+	} else {
+		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil;
+	}
+	var base = "&yUnitSystem=binary&format=svg&colorList=" + colorlist + "&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title;
 	if (nms.nightMode) {
 		return "&bgcolor=222222&fgcolor=dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
 	} else {

@@ -52,7 +52,7 @@ sub parse_switches {
 # FIXME: Derive which function from the config/db using the shortname.
 # If we care.
 sub guess_placement {
-	return guess_placement_dx($_[0]);
+	return guess_placement_tg($_[0]);
 }
 # Guesses placement from name to get a starting point
 # Digitality X layout
@@ -63,7 +63,7 @@ sub guess_placement_dx {
 	my $name = $_[0];
 	my $src = "unknown";
 	if ($name =~ /^e\d+-\d+$/) {
-		$name =~ /e(\d+)-(\d+)/;
+		$name =~ /row(\d+)-(\d+)/;
 		my ($e, $s) = ($1, $2);
 		$src = "main";
 

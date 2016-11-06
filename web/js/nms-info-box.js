@@ -875,6 +875,10 @@ var switchEditPanel = function () {
 		var place;
 		var tags;
 		for (var v in swi) {
+			/*
+			 * Placement and tags needs to be sent and edited
+			 * as plain JSON...
+			 */
 			if (v == "placement") {
 				place = JSON.stringify(swi[v]);
 				template[v] = place;
@@ -896,6 +900,10 @@ var switchEditPanel = function () {
 			var tmpv = '\'' + v + '\'';
 			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
 			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' ? "readonly" : "") + '>';
+			if (v == "placement") {
+				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
+				console.log(v);
+			}
 			content.push([v, html]);
 		}
 

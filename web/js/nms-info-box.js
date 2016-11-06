@@ -601,7 +601,7 @@ var switchPortsPanel = function () {
 		}
 		var img = document.createElement("img");
 		var i = "totals";
-		img.src = '/render/?target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCOutOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCInOctets)))),"binary")' + nmsInfoBox._graphDefaults(this.sw + "totals");
+		img.src = '/render/?target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCInOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCOutOctets)))),"binary")' + nmsInfoBox._graphDefaults(this.sw + "totals");
 		img.classList.add("graph");
 		var expanderButton = document.createElement("a");
 		expanderButton.innerHTML = "Toggle all";

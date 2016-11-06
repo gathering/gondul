@@ -50,12 +50,8 @@ var nmsInfoBox = nmsInfoBox || {
 				'name': 'SNMP',
 				'panels': ['switchSNMP:misc']
 			},
-			'details': {
-				'name': 'Settings',
-				'panels': ['switchDetails']
-			},
 			'edit': {
-				'name': 'Edit',
+				'name': 'Edit settings',
 				'panels': ['switchEdit']
 			}
 		}
@@ -711,47 +707,6 @@ var switchPortsPanel = function () {
 };
 nmsInfoBox.addPanelType("switchPorts",switchPortsPanel);
 
-/*
- * Panel type: Switch details
- *
- * Displays a table of switch information
- *
- */
-var switchDetailsPanel = function() {
-	nmsInfoPanel.call(this,"switchDetails");
-	this.refresh = function(reason) {
-		var swi = [];
-		var swm = [];
-		try {
-			swi = nmsData.switches["switches"][this.sw];
-		} catch(e) {}
-		try {
-			swm = nmsData.smanagement.switches[this.sw];
-		} catch(e) {}
-
-		var content = [];
-
-		for (var v in swi) {
-			if (v == "placement") {
-				var place = JSON.stringify(swi[v]);
-				content.push([v,place]);
-				continue;
-			}
-			content.push([v, swi[v]]);
-		}
-
-		for (var v in swm) {
-			content.push([v, swm[v]]);
-		}
-		content.sort();
-
-		var infotable = nmsInfoBox._makeTable(content);
-
-		this._render(infotable);
-	};
-};
-nmsInfoBox.addPanelType("switchDetails",switchDetailsPanel);
-
 var searchHelpPanel = function() {
 	nmsInfoPanel.call(this,"searchHelp");
 	this.refresh = function(reason) {
@@ -1096,7 +1051,7 @@ var switchSummaryPanel = function() {
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
-		latency.src = '/render/?target=alias(movingAverage(ping.' + this.sw + '.ipv4,60),"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
+		latency.src = '/render/?target=alias(ping.' + this.sw + '.ipv4,"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
 		latency.classList.add("graph");
 		
 		latency.setAttribute("onclick","nmsInfoBox._graphZoom();");
@@ -1186,7 +1141,7 @@ nmsInfoBox._graphDefaults = function(title) {
 	}
 	var base = "&yMinLeft=0&yMinRight=0&yMin=0&fontName=courier&width=600&height=240&yUnitSystem=binary&format=svg&colorList=" + colorlist + "&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title;
 	if (nms.nightMode) {
-		return "&bgcolor=222222&fgcolor=dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
+		return "&bgcolor=%23222222&fgcolor=%23dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
 	} else {
 		return base;
 	}

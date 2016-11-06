@@ -5,8 +5,8 @@ This is the system used to monitor the network during The Gathering (a
 computer party with between 5000 and 10000 active clients - see
 http://gathering.org). It is now provided as a stand-alone application with
 the goal of being usable to any number of computer parties and events of
-similar nature. First up of non-TG users is Digitality X 2016
-(http://digitalityx.no), scheduled for June / July 2016.
+similar nature. First up of non-TG users was Digitality X 2016
+(http://digitalityx.no), taking place in June / July 2016.
 
 Unlike other NMS's, Gondul is not designed to run perpetually, but for a
 limited time and needs to be effective with minimal infrastructure in place
@@ -54,20 +54,25 @@ bearer.
 Current state
 -------------
 
-Gondul was recently split out from the original 'tgmanage' repository used
-for all Tech:Server-related project at The Gathering.
+Gondul is used at The Gathering and Digitality X. It was spun off as a
+separate project form the big "Tech:Server misc tools" git repository in
+2015.
 
-The basic split from the original tgmanage repo is done and much of the
-name changing is done. The repository works well for general development of
-frontend code now. You should, however, expect significant changes leading
-up to and including Digitality X 2016.
+Deployment is still slightly awkward, as development and the state of the
+repository is largely focused around specific events. That said, if you
+want to use it, let us know and we'll avoid breaking things too badly.
+
+There is no "release" process for the time being since all development is
+directly linked to upcoming events and development continues throughout
+events.
 
 Installation
 ------------
 
-We are re-doing the installation to production at present. Stay tuned.
-
 For now, see the Testing-chapter.
+
+Production is pretty much the exact same thing, but with a manually
+deployed postgres database. Graphs are persistent.
 
 Testing
 -------
@@ -84,13 +89,15 @@ simple tests to see that the front works. It does some hacks to detect PWD
 (...), but does not use sudo/root and makes no attempt at configuring the
 host beyond interacting with docker images and containers.
 
-It will build and run 5 containers:
+It will build and run 7 containers:
 
 - gondul-db-test - Database
 - gondul-front-test -  Frontend (apache)
 - gondul-varnish-test - Varnish
 - gondul-ping-test - Collector with ping
 - gondul-snmp-test - Collector with snmp AND an snmpd running on 127.0.0.1
+- gondul-graphite-test - Graphite-api and carbon daemon
+- gondul-grafana-test - ...
 
 The IP of the Varnish instance and apache/frontend is reported and can be
 used. The credentials used are 'demo/demo'. For development of
@@ -140,6 +147,10 @@ The basic philosophy of Gondul is to have a generic and solid API, a data
 base model that is somewhat agnostic to what we collect (so we can add more
 interesting SNMP communities on the fly) and a front end that does a lot of
 magic.
+
+Recently, graphite was integrated. The authentication model isn't complete,
+but the regular Graphite rendering API is available on the front-end as
+``/render/``. Collectors push to both graphite and postgresql.
 
 
 APIs

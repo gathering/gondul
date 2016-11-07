@@ -624,7 +624,7 @@ function restoreSettings()
  */
 function nmsUpdateNavbarGraph() {
 	var img = document.getElementById("navbar-graph");
-	img.src = "/render/?target=movingAverage(averageSeries(ping.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=600&height=20&format=svg&from=-60min&until=now&graphOnly=true&somerandomthing=" + Math.floor(new Date().getTime() / 10000);
+	img.src = "/render/?target=movingAverage(averageSeries(ping.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=400&height=20&format=svg&from=-60min&until=now&graphOnly=true&somerandomthing=" + Math.floor(new Date().getTime() / 10000);
 }
 /*
  * Test if the entire path specified in the arrary "ar" exists under the

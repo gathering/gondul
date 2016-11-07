@@ -395,6 +395,8 @@ function initNMS() {
 		nmsData.registerSource("snmp","/api/read/snmp");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
+		setInterval(nmsUpdateNavbarGraph, 10000);
+		nmsUpdateNavbarGraph();
 		nmsOplog.init();
 	}
 
@@ -611,6 +613,19 @@ function restoreSettings()
 	setMenu();
 }
 
+/*
+ * Updates a simple legend-free graph, located on the navbar.
+ *
+ * The idea is to give a general "feeling" of the event. And that it's
+ * neat.
+ *
+ * The timer-thing to bust a cache divides by 10 seconds, so updating more
+ * than once every 10 seconds is pointless.
+ */
+function nmsUpdateNavbarGraph() {
+	var img = document.getElementById("navbar-graph");
+	img.src = "/render/?target=movingAverage(averageSeries(ping.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=600&height=20&format=svg&from=-60min&until=now&graphOnly=true&somerandomthing=" + Math.floor(new Date().getTime() / 10000);
+}
 /*
  * Test if the entire path specified in the arrary "ar" exists under the
  * specified root.

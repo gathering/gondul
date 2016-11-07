@@ -682,7 +682,7 @@ var switchPortsPanel = function () {
 			if (snmpJson[obj].ifHCInOctets != 0 
 			 || snmpJson[obj].ifHCOutOctets != 0) {
 				var img = document.createElement("img");
-				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors})),"binary")' + nmsInfoBox._graphDefaults();
+				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
 				img.classList.add("graph");
 				panelBodyObj.appendChild(img);
 			}
@@ -1140,16 +1140,14 @@ nmsInfoBox._graphZoom = function() {
 nmsInfoBox._graphFrom = "-60min";
 nmsInfoBox._graphUntil = "now";
 nmsInfoBox._graphDefaults = function(title) {
-	// Copied from nms-color-util.js. Could do with expanding.
-	var colorlist = "337ab7,5cb85c,5bc0de,f0ad4e,d9534f,ffffff";
 	if (title != undefined) {
 		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil + " (" + title + ")";
 	} else {
 		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil;
 	}
-	var base = "&yMinLeft=0&yMinRight=0&yMin=0&fontName=courier&width=600&height=240&yUnitSystem=binary&format=svg&colorList=" + colorlist + "&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title;
+	var base = "&yMinLeft=0&yMinRight=0&yMin=0&bgcolor=%23ffffff00&fontName=courier&width=600&height=240&yUnitSystem=binary&format=svg&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title;
 	if (nms.nightMode) {
-		return "&bgcolor=%23222222&fgcolor=%23dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
+		return "&fgcolor=%23dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
 	} else {
 		return base;
 	}

@@ -8,7 +8,7 @@ endpoints = "read/oplog read/snmp read/switches-management public/config public/
 objects = dict()
 
 def getEndpoint(endpoint):
-    r = requests.get("http://localhost/api/%s" % endpoint, auth=('demo','demo'))
+    r = requests.get("http://gondul-front:/api/%s" % endpoint, auth=('demo','demo'))
     if (r.status_code != 200):
         raise Exception("Bad status code for endpoint %s: %s" % (endpoint, r.status_code))
     return r.json()
@@ -17,7 +17,7 @@ def updateData():
     for a in endpoints:
         objects[a] = getEndpoint(a)
 
-env = Environment(loader=FileSystemLoader('templates/'))
+env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/templating/templates']))
 
 import http.server
 class MyHandler(http.server.BaseHTTPRequestHandler):
@@ -38,7 +38,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.flush()
        
 def run(server_class=http.server.HTTPServer, handler_class=http.server.BaseHTTPRequestHandler):
-    server_address = ('', 8000)
+    server_address = ('', 8080)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever() 
 

@@ -26,9 +26,13 @@
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
       links: [ "gondul-db-test:db" ]
       ports: "{{ front_ports }}"
+    - name: "gondul-templating-test"
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
+      links: [ "gondul-front-test:gondul-front"]
+      ports: []
     - name: "gondul-varnish-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
-      links: [ "gondul-front-test:gondul-front", "gondul-graphite-test:gondul-graphite" ]
+      links: [ "gondul-front-test:gondul-front", "gondul-graphite-test:gondul-graphite", "gondul-templating-test:gondul-templating" ]
       ports: "{{ varnish_ports }}"
     - name: "gondul-snmp-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]

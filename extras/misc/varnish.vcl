@@ -12,6 +12,11 @@ backend graphite {
     .port = "80";
 }
 
+backend templating {
+    .host = "gondul-templating";
+    .port = "8080";
+}
+
 sub vcl_recv {
     if (req.url ~ "^/where" || req.url ~ "^/location") {
 	set req.url = "/api/public/location";
@@ -34,6 +39,10 @@ sub vcl_recv {
 
     if (req.url ~ "/render") {
         set req.backend_hint = graphite;
+    }
+    if (req.url ~ "/templating") {
+        set req.url = regsub(req.url, "/templating", "");
+        set req.backend_hint = templating;
     }
 
     # Brukes ikke. Cookies er for nubs.

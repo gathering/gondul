@@ -1,0 +1,2 @@
+{% for switch in objects["public/switches"].switches %}Switch {{ switch }}: {{ objects["read/switches-management"].switches[switch].mgmt_v4_addr }}
+{% endfor %}

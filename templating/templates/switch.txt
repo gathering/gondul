@@ -1,0 +1,19 @@
+{# 
+  This can be used through GET /templating/switch.txt?switch=e41-2 
+ 
+  It is provided as a simple demo of how to combine "GET parameters" with
+  templating. 
+  
+  #}
+{% set sw = options["switch"] %}
+{% set s = objects["public/switches"].switches[sw] %}
+{% if s %}
+{% set mg = objects["read/switches-management"].switches[sw] %}
+
+Switch {{ sw }} has management ip {{ mg.mgmt_v4_addr }}
+
+It is assoicated with distro {{ s.distro_name }}
+{% else %}
+Switch not found
+{% endif %}
+

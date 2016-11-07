@@ -24,9 +24,20 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         print (self.path[1:])
         updateData()
+        url = self.path[1:]
+        options = dict()
+        if url.find("?") != -1:
+            (url, tmpoptions) = url.split("?")
+            print (tmpoptions)
+            tmptuples = tmpoptions.split("&")
+            print (tmptuples)
+            for a in tmptuples:
+                (x,y) = a.split("=")
+                options[x] = y
+            
         try:
-            template = env.get_template(self.path[1:])
-            body = template.render(objects=objects).encode('UTF-8')
+            template = env.get_template(url)
+            body = template.render(objects=objects, options=options).encode('UTF-8')
             self.send_response(200)
         except:
             body = "baaad\n".encode('UTF-8')

@@ -17,7 +17,7 @@ def updateData():
     for a in endpoints:
         objects[a] = getEndpoint(a)
 
-env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/templating/templates']))
+env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/templating/templates']),lstrip_blocks=True, trim_blocks=True)
 
 import http.server
 class MyHandler(http.server.BaseHTTPRequestHandler):

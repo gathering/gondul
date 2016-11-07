@@ -1,2 +1,7 @@
-{% for switch in objects["public/switches"].switches %}Switch {{ switch }}: {{ objects["read/switches-management"].switches[switch].mgmt_v4_addr }}
+{% for switch in objects["public/switches"].switches %}
+	{% set mg = objects["read/switches-management"].switches[switch]  %}
+	{% set s = objects["public/switches"].switches[switch] %}
+	{% if mg.subnet4 -%}
+		 {{ switch }} {{mg.subnet4 }} {{ mg.subnet6 }} {{ mg.mgmt_v4_addr }} {{ mg.mgmt_v6_addr }} {{ mg.traffic_vlan }} {{ s.distro_name }}
+	{% endif %}
 {% endfor %}

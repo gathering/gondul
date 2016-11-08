@@ -40,8 +40,8 @@ sub vcl_recv {
     if (req.url ~ "/render") {
         set req.backend_hint = graphite;
     }
-    if (req.url ~ "/templating") {
-        set req.url = regsub(req.url, "/templating", "");
+    if (req.url ~ "/api/templates") {
+        set req.url = regsub(req.url, "/api/templates", "");
         set req.backend_hint = templating;
     }
 

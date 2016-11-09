@@ -13,3 +13,4 @@ read_urls:
    - "/api/read/oplog"
    - "/api/read/snmp"
    - "/api/read/switches-management"
+   - "/api/read/distro-tree"

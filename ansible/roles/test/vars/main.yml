@@ -5,6 +5,10 @@ simple_urls:
    - "/api/public/location"
    - "/api/public/dhcp"
    - "/api/public/dhcp-summary"
+   - "/index.html"
+   - "/templates/switches.txt"
+   - "/api/templates/switches.txt"
+   - "/render/?target=carbon.agents.*.errors"
 read_urls:
    - "/api/read/oplog"
    - "/api/read/snmp"

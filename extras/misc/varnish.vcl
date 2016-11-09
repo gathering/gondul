@@ -69,7 +69,7 @@ sub vcl_backend_response {
     if (bereq.url ~ "/render") {
         # Graphite claims "no-cache", which is dumb.
         # Let's blindly cache for 5+10s. Which is 10000 times better.
-        set beresp.http.Cache-Control = "max-age=5s";
+        set beresp.http.Cache-Control = "max-age=5";
         unset beresp.http.Pragma;
         set beresp.uncacheable = false;
         set beresp.grace = 10s;

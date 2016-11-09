@@ -1145,7 +1145,7 @@ nmsInfoBox._graphDefaults = function(title) {
 	} else {
 		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil;
 	}
-	var base = "&yMinLeft=0&yMinRight=0&yMin=0&bgcolor=%23ffffff00&fontName=courier&width=600&height=240&yUnitSystem=binary&format=svg&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title;
+	var base = "&yMinLeft=0&yMinRight=0&yMin=0&bgcolor=%23ffffff00&fontName=courier&width=600&height=240&yUnitSystem=binary&format=svg&from=" + nmsInfoBox._graphFrom + "&until=" + nmsInfoBox._graphUntil + '&title=' + title + "&lolBuster=" + Math.floor(new Date().getTime() / 30000);
 	if (nms.nightMode) {
 		return "&fgcolor=%23dddddd&minorGridLineColor=%233d3d3d&majorGridLineColor=%23666666" + base;
 	} else {

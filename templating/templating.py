@@ -8,7 +8,7 @@ endpoints = "read/oplog read/snmp read/switches-management public/config public/
 objects = dict()
 
 def getEndpoint(endpoint):
-    r = requests.get("http://gondul-front:/api/%s" % endpoint, auth=('demo','demo'))
+    r = requests.get("http://gondul-front:/api/%s" % endpoint)
     if (r.status_code != 200):
         raise Exception("Bad status code for endpoint %s: %s" % (endpoint, r.status_code))
     return r.json()

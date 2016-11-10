@@ -140,12 +140,10 @@ sub callback{
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
 		for my $tmp_key (keys $tree{$nic}) {
-			my $path = "snmp.$switch{'sysname'}.$tree{$nic}{'ifName'}.$tmp_key";
+			my $path = "snmp.$switch{'sysname'}.ports.$tree{$nic}{'ifName'}.$tmp_key";
 			my $value = $tree{$nic}{$tmp_key};
 			if ($value =~ m/^\d+$/) {
 				print $sock "$path $value $now_graphite\n";
-			} else {
-				mylog ("??? $path $value $now_graphite");
 			}
 
 		}
@@ -154,6 +152,15 @@ sub callback{
 	for my $iid (keys %tree) {
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
+			my $localiid = $iid;
+			if ($iid ne "") {
+				$localiid = ".$iid";
+			}
+			my $path = "snmp.$switch{'sysname'}.misc.$key$localiid";
+			my $value = $tree{$iid}{$key};
+			if ($value =~ m/^\d+$/) {
+				print $sock "$path $value $now_graphite\n";
+			}
 		}
 	}
 	if ($total > 0) {

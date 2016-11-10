@@ -601,7 +601,7 @@ var switchPortsPanel = function () {
 		}
 		var img = document.createElement("img");
 		var i = "totals";
-		img.src = '/render/?target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCInOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.*.ifHCOutOctets)))),"binary")' + nmsInfoBox._graphDefaults(this.sw + " totals");
+		img.src = '/render/?target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.ports.*.ifHCInOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.ports.*.ifHCOutOctets)))),"binary")' + nmsInfoBox._graphDefaults(this.sw + " totals");
 		img.classList.add("graph");
 		var expanderButton = document.createElement("a");
 		expanderButton.innerHTML = "Toggle all";
@@ -682,7 +682,7 @@ var switchPortsPanel = function () {
 			if (snmpJson[obj].ifHCInOctets != 0 
 			 || snmpJson[obj].ifHCOutOctets != 0) {
 				var img = document.createElement("img");
-				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
+				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.ports.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.ports.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
 				img.classList.add("graph");
 				panelBodyObj.appendChild(img);
 			}
@@ -1059,7 +1059,7 @@ var switchSummaryPanel = function() {
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
 		var latency = document.createElement("img");
-		latency.src = '/render/?target=alias(ping.' + this.sw + '.ipv4,"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
+		latency.src = '/render/?target=alias(ping.' + this.sw + '.ipv4,"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.ports.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.ports.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
 		latency.classList.add("graph");
 		
 		latency.setAttribute("onclick","nmsInfoBox._graphZoom();");

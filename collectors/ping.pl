@@ -21,6 +21,8 @@ my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is 
 
 my $last = time();
 my $target = 0.7;
+# Hack to avoid starting the collector before graphite is up.
+sleep(5);
 my $sock = IO::Socket::IP->new(
        PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
         Timeout => 20,

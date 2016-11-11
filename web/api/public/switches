@@ -10,7 +10,8 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-$nms::web::cc{'max-age'} = "60";
+$nms::web::cc{'max-age'} = "5";
+$nms::web::cc{'stale-while-revalidate'} = "30";
 
 my $q2 = $nms::web::dbh->prepare('select switch,sysname,tags,distro_name,placement,mgmt_v4_addr,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,last_config_fetch,current_mac,poll_frequency,community,last_updated,switchtype from switches where placement is not null');
 

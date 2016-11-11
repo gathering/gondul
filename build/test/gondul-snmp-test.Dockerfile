@@ -15,6 +15,7 @@ RUN apt-get -y install          \
     snmpd			\
     libsnmp-perl		\
     perl-modules 
+RUN apt-get -y install wget tar
 RUN mkdir -p /opt/gondul
 COPY build/test/snmpd.conf /etc/snmp/
 CMD /opt/gondul/build/test/snmpfetch-misc.sh

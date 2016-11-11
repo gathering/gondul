@@ -11,9 +11,9 @@ use nms qw(convert_mac);
 use IO::Socket::IP;
 
 SNMP::initMib();
-SNMP::addMibDirs("/opt/gondul/mibs/StandardMibs");
-SNMP::addMibDirs("/opt/gondul/mibs/JuniperMibs");
-SNMP::addMibDirs("/opt/gondul/mibs/CiscoMibs");
+SNMP::addMibDirs("/opt/gondul/data/mibs/StandardMibs");
+SNMP::addMibDirs("/opt/gondul/data/mibs/JuniperMibs");
+SNMP::addMibDirs("/opt/gondul/data/mibs/CiscoMibs");
 SNMP::loadModules('ALL');
 
 our $dbh = nms::db_connect();

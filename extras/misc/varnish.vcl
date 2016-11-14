@@ -32,17 +32,17 @@ sub vcl_recv {
         return (synth(418,"LOLOLOL"));
     }
 
-    if (req.method != "GET" && req.method != "HEAD") {
-        /* We only deal with GET and HEAD by default */
-        return (pass);
-    }
-
     if (req.url ~ "/render") {
         set req.backend_hint = graphite;
     }
     if (req.url ~ "/api/templates") {
         set req.url = regsub(req.url, "/api/templates", "");
         set req.backend_hint = templating;
+    }
+
+    if (req.method != "GET" && req.method != "HEAD") {
+        /* We only deal with GET and HEAD by default */
+        return (pass);
     }
 
     # Brukes ikke. Cookies er for nubs.

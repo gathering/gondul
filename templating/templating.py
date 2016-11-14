@@ -28,6 +28,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
     def parse_options(self):
         url = self.path[1:]
         self.url = url
+        self.options = dict()
         if url.find("?") != -1:
             (self.url, tmpoptions) = url.split("?")
             tmptuples = tmpoptions.split("&")

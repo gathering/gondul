@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.4
 
-import requests
+import requests,traceback
 from jinja2 import Template,Environment,FileSystemLoader
 import json
 
@@ -39,10 +39,11 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             template = env.get_template(url)
             body = template.render(objects=objects, options=options).encode('UTF-8')
             self.send_response(200)
-        except:
-            body = "baaad\n".encode('UTF-8')
+            self.send_header('Cache-Control','max-age=30, s-maxage=5')
+        except Exception as err:
+            body = ("Templating of %s failed to render. Most likely due to an error in the template. Error transcript:\n\n%s\n----\n\n%s\n" % (url, err, traceback.format_exc())).encode('UTF-8')
             self.send_response(500)
-        self.send_header('Cache-Control','max-age=30, s-maxage=5')
+            self.send_header('Cache-Control','max-age=1, s-maxage=1')
         self.send_header('Content-Length', int(len(body)))
         self.end_headers()
         self.wfile.write(body)

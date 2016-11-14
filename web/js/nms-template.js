@@ -15,7 +15,11 @@ nmsTemplate.test = function() {
 		dataType: "text",
 		success: function (indata, textStatus, jqXHR) {
 			var output = document.getElementById("template-output");
-			output.value = indata;
+			output.value = jqXHR.responseText;
+		},
+		error: function (jqXHR, textStatus) {
+			var output = document.getElementById("template-output");
+			output.value = jqXHR.responseText;
 		}
 	});
 }

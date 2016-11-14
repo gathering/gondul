@@ -64,7 +64,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
                 length = 0
             content = self.rfile.read(int(length)).decode('UTF-8')
             template = Template(content)
-            self.body = template.render(options=self.options).encode('UTF-8')
+            self.body = template.render(objects=objects, options=self.options).encode('UTF-8')
             self.send_response(200)
             self.send_header('Cache-Control','max-age=30, s-maxage=5')
         except Exception as err:

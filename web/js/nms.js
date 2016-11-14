@@ -518,7 +518,7 @@ function moveTimeFromKey(e,key)
 
 function keyPressed(e)
 {
-	if (e.target.nodeName == "INPUT") {
+	if (e.target.nodeName == "INPUT" || e.target.nodeName == "TEXTAREA") {
 		return false;
 	}
 	if(e.key) {
@@ -624,7 +624,7 @@ function restoreSettings()
  */
 function nmsUpdateNavbarGraph() {
 	var img = document.getElementById("navbar-graph");
-	var w = Math.floor(window.innerWidth / 3);
+	var w = Math.floor(window.innerWidth / 4);
 	if (window.innerWidth > 2300)
 		w += 400;
 	

@@ -39,6 +39,7 @@
 	  <ul class="nav navbar-nav">
 	     <li id='map-link' class="active"><a href="#" onclick="nmsUi.setActive('map');">Map<span class="sr-only">(current)</span></a></li>
 	     <li id='admin-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('admin');nmsAdmin.updateConfigPane();">Admin</a></li>
+	     <li id='template-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('template');">Templates</a></li>
 	     <li id='oplog-link' class="gondul-is-private"><a href="#" onclick="nmsUi.setActive('oplog');">Oplog</a></li>
 	    <li class="dropdown">
 	      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu
@@ -131,6 +132,15 @@
 	<div id="oplog-parent" class="logbook">
 	  <table id="oplog-table" class="table table-condensed">
 	  </table>
+	</div>
+      </div>
+    </div>
+    <div class="container-fluid" id="template">
+      <div class="row-fluid" id="template-row">
+	<div id="template-parent" class="template">
+		<textarea id="template-input" cols="80" rows="25"></textarea>
+		<button onclick="nmsTemplate.test()">Test</button>
+		<textarea id="template-output" disabled cols="80" rows="25"></textarea>
 	</div>
       </div>
     </div>
@@ -309,6 +319,7 @@
     <script type="text/javascript" src="js/nms-search.js"></script>
     <script type="text/javascript" src="js/nms-time.js"></script>
     <script type="text/javascript" src="js/nms-dhcp.js"></script>
+    <script type="text/javascript" src="js/nms-template.js"></script>
     <script src="js/jquery.datetimepicker.full.js" type="text/javascript"></script>
     <script type="text/javascript">
 	initNMS();

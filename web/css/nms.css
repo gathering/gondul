@@ -73,7 +73,7 @@ div.map-mode-legend {
 	right: 15px;
 	z-index: 999;
 }
-#admin, #oplog {
+#admin, #oplog, #template {
 	display: none;
 }
 .vertical div.map-mode-legend {

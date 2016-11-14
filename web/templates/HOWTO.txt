@@ -3,20 +3,30 @@ How to use Gondul templating
 
 We utilize Jinja2 templates.
 
+{#
+ This is a jinja2 comment!
+-#}
+
+{% set url = "localhost" -%}
+{% set example_switch = "distro0" -%}
+
 See http://jinja.pocoo.org/ for the full documentation of the templating
 language.
 
 The rest of this document is about templating as it relates to Gondul
 
 Neat: This document is an actual template, so the examples are working
-examples.
+examples. The best place to view this HOWTO is in the Gondul GUI, where you
+get a side-by-side comparison of the template and the rendered result.
 
 URLs
 ====
 
-To read raw (unprocessed) templates, see http://nms/templates
+To read raw (unprocessed) templates, see http://{{ url }}/templates
 
-To see the rendered final result, see http://nms/api/templates
+To see the rendered final result, see http://{{ url }}/api/templates
+
+Otherwise, use the Template-tab at http://{{ url }}/
 
 Basics
 ======
@@ -28,7 +38,7 @@ templates stored on the server and accessible by all Tech crew/equipment.
 
 These are fetched typically through a HTTP GET request. E.g.:
 
-http://nms/api/templates/switches.txt
+http://{{ url }}/api/templates/switches.txt
 
 Secondly, you can write templates yourself and POST them to Gondul. This is
 highly useful for one-off templates or template development. The syntax is
@@ -37,18 +47,18 @@ the same.
 Simply write a template-file and POST it with your favorite command-line
 tool to:
 
-http://nms/api/templates/WHATEVER
+http://{{ url }}/api/templates/WHATEVER
 
 Example:
 
-POST http://nms/api/templates/foobar < my-local-template
+POST http://{{ url }}nms/api/templates/foobar < my-local-template
 
 Available objects
 =================
 
 Gondul templates have two dictionaries available for general use. The first
 is "options". This is a simple list of GET parameters. If you access
-http://nms/api/templates/HOWTO.txt?foo=bar, options[foo] will evaluate to
+http://{{ url }}/api/templates/HOWTO.txt?foo=bar, options[foo] will evaluate to
 "bar" in that template. This can be accessed in the template as:
 
 Foo: {{ options["foo"] }}
@@ -59,11 +69,11 @@ the HTTP API end-points, in all their glory. The key is the URL.
 To use this, you need to review the relevant endpoint. This is best done by
 reading the API documentation (or skimming through other templates). If you
 want to acces e13-2's latency, for example, you can access
-objects["public/ping"].switches["e13-2"].latency4
+objects["public/ping"].switches["{{ example_switch }}"].latency4
 
-As such: {{ objects["public/ping"].switches["e13-2"].latency4 }}
+As such: {{ objects["public/ping"].switches[example_switch].latency4 }}
 
-The logic is that "public/ping" is the url: http://nms/api/public/ping, it
+The logic is that "public/ping" is the url: http://{{ url }}/api/public/ping, it
 contains JSON that begins with "switches", a list of all switches, each
 switch as a "latency4" object (among other things)
 
@@ -83,6 +93,4 @@ Recommended:
 3. Use query-parameters to provide user-selection (e.g.: ?switch=foobar)
 4. Write your template on your local machine, test frequently by POST'ing it
 5. When done: Ask us and we'll upload it server-side
-
-
 

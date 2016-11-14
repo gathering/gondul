@@ -1,7 +1,6 @@
 "use strict";
 
 var nmsTemplate = nmsTemplate || {
-
 }
 
 nmsTemplate.test = function() {
@@ -26,8 +25,6 @@ nmsTemplate.test = function() {
 }
 
 nmsTemplate.fromFile = function(template) {
-	var input = document.getElementById("template-input");
-	var output = document.getElementById("template-output");
 	$.ajax({
 		type: "GET",
 		url: "/templates/" + template,
@@ -38,4 +35,5 @@ nmsTemplate.fromFile = function(template) {
 			output.value = indata;
 		}
 	});
+	nmsTemplate.test();
 }

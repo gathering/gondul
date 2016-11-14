@@ -138,9 +138,27 @@
     <div class="container-fluid" id="template">
       <div class="row-fluid" id="template-row">
 	<div id="template-parent" class="template">
-		<textarea id="template-input" cols="80" rows="25"></textarea>
-		<button onclick="nmsTemplate.test()">Test</button>
-		<textarea id="template-output" disabled cols="80" rows="25"></textarea>
+		<div class="form-inline">
+			<div class="form-group">
+				<button onclick="nmsTemplate.fromFile('HOWTO.txt')" class="btn btn-info">Load HOWTO.txt</button>
+				<button onclick="nmsTemplate.fromFile('switches.txt')" class="btn btn-info">Load switches.txt</button>
+				<button onclick="nmsTemplate.fromFile('switch.txt')" class="btn btn-info">Load switch.txt</button>
+			</div>
+			<div class="form-group">
+				<label for="template-query-params">Query parameters</label>
+				<input type="text" class="form-control" id="template-query-params" value="?switch=e13-1&foo=bar" />
+			</div>
+			<div class="form-group">
+				<button onclick="nmsTemplate.test()" class="btn btn-primary">Test</button>
+			</div>
+		</div>
+
+		<div class="form-inline">
+			<div class="form-group">
+				<textarea id="template-input" class="form-control" cols="80" rows="25"></textarea>
+				<textarea id="template-output" class="form-control" disabled cols="80" rows="25"></textarea>
+			</div>
+		</div>
 	</div>
       </div>
     </div>

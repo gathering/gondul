@@ -7,9 +7,10 @@ var nmsTemplate = nmsTemplate || {
 nmsTemplate.test = function() {
 	var input = document.getElementById("template-input");
 	var output = document.getElementById("template-output");
+	var qp = document.getElementById("template-query-params");
 	$.ajax({
 		type: "POST",
-		url: "/api/templates/test",
+		url: "/api/templates/test" + qp.value,
 		async: false,
 		data: input.value,
 		dataType: "text",
@@ -31,7 +32,6 @@ nmsTemplate.fromFile = function(template) {
 		type: "GET",
 		url: "/templates/" + template,
 		async: false,
-		data: input.value,
 		dataType: "text",
 		success: function (indata, textStatus, jqXHR) {
 			var output = document.getElementById("template-input");

@@ -208,22 +208,6 @@ CREATE TABLE ping_secondary_ip (
 ALTER TABLE ping_secondary_ip OWNER TO nms;
 
 --
--- Name: polls; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE TABLE polls (
-    switch integer NOT NULL,
-    "time" timestamp with time zone NOT NULL,
-    ifname character varying(30) NOT NULL,
-    ifhighspeed integer,
-    ifhcoutoctets bigint,
-    ifhcinoctets bigint
-);
-
-
-ALTER TABLE polls OWNER TO nms;
-
---
 -- Name: seen_mac; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -270,6 +254,7 @@ ALTER TABLE snmp_id_seq OWNER TO nms;
 
 ALTER SEQUENCE snmp_id_seq OWNED BY snmp.id;
 
+
 --
 -- Name: switches; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
@@ -313,17 +298,6 @@ CREATE SEQUENCE switches_switch_seq
 ALTER TABLE switches_switch_seq OWNER TO nms;
 
 --
--- Name: test_table; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE TABLE test_table (
-    test timestamp with time zone
-);
-
-
-ALTER TABLE test_table OWNER TO nms;
-
---
 -- Name: id; Type: DEFAULT; Schema: public; Owner: nms
 --
 
@@ -349,14 +323,6 @@ ALTER TABLE ONLY oplog ALTER COLUMN id SET DEFAULT nextval('oplog_id_seq'::regcl
 --
 
 ALTER TABLE ONLY snmp ALTER COLUMN id SET DEFAULT nextval('snmp_id_seq'::regclass);
-
-
---
--- Name: polls_time_switch_ifname_key; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
---
-
-ALTER TABLE ONLY polls
-    ADD CONSTRAINT polls_time_switch_ifname_key UNIQUE ("time", switch, ifname);
 
 
 --
@@ -431,34 +397,6 @@ CREATE INDEX ping_index ON ping USING btree ("time");
 --
 
 CREATE INDEX ping_secondary_index ON ping_secondary_ip USING btree ("time");
-
-
---
--- Name: polls_ifname; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX polls_ifname ON polls USING btree (ifname);
-
-
---
--- Name: polls_switch; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX polls_switch ON polls USING btree (switch);
-
-
---
--- Name: polls_switch_ifname; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX polls_switch_ifname ON polls USING btree (switch, ifname);
-
-
---
--- Name: polls_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX polls_time ON polls USING btree ("time");
 
 
 --
@@ -537,14 +475,6 @@ ALTER TABLE ONLY snmp
 -- Name: switchname; Type: FK CONSTRAINT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY polls
-    ADD CONSTRAINT switchname FOREIGN KEY (switch) REFERENCES switches(switch);
-
-
---
--- Name: switchname; Type: FK CONSTRAINT; Schema: public; Owner: nms
---
-
 ALTER TABLE ONLY ping
     ADD CONSTRAINT switchname FOREIGN KEY (switch) REFERENCES switches(switch);
 
@@ -614,15 +544,6 @@ GRANT ALL ON TABLE ping_secondary_ip TO nms;
 
 
 --
--- Name: polls; Type: ACL; Schema: public; Owner: nms
---
-
-REVOKE ALL ON TABLE polls FROM PUBLIC;
-REVOKE ALL ON TABLE polls FROM nms;
-GRANT ALL ON TABLE polls TO nms;
-
-
---
 -- Name: seen_mac; Type: ACL; Schema: public; Owner: nms
 --
 
@@ -658,15 +579,6 @@ GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
 REVOKE ALL ON TABLE switches FROM PUBLIC;
 REVOKE ALL ON TABLE switches FROM nms;
 GRANT ALL ON TABLE switches TO nms;
-
-
---
--- Name: test_table; Type: ACL; Schema: public; Owner: nms
---
-
-REVOKE ALL ON TABLE test_table FROM PUBLIC;
-REVOKE ALL ON TABLE test_table FROM nms;
-GRANT ALL ON TABLE test_table TO nms;
 
 
 --

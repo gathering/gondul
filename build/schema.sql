@@ -270,20 +270,6 @@ ALTER TABLE snmp_id_seq OWNER TO nms;
 
 ALTER SEQUENCE snmp_id_seq OWNED BY snmp.id;
 
-
---
--- Name: switch_temp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE TABLE switch_temp (
-    switch integer,
-    temp integer,
-    "time" timestamp with time zone
-);
-
-
-ALTER TABLE switch_temp OWNER TO nms;
-
 --
 -- Name: switches; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
 --
@@ -511,13 +497,6 @@ CREATE INDEX snmp_time6 ON snmp USING btree ("time" DESC, switch);
 
 
 --
--- Name: switch_temp_index; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX switch_temp_index ON switch_temp USING btree (switch);
-
-
---
 -- Name: switches_switch; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
 --
 
@@ -670,15 +649,6 @@ REVOKE ALL ON SEQUENCE snmp_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE snmp_id_seq FROM nms;
 GRANT ALL ON SEQUENCE snmp_id_seq TO nms;
 GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
-
-
---
--- Name: switch_temp; Type: ACL; Schema: public; Owner: nms
---
-
-REVOKE ALL ON TABLE switch_temp FROM PUBLIC;
-REVOKE ALL ON TABLE switch_temp FROM nms;
-GRANT ALL ON TABLE switch_temp TO nms;
 
 
 --

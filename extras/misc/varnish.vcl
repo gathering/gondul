@@ -17,6 +17,11 @@ backend templating {
     .port = "8080";
 }
 
+backend grafana {
+    .host = "gondul-grafana";
+    .port = "3000";
+}
+
 sub vcl_recv {
     if (req.url ~ "^/where" || req.url ~ "^/location") {
 	set req.url = "/api/public/location";
@@ -32,10 +37,15 @@ sub vcl_recv {
         return (synth(418,"LOLOLOL"));
     }
 
-    if (req.url ~ "/render") {
+    if (req.url ~ "^/render") {
         set req.backend_hint = graphite;
     }
-    if (req.url ~ "/api/templates") {
+    if (req.url ~ "^/grafana") {
+	set req.url = regsub(req.url, "^/grafana","");
+	set req.backend_hint = grafana;
+	return (pass);
+    }
+    if (req.url ~ "^/api/templates") {
         set req.url = regsub(req.url, "/api/templates", "");
         set req.backend_hint = templating;
     }

@@ -28,7 +28,7 @@
       ports: []
     - name: "gondul-varnish-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
-      links: [ "gondul-front-test:gondul-front", "gondul-graphite-test:gondul-graphite", "gondul-templating-test:gondul-templating" ]
+      links: [ "gondul-front-test:gondul-front", "gondul-graphite-test:gondul-graphite", "gondul-templating-test:gondul-templating", "gondul-grafana-test:gondul-grafana" ]
       ports: "{{ varnish_ports }}"
     - name: "gondul-collector-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]

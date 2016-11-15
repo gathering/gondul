@@ -83,6 +83,36 @@ Other worth-while api-endpoints:
 - public/switches - All switches
 - read/snmp - All SNMP data
 
+Filters
+=======
+
+Jinja2 uses a number of filters to transform variables. They can be used to
+do anything from upper-case all text to pretty-print JSON objects. They are
+used by piping a variable. For example: options|pprint . This will "pretty
+print" the options-object:
+
+{{ options|pprint }}
+
+See http://jinja.pocoo.org/docs/dev/templates/#builtin-filters for a list
+of available filters.
+
+Loops
+=====
+
+You can easily loop over objects, such as switches, using a for-loop.
+Combine this with the "dictsort" filter to get a sorted list.
+
+{% for switch in objects["public/switches"].switches|dictsort %}
+	Switch {{ loop.index }} is {{ switch[0] }} or {{ switch[1] }} or full version: {{ switch }}
+{% endfor %}
+
+To avoid having to worry about indices of tuples (e.g.: switch[0]), you can
+also use a simpler style:
+
+{% for key, value in objects["public/ping"].switches|dictsort %}
+	Switch {{ loop.index }} is {{ key}} with latency4 of {{ value.latency4 }}ms
+{% endfor %}
+
 Work flow
 =========
 

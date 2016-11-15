@@ -23,7 +23,7 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-my @fields = ( 'community', 'current_mac', 'distro_name', 'distro_phy_port', 'lldp_chassis_id', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'switchtype', 'sysname', 'traffic_vlan');
+my @fields = ( 'community', 'distro_name', 'distro_phy_port', 'mgmt_v4_addr', 'mgmt_v4_gw', 'mgmt_v6_addr', 'mgmt_v6_gw', 'mgmt_vlan', 'placement', 'poll_frequency', 'subnet4', 'subnet6', 'sysname', 'traffic_vlan');
 
 sub convertplace
 {
@@ -82,7 +82,7 @@ foreach my $tmp2 (@tmp) {
 		} keys %switch;
 		
 
-		$nms::web::dbh->do("INSERT INTO SWITCHES (mgmt_v4_addr, sysname, poll_frequency, community, lldp_chassis_id, mgmt_v6_addr, placement,subnet4,subnet6,distro_name)  VALUES ($template{'mgmt_v4_addr'}, $template{'sysname'}, $template{'poll_frequency'}, $template{'community'}, $template{'lldp_chassis_id'}, $template{'mgmt_v6_addr'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro_name'});");
+		$nms::web::dbh->do("INSERT INTO SWITCHES (mgmt_v4_addr, sysname, poll_frequency, community, mgmt_v6_addr, placement,subnet4,subnet6,distro_name)  VALUES ($template{'mgmt_v4_addr'}, $template{'sysname'}, $template{'poll_frequency'}, $template{'community'}, $template{'mgmt_v6_addr'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro_name'});");
 		push @added, $switch{'sysname'};
 		oplog("\"" . $switch{'sysname'} . "\"", "Switch added: " . $switch{'sysname'});
 	}

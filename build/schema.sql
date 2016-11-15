@@ -292,12 +292,10 @@ CREATE TABLE switches (
     switch integer DEFAULT nextval(('"switches_switch_seq"'::text)::regclass) NOT NULL,
     mgmt_v4_addr inet,
     sysname character varying NOT NULL,
-    switchtype character varying DEFAULT 'ex2200'::character varying NOT NULL,
     last_updated timestamp with time zone,
     locked boolean DEFAULT false NOT NULL,
     poll_frequency interval DEFAULT '00:01:00'::interval NOT NULL,
     community character varying DEFAULT 'FullPuppTilNMS'::character varying NOT NULL,
-    lldp_chassis_id character varying,
     mgmt_v6_addr inet,
     placement box,
     subnet4 cidr,
@@ -308,9 +306,7 @@ CREATE TABLE switches (
     mgmt_v4_gw inet,
     mgmt_vlan integer DEFAULT 666,
     traffic_vlan integer,
-    last_config_fetch timestamp with time zone,
-    tags jsonb DEFAULT '[]',
-    current_mac macaddr
+    tags jsonb DEFAULT '[]'::jsonb
 );
 
 

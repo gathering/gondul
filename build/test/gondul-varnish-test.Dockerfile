@@ -2,7 +2,5 @@ FROM debian:jessie
 RUN apt-get update
 RUN apt-get -y install varnish
 
-RUN rm /etc/varnish/default.vcl
-ADD extras/misc/varnish.vcl /etc/varnish/default.vcl
-CMD varnishd -a :80 -f /etc/varnish/default.vcl -F
+CMD /opt/gondul/build/test/varnish-init.sh
 EXPOSE 80

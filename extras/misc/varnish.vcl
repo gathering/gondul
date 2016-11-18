@@ -2,6 +2,8 @@
 
 vcl 4.0;
 
+include "/opt/gondul/data/varnish-auth.vcl";
+
 backend default {
     .host = "gondul-front";
     .port = "80";

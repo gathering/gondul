@@ -142,7 +142,9 @@ sub callback{
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
 		for my $tmp_key (keys $tree{$nic}) {
-			my $path = "snmp.$switch{'sysname'}.ports.$tree{$nic}{'ifName'}.$tmp_key";
+			my $field = $tree{$nic}{'ifName'};
+			$field =~ s/[^a-z0-9]/_/gi;
+			my $path = "snmp.$switch{'sysname'}.ports.$field.$tmp_key";
 			my $value = $tree{$nic}{$tmp_key};
 			if ($value =~ m/^\d+$/) {
 				print $sock "$path $value $now_graphite\n";
@@ -155,10 +157,11 @@ sub callback{
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
 			my $localiid = $iid;
-			if ($iid ne "") {
-				$localiid = ".$iid";
+			if ($localiid eq "") {
+				$localiid = "_";
 			}
-			my $path = "snmp.$switch{'sysname'}.misc.$key$localiid";
+			$localiid =~ s/[^a-z0-9]/_/gi;
+			my $path = "snmp.$switch{'sysname'}.misc.$key.$localiid";
 			my $value = $tree{$iid}{$key};
 			if ($value =~ m/^\d+$/) {
 				print $sock "$path $value $now_graphite\n";

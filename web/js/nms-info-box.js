@@ -682,7 +682,8 @@ var switchPortsPanel = function () {
 			if (snmpJson[obj].ifHCInOctets != 0 
 			 || snmpJson[obj].ifHCOutOctets != 0) {
 				var img = document.createElement("img");
-				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.ports.' + obj + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.ports.' + obj + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
+				var port_id = nmsInfoBox._graphNormalize(obj);
+				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.ports.' + port_id + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.ports.' + port_id + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
 				img.classList.add("graph");
 				panelBodyObj.appendChild(img);
 			}
@@ -902,7 +903,6 @@ var switchEditPanel = function () {
 			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' ? "readonly" : "") + '>';
 			if (v == "placement") {
 				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
-				console.log(v);
 			}
 			content.push([v, html]);
 		}
@@ -1139,6 +1139,9 @@ nmsInfoBox._graphZoom = function() {
 }
 nmsInfoBox._graphFrom = "-60min";
 nmsInfoBox._graphUntil = "now";
+nmsInfoBox._graphNormalize = function(f) {
+	return f.replace(/[^a-z0-9]/gi,"_");
+}
 nmsInfoBox._graphDefaults = function(title) {
 	if (title != undefined) {
 		title = "From " + nmsInfoBox._graphFrom + " until " + nmsInfoBox._graphUntil + " (" + title + ")";

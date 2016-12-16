@@ -7,7 +7,7 @@
   vars:
   - images:
     - name: "gondul-db-test"
-      volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]
+      volumes: [ "{{ pwd.stdout }}/:/opt/gondul", "{{ pwd.stdout }}/data/postgresql:/var/lib/postgresql" ]
       links: []
       ports: []
     - name: "gondul-graphite-test"
@@ -16,7 +16,7 @@
       ports: []
     - name: "gondul-grafana-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" , "{{ pwd.stdout }}/data/grafana:/var/lib/grafana" ]
-      links: ["gondul-graphite-test:graphite" ]
+      links: ["gondul-graphite-test:graphite","gondul-db-test:db" ]
       ports: []
     - name: "gondul-front-test"
       volumes: [ "{{ pwd.stdout }}/:/opt/gondul" ]

@@ -10,10 +10,20 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+my $target = $ENV{REQUEST_URI};
+$target =~ s/$ENV{SCRIPT_NAME}//;
+$target =~ s/^\///;
+my ($switch, $port) = split(/\//,$target,2);
+my $q2;
+
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 
-my $q2 = $nms::web::dbh->prepare('select sysname,mgmt_v4_addr,subnet4,subnet6,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null');
+if (!defined($switch)) {
+	$q2 = $nms::web::dbh->prepare('select sysname,mgmt_v4_addr,subnet4,subnet6,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null');
+} else {
+	$q2 = $nms::web::dbh->prepare('select sysname,mgmt_v4_addr,subnet4,subnet6,mgmt_v6_addr,mgmt_v4_gw,mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+}
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {

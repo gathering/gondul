@@ -78,11 +78,11 @@ Testing
 -------
 
 There is basic test and development infrastructure set up in
-``build/`` and ``ansible/``. It uses Docker and Ansible.
+``build/`` and ``ansible``. It uses Docker and Ansible.
 
 To use it, first set up docker and install Ansible, then run::
 
-        $ ansible-playbook -i ansible/inventory-localhost ansible/playbook-test.yml
+        $ ansible-playbook -i inventory-localhost playbook-test.yml
 
 This will build the relevant Docker images, start them and run a very
 simple tests to see that the front works. It does some hacks to detect PWD
@@ -114,7 +114,7 @@ dummy-switches with 127.0.0.1 as management IP.
 The following tags are defined: start, stop, build, test. To stop the
 containers, run::
 
-        $ ansible-playbook -i ansible/inventory-localhost -t stop ansibe/playbook-test.yml
+        $ ansible-playbook -i inventory-localhost -t stop playbook-test.yml
 
 
 Architecture

@@ -15,6 +15,8 @@ nmsSearch.helpText =  [
 	'IP search: Start typing an IP and any switch with that IP registered either as management IP or part of its subnet will be identified',
 	'SNMP search: Type anything found in the "sysDescr" SNMP OID to hilight a switch matching that. Practical examples include version numbers for firmware (e.g.: "JUNOS 12." vs "JUNOS 14.").'];
 
+nmsSearch.matches = [];
+
 /*
  * Test if the search expression "id" matches the switch "sw"
  *
@@ -81,6 +83,13 @@ nmsSearch.searchTest = function(id, sw) {
 			}
 		} catch (e) {}
 		try {
+			for (var x in nmsData.switches.switches[sw]['tags']) {
+				if(re.test(nmsData.switches.switches[sw]['tags'][x])){
+					return true;
+				}
+			}
+		} catch (e) {}
+		try {
 			for (var x in nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum) {
 				if (nmsData.snmp.snmp[sw].misc.entPhysicalSerialNum[x] == null) {
 					continue;
@@ -126,7 +135,7 @@ nmsSearch._disableTimer = function() {
 nmsSearch.search = function() {
 	var el = document.getElementById("searchbox");
 	var id = false;
-	var matches = [];
+	nmsSearch.matches = [];
 	if (el) {
 		id = el.value.toLowerCase();
 	}
@@ -134,7 +143,7 @@ nmsSearch.search = function() {
 		nmsMap.enableHighlights();
 		for(var sw in nmsData.switches.switches) {
 			if (nmsSearch.searchTest(id,sw)) {
-				matches.push(sw);
+				nmsSearch.matches.push(sw);
 				nmsMap.setSwitchHighlight(sw,true);
 			} else {
 				nmsMap.setSwitchHighlight(sw,false);
@@ -145,22 +154,25 @@ nmsSearch.search = function() {
 		nmsSearch._disableTimer();
 		nmsMap.disableHighlights();
 	}
-	if(matches.length == 1) {
-		document.getElementById("searchbox-submit").classList.add("btn-primary");
-		document.getElementById("searchbox").dataset.match = matches[0];
-	} else {
+	if(nmsSearch.matches.length == 0) {
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
 		document.getElementById("searchbox").dataset.match = '';
+	}
+};
+
+nmsSearch.runSearch = function() {
+	if(nmsSearch.matches.length == 1) {
+		nmsInfoBox.showWindow("switchInfo",nmsSearch.matches[0]);
+	}
+	else {
+        	nmsInfoBox.showWindow('searchResults',nmsSearch.matches.length);
 	}
 };
 
 nmsSearch._searchKeyListener = function(e) {
 	switch (e.keyCode) {
 		case 13:
-			var sw = document.getElementById("searchbox").dataset.match;
-			if(sw != '') {
-				nmsInfoBox.showWindow("switchInfo",sw);
-			}
+			nmsSearch.runSearch();
 			break;
 		case 27:
 			nmsSearch.reset();

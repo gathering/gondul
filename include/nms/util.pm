@@ -17,7 +17,7 @@ sub parse_switch {
 		'mgmt_v4_addr' => "$mgtmt4",
 		'mgmt_v6_addr' => "$mgtmt6",
 		'traffic_vlan' => "$lolid",
-		'distro' => "$distro"
+		'distro_name' => "$distro"
 	);
 	%{$ret{'placement'}} = guess_placement($switch);
 	return %ret;

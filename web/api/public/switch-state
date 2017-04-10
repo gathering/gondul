@@ -40,13 +40,22 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
 		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
-		    $data{'ports'}{$porti}{'ifAlias'} =~ m/trunk/i) {
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/LAG member/i) {
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'switches'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
 				$json{'switches'}{$sysname}{'uplinks'}{'live'} += 1;
 			}
 			$json{'switches'}{$sysname}{'uplinks'}{'total'} += 1;
+		}
+		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/Clients/i) {
+			$json{'switches'}{$sysname}{'clients'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+			$json{'switches'}{$sysname}{'clients'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+			if ($port{'ifOperStatus'} eq "up") {
+				$json{'switches'}{$sysname}{'clients'}{'live'} += 1;
+			}
+			$json{'switches'}{$sysname}{'clients'}{'total'} += 1;
 		}
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
@@ -91,13 +100,22 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
 		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
-		    $data{'ports'}{$porti}{'ifAlias'} =~ m/trunk/i) {
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/LAG member/i) {
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 			$json{'then'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
 			if ($port{'ifOperStatus'} eq "up") {
 				$json{'then'}{$sysname}{'uplinks'}{'live'} += 1;
 			}
 			$json{'then'}{$sysname}{'uplinks'}{'total'} += 1;
+		}
+		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/Clients/i) {
+			$json{'then'}{$sysname}{'clients'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
+			$json{'then'}{$sysname}{'clients'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};
+			if ($port{'ifOperStatus'} eq "up") {
+				$json{'then'}{$sysname}{'clients'}{'live'} += 1;
+			}
+			$json{'then'}{$sysname}{'clients'}{'total'} += 1;
 		}
 
 		$json{'then'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;

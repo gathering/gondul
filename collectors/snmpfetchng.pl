@@ -61,7 +61,7 @@ sleep(5);
 my $sock = IO::Socket::IP->new(
        PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
         Timeout => 20,
-       ) or die "Cannot connect - $@";
+       ) or die "Cannot connect to graphite - $@";
  
  $sock->blocking( 0 );
 

@@ -136,31 +136,53 @@ function uplinkInfo(sw)
 	ret.score = 0;
 	var u = 0;
 	var t  = 0;
+        var known_t = 0;
 	if (testTree(nmsData,['switchstate','switches',sw,'uplinks','live'])) {
 		u = parseInt(nmsData.switchstate.switches[sw].uplinks.live);
 		t = parseInt(nmsData.switchstate.switches[sw].uplinks.total);
+		known_t = t;
 		ret.data[0].value = u + " / " + t;
 		ret.data[0].description = "Uplinks (live/configured)";
 		if (nmsData.switches.switches[sw].subnet4 == undefined ||
 		    nmsData.switches.switches[sw].subnet4 == null) {
-			if (u == t) {
-				ret.score = 0
-				ret.why = "All uplinks up";
-			} else if (u == 1) {
-				ret.score = 800;
-				ret.why = "Only 1 of " + t + " uplinks alive";
-			} else {
-				ret.score = 650;
-				ret.why = u + " of " + t + " uplinks alive";
-			}
+		    if (tagged(sw,'3up')) {
+			    known_t = 3;
+		    } else if (tagged(sw,'2up')) {
+			    known_t = 2;
+		    } else if (tagged(sw, '1up')) {
+			    known_t = 1;
+		    } else if (tagged(sw,'4up')) {
+			    known_t = 4;
+		    }
+		    if (known_t != t) {
+			    ret.data[0].value += "(Overridden: " + known_t + ")";
+		    }
+
+		    if (u == known_t) {
+			    ret.score = 0
+				    ret.why = "All uplinks up";
+		    } else if (u == 1) {
+			    ret.score = 800;
+			    ret.why = "Only 1 of " + known_t + " uplinks alive";
+		    } else {
+			    ret.score = 650;
+			    ret.why = u + " of " + known_t + " uplinks alive";
+		    }
 		}
+	}
+	if (testTree(nmsData,['switchstate','switches',sw,'clients','live'])) {
+		var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
+		var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
+		ret.data[1] = {};
+		ret.data[1].value = (tu) + " / " + (tt);
+		ret.data[1].description = "Client ports (live/total)";
 	}
 	if (testTree(nmsData,['switchstate','switches',sw,'totals','live'])) {
 		var tu = parseInt(nmsData.switchstate.switches[sw].totals.live);
 		var tt = parseInt(nmsData.switchstate.switches[sw].totals.total);
-		ret.data[1] = {};
-		ret.data[1].value = (tu-u) + " / " + (tt-t);
-		ret.data[1].description = "Non-uplink ports (live/total)";
+		ret.data[2] = {};
+		ret.data[2].value = (tu-u) + " / " + (tt-t);
+		ret.data[2].description = "Non-uplink ports (live/total)";
 	}
 	return ret;
 }
@@ -422,7 +444,7 @@ function pingInfo(sw)
 			ret.why = "Latency";
 			ret.score = parseInt(v4 > v6 ? v4 : v6);
 		}
-		if (nmsData.ping.switches[sw].age4 > 5 || nmsData.ping.switches[sw].age6 > 5) {
+		if (nmsData.ping.switches[sw].age4 > 10 || nmsData.ping.switches[sw].age6 > 10) {
 			ret.why = "Old ping";
 			ret.score = 900;
 		}
@@ -483,9 +505,14 @@ function dhcpInfo(sw) {
 		var now = nmsData.dhcp.time;
 		var then = nmsData.dhcp.dhcp[sw];
 		var diff = now - then;
+		var divider = 4;
+		if(tagged(sw,'slowdhcp')) {
+			divider = 10;
+		}
+
 		ret.data[0].value = diff;
 		ret.why = "DHCP freshness";
-		ret.score = diff/4> 500 ? 500 : parseInt(diff/4);
+		ret.score = diff/divider> 500 ? 500 : parseInt(diff/divider);
 	} else {
 		ret.data[0].value = "No DHCP data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
@@ -509,9 +536,10 @@ function dhcpInfo(sw) {
 		ret.data[1].description = "DHCP clients";
 	}
 	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
-		if (nmsData.switches.switches[sw].tags.includes('ignoredhcp')) {
+		if (tagged(sw,'ignoredhcp')) {
 			ret.score = 0;
 			ret.why += "(Ignored)";
+			ret.data[0].value += "(Ignored)";
 		}
 	}
 	return ret;

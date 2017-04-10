@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use lib '/opt/gondul/include';
+use lib '/home/tech/gondul/include';
 use JSON;
 use nms::util;
 

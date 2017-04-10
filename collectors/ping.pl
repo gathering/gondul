@@ -20,7 +20,7 @@ my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();
-my $target = 0.7;
+my $target = 1.5;
 # Hack to avoid starting the collector before graphite is up.
 sleep(5);
 my $sock = IO::Socket::IP->new(
@@ -38,7 +38,7 @@ while (1) {
 	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;
-	$ping->timeout(0.4);
+	$ping->timeout(0.9);
 
 	$q->execute;
 	my %ip_to_switch = ();
@@ -78,10 +78,10 @@ while (1) {
 	my $now_graphite = time();
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
-		my $sysname = $sw_to_sysname{$switch};
 		if (!defined($switch)) {
 			next;
 		}
+		my $sysname = $sw_to_sysname{$switch};
 
 		if (!defined($latency)) {
 			$drops += $dropped{$ip};

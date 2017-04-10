@@ -395,8 +395,8 @@ function initNMS() {
 		nmsData.registerSource("snmp","/api/read/snmp");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
-		setInterval(nmsUpdateNavbarGraph, 10000);
-		nmsUpdateNavbarGraph();
+	//	setInterval(nmsUpdateNavbarGraph, 30000);
+	//	nmsUpdateNavbarGraph();
 		nmsOplog.init();
 	}
 
@@ -624,11 +624,9 @@ function restoreSettings()
  */
 function nmsUpdateNavbarGraph() {
 	var img = document.getElementById("navbar-graph");
-	var w = Math.floor(window.innerWidth / 4);
-	if (window.innerWidth > 2300)
-		w += 400;
+	var w = 200;
 	
-	img.src = "/render/?target=movingAverage(averageSeries(ping.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.ports.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=" + w + "&height=20&format=svg&from=-60min&until=now&graphOnly=true&somerandomthing=" + Math.floor(new Date().getTime() / 10000);
+	img.src = "/render/?target=movingAverage(averageSeries(ping.*.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.*.ports.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=" + w + "&height=20&format=svg&from=-30min&until=now&graphOnly=true";
 }
 /*
  * Test if the entire path specified in the arrary "ar" exists under the

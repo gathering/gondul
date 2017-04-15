@@ -50,7 +50,25 @@ our @snmp_objects = [
 	['jnxOperatingTemp'],
 	['jnxOperatingCPU'],
 	['jnxOperatingDescr'],
-	['jnxBoxSerialNo']
+	['jnxBoxSerialNo'],
+	['jnxVirtualChassisFpcId'],
+	['jnxVirtualChassisPortName'],
+	['jnxVirtualChassisPortAdminStatus'],
+	['jnxVirtualChassisPortOperStatus'],
+	['jnxVirtualChassisPortInPkts'],
+	['jnxVirtualChassisPortOutPkts'],
+	['jnxVirtualChassisPortInOctets'],
+	['jnxVirtualChassisPortOutOctets'],
+	['jnxVirtualChassisPortInMcasts'],
+	['jnxVirtualChassisPortOutMcasts'],
+	['jnxVirtualChassisPortInPkts1secRate'],
+	['jnxVirtualChassisPortOutPkts1secRate'],
+	['jnxVirtualChassisPortInOctets1secRate'],
+	['jnxVirtualChassisPortOutOctets1secRate'],
+	['jnxVirtualChassisPortCarrierTrans'],
+	['jnxVirtualChassisPortInCRCAlignErrors'],
+	['jnxVirtualChassisPortUndersizePkts'],
+	['jnxVirtualChassisPortCollisions']
 ];
 
 BEGIN {

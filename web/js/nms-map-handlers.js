@@ -68,6 +68,7 @@ var handler_snmp = {
 
 var handler_cpu = {
 	init:cpuInit,
+	getInfo:cpuInfo,
 	tag:"cpu",
 	name:"CPU utilization"
 };
@@ -83,6 +84,11 @@ var handler_mgmt = {
 	getInfo:mgmtInfo,
 	tag:"mgmt",
 	name:"Management info"
+};
+var handler_snmpup = {
+	getInfo:snmpUpInfo,
+	tag:"snmpup",
+	name:"SNMP Uplink state"
 };
 
 var handlerInfo = function(tag,desc) {
@@ -126,7 +132,8 @@ var handlers = [
 	handler_traffic_tot,
 	handler_dhcp,
 	handler_snmp,
-	handler_cpu
+	handler_cpu,
+	handler_snmpup
 	];
 
 function uplinkInfo(sw)
@@ -159,13 +166,16 @@ function uplinkInfo(sw)
 		    }
 
 		    if (u == known_t) {
-			    ret.score = 0
-				    ret.why = "All uplinks up";
+			    ret.score = 0;
+			    ret.why = "All uplinks up";
 		    } else if (u == 1) {
 			    ret.score = 800;
 			    ret.why = "Only 1 of " + known_t + " uplinks alive";
-		    } else {
-			    ret.score = 650;
+		    } else if (u < known_t) {
+			    ret.score = 450;
+			    ret.why = u + " of " + known_t + " uplinks alive";
+		    } else if (u > known_t) {
+			    ret.score = 350;
 			    ret.why = u + " of " + known_t + " uplinks alive";
 		    }
 		}
@@ -453,6 +463,31 @@ function pingInfo(sw)
 		ret.why = "No ping replies";
 		ret.score = 999;
 	}
+
+	if (testTree(nmsData,['smanagement','switches',sw])) {
+		try {
+			var distro = nmsData['smanagement']['switches'][sw]['distro_name'];
+			var phy = nmsData['smanagement']['switches'][sw]['distro_phy_port'];
+			if (!(distro == "" || phy == "" || distro == undefined || phy == undefined)) {
+				if (testTree(nmsData,['snmp','snmp',distro, 'ports',phy,'ifOperStatus'])) {
+					var x = nmsData['snmp']['snmp'][distro]['ports'][phy]['ifOperStatus'];
+					var ping = parseFloat(nmsData["ping"]["switches"][sw]["latency4"]);
+					var ping6 = parseFloat(nmsData["ping"]["switches"][sw]["latency6"]);
+					if (x == "up") {
+						ret.data[3] = {};
+						ret.data[3].description = "Distro-port";
+						ret.data[3].value = "Distro port is live";
+						if (isNaN(ping) && isNaN(ping6)) {
+							ret.score = 850;
+							ret.why = "Distro port is alive, but no IPv4/IPv6 ping. ROLLBACK!";
+						}
+					}
+				}
+			}
+		} catch(e) {
+			console.log("lol");
+		}
+	}
 	return ret;
 }
 
@@ -500,19 +535,19 @@ function dhcpUpdater()
 function dhcpInfo(sw) {
 	var ret = new handlerInfo("dhcp","DHCP state");
 	ret.why = "No DHCP data";
-	ret.data[0].description = "DHCP age (seconds)";
+	ret.data[0].description = "DHCP age";
 	if (testTree(nmsData,['dhcp','dhcp',sw])) {
 		var now = nmsData.dhcp.time;
 		var then = nmsData.dhcp.dhcp[sw];
 		var diff = now - then;
-		var divider = 4;
+		var divider = 6;
 		if(tagged(sw,'slowdhcp')) {
-			divider = 10;
+			divider = 12;
 		}
 
-		ret.data[0].value = diff;
+		ret.data[0].value = secondsToTime(diff);
 		ret.why = "DHCP freshness";
-		ret.score = diff/divider> 500 ? 500 : parseInt(diff/divider);
+		ret.score = diff/divider> 350 ? 350 : parseInt(diff/divider);
 	} else {
 		ret.data[0].value = "No DHCP data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
@@ -522,7 +557,7 @@ function dhcpInfo(sw) {
 				ret.score = 0;
 				ret.why = "No subnet registered";
 			} else {
-				ret.score = 500;
+				ret.score = 350;
 				ret.why = "No DHCP data";
 			}
 		} else {
@@ -658,6 +693,7 @@ function snmpInfo(sw) {
 	return ret;
 }
 
+
 function snmpInit() {
 	nmsData.addHandler("snmp", "mapHandler", snmpUpdater);
 	
@@ -667,6 +703,59 @@ function snmpInit() {
 	setLegend(4,nmsColor.green, "");
 	setLegend(5,nmsColor.green,"");
 	snmpUpdater();
+}
+
+function snmpUpInfo(sw) {
+	var ret = new handlerInfo("snmpup","SNMP uplink data");
+	ret.why = "No SNMP data";
+	ret.score = 0;
+
+	if (testTree(nmsData,['snmp','snmp',sw, 'ports'])) {
+		var total_up = 0;
+		var seen_up = 0;
+		for (var port in nmsData.snmp.snmp[sw].ports) {
+			var x = nmsData.snmp.snmp[sw].ports[port];
+			if (x["ifAlias"].match(/Uplink/i) && x["ifOperStatus"] == "up") {
+				total_up += parseInt(x["ifHighSpeed"]);
+			}
+			if (x["ifAlias"].match(/LAG Member/i) && x["ifOperStatus"] == "up") {
+				seen_up += parseInt(x["ifHighSpeed"]);
+			}
+		}
+		ret.data[0].value = "LAG member speed and total speed is " + seen_up;
+		if (total_up != seen_up) {
+			ret.score = 500;
+			ret.why = "LAG member (ge/xt/etc) speed is " + seen_up + " but logical (ae) is " + total_up;
+			ret.data[0].value = ret.why;
+		}
+	}
+	return ret;
+}
+
+function cpuInfo(sw) {
+	var ret = new handlerInfo("cpu","CPU utilization");
+	ret.why = "No CPU info";
+	ret.score = 0;
+
+	if (testTree(nmsData,['snmp','snmp',sw, 'misc','jnxOperatingCPU'])) {
+		var cpu = 0;
+		for (var u in nmsData.snmp.snmp[sw].misc.jnxOperatingCPU) {
+			var local = nmsData.snmp.snmp[sw].misc['jnxOperatingCPU'][u];
+			cpu = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingCPU[u],cpu);
+		}
+		if (cpu < 30) {
+			ret.score = 0;
+		} else if (cpu < 50) {
+			ret.score = 100;
+		} else if (cpu < 95) {
+			ret.score = cpu * 2;
+		} else {
+			ret.score = cpu * 4;
+		}
+		ret.why = "CPU utilization: " + cpu + "%";
+		ret.data[0].value = cpu + "%";
+	}
+	return ret;
 }
 
 function cpuUpdater() {
@@ -714,6 +803,9 @@ function mgmtInfo(sw) {
 			}, {
 				value: mg.subnet6 || "N/A",
 				description: "Subnet (v6)"
+			}, {
+				value: mg.distro_name || "N/A",
+				description: "Distro"
 			}];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
 			ret.why = "No IPv4 or IPv6 mamagement IP";

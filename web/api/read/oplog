@@ -16,6 +16,9 @@ while (my $ref = $query->fetchrow_hashref()) {
 	$meh{'id'} = $ref->{'id'};
 	$meh{'systems'} = $ref->{'systems'};
 	$meh{'timestamp'} = $ref->{'timestamp'};
+	$meh{'timestamp'} =~ s/ /T/;
+	$meh{'timestamp'} =~ s/\+00$/Z/;
+
 	push @{$nms::web::json{'oplog'}},\%meh;
 }
 

@@ -38,7 +38,7 @@ var nmsMap = nmsMap || {
 		textMargin: 4,
 		xMargin: 10,
 		yMargin: 20,
-		fontSize: 15,
+		fontSize: 14,
 		fontFace: "sans-serif"
 	},
 	scale: 1,

@@ -132,10 +132,10 @@ sub guess_placement_tg {
 		$x = int(292 + (($e-1)/2) * 31.1);
 		$y = undef;
 
-		$x += 14 if ($e >= 13);
-		$x += 14 if ($e >= 25);
-		$x += 14 if ($e >= 41);
-		$x += 14 if ($e >= 59);
+		$x += 14 if ($e >= 21);
+		$x += 14 if ($e >= 37);
+		$x += 14 if ($e >= 55);
+		$x += 14 if ($e >= 69);
 
 		if ($s > 2) {
 			$y = 405 - 120 * ($s-2);
@@ -151,9 +151,9 @@ sub guess_placement_tg {
 		$y += 20 if $name eq "e3-4";
 		$y += 15 if $name eq "e5-4";
 		$yy -= 25 if $name eq "e7-1";
-		$y += 10 if $name eq "e5-2";
-		$yy -= 25 if $name eq "e5-2";
-		$y += 20 if ($e >= 81 and $s == 2);
+		$yy -= 25 if $name eq "e5-1";
+		$yy -= 25 if $name eq "e3-1";
+		$y += 20 if ($e >= 79 and $s == 2);
 		$yy -= 20 if ($e >= 79 and $s == 1);
 		$yy -= 30 if ($e >= 81 and $s == 1);
 

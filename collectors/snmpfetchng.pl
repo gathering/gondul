@@ -7,7 +7,7 @@ use POSIX;
 use SNMP;
 use Data::Dumper;
 use lib '/opt/gondul/include';
-use nms qw(convert_mac);
+use nms qw(convert_mac convert_decimal);
 use IO::Socket::IP;
 
 SNMP::initMib();
@@ -109,7 +109,7 @@ sub inner_loop
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(10);
+	SNMP::MainLoop(6);
 }
 
 sub callback{
@@ -121,24 +121,32 @@ sub callback{
 	my @nicids;
 	my $total = 0;
 	my $now_graphite = time();
+	my %tree2;
 
 	for my $ret (@top) {
 		for my $var (@{$ret}) {
 			for my $inner (@{$var}) {
 				$total++;
 				my ($tag,$type,$name,$iid, $val) = ( $inner->tag ,$inner->type , $inner->name, $inner->iid, $inner->val);
-				if ($tag eq "ifPhysAddress") {
+				if ($tag eq "ifPhysAddress" or $tag eq "jnxVirtualChassisMemberMacAddBase") {
 					$val = convert_mac($val);
 				}
 				$tree{$iid}{$tag} = $val;
 				if ($tag eq "ifIndex") {
 					push @nicids, $iid;
 				}
+				if ($tag =~ m/^jnxVirtualChassisMember/) {
+					$tree2{'vcm'}{$tag}{$iid} = $val;
+				}
+				if ($tag =~ m/^jnxVirtualChassisPort/ ) {
+					my ($member,$lol,$interface) = split(/\./,$iid,3);
+					my $decoded_if = convert_decimal($interface);
+					$tree2{'vcp'}{$tag}{$member}{$decoded_if} = $val;
+				}
 			}
 		}
 	}
 
-	my %tree2;
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
 		for my $tmp_key (keys $tree{$nic}) {
@@ -175,7 +183,9 @@ sub callback{
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 	if ($total > 0) {
-		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+		if ((time - $switch{'start'}) > 10) {
+			mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+		}
 	} else {
 		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s - no data. Timeout?");
 	}

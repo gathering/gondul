@@ -68,7 +68,16 @@ our @snmp_objects = [
 	['jnxVirtualChassisPortCarrierTrans'],
 	['jnxVirtualChassisPortInCRCAlignErrors'],
 	['jnxVirtualChassisPortUndersizePkts'],
-	['jnxVirtualChassisPortCollisions']
+	['jnxVirtualChassisPortCollisions'],
+	['jnxVirtualChassisMemberFabricMode'],
+	['jnxVirtualChassisMemberLocation'],
+	['jnxVirtualChassisMemberMixedMode'],
+	['jnxVirtualChassisMemberModel'],
+	['jnxVirtualChassisMemberPriority'],
+	['jnxVirtualChassisMemberRole'],
+	['jnxVirtualChassisMemberSerialnumber'],
+	['jnxVirtualChassisMemberSWVersion'],
+	['jnxVirtualChassisMemberUptime']
 ];
 
 BEGIN {

@@ -59,7 +59,7 @@ nmsOplog.commit = function() {
 }
 
 nmsOplog.updateComments = function() {
-	nmsOplog._updateComments(3,"-mini","time",100);
+	nmsOplog._updateComments(10,"-mini","time",100);
 	nmsOplog._updateComments(0,"","timestamp");
 }
 
@@ -89,6 +89,9 @@ nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 	table.classList.add("table-condensed");
 	var i = 0;
 	for (var v in nmsData['oplog']['oplog']) {
+		if (cutoff && nmsData.oplog.oplog[v]['username'] == "system") {
+			continue;
+		}
 		tr = table.insertRow(-1);
 		td1 = tr.insertCell(0);
 		td2 = tr.insertCell(1);

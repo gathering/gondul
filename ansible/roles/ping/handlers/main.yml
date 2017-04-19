@@ -1,0 +1,3 @@
+---
+- name: restart gondul-pinger
+  service: name=gondul-pinger state=restarted

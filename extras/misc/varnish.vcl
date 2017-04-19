@@ -12,6 +12,10 @@ backend default {
 backend graphite {
     .host = "gondul-graphite";
     .port = "80";
+    .first_byte_timeout	= 3s;
+    .between_bytes_timeout = 3s;
+    .connect_timeout = 1s;
+    .max_connections = 20;
 }
 
 backend templating {
@@ -39,7 +43,7 @@ sub vcl_recv {
         return (synth(418,"LOLOLOL"));
     }
 
-    if (req.url ~ "^/render") {
+    if (req.url ~ "^/render" || req.url ~ "^/metric") {
         set req.backend_hint = graphite;
     }
     if (req.url ~ "^/grafana") {

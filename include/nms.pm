@@ -8,7 +8,7 @@ use JSON;
 package nms;
 
 use base 'Exporter';
-our @EXPORT = qw(db_connect convert_mac);
+our @EXPORT = qw(db_connect convert_mac convert_decimal);
 
 BEGIN {
 	require "config.pm";
@@ -52,6 +52,11 @@ sub convert_addr {
 	} else {
 		die "Unknown address type $type";
 	}
+}
+
+# I am not a perl programmer
+sub convert_decimal {
+	return join("",(map { sprintf "%c", $_ } split(/\./,shift)));
 }
 
 # Convert raw binary SNMP data to list of bits.

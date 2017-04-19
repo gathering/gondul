@@ -51,71 +51,85 @@ Name
 The name comes from the Norse Valkyrie Gondul, also known as the wand
 bearer.
 
+Features
+--------
+
+Some of Gondul's features are:
+
+- Collects SNMP and ping-data frequently.
+- Per-device configurable SNMP polling-interval
+- IPv4 and IPv6 support
+- Provides per-port statistics.
+- Client-counter (based on active DHCP leases)
+- Intelligent, easy-to-use and real-time device search based on name,
+  description (e.g.: sysDescr, so also software versions/models), serial
+  numbers, distribution switches, IP addresses, etc.
+- Low-effort operations log with optional device-association, using the
+  same search pattern.
+- Intelligent health-map that will alert you of any error without
+  overloading you with information.
+
+  - All "map handlers" evaluate a device and return a health score from 0
+    to 1000 to signify what their opinion of the device's health is.
+    Whatever map handler provides the worst score will be shown.
+  - Map handlers are trivial to write and exist in pure javascript.
+  - Some map handlers include:
+
+    - Latency (v4/v6)
+    - Temperature (Cisco and Juniper)
+    - SNMP sysname versus database sysname-mismatch
+    - DHCP age (where a client subnet is set)
+    - Lack of management info (e.g.: missing IPv6 management info)
+    - Recent reboots
+    - (more)
+
+- Replay capabilities: Easy to review the state of the network as it was at
+  any given time Gondul was running. And "fast forward" to real time.
+- Modular JavaScript front-end that is reasonably easy to adapt
+- Templating (using jinja2 and all data available to Gondul, from
+  management information to latency)
+- Graphing and dashboards through Graphite
+- Huge-ass README that is still not complete.
+
 Current state
 -------------
 
-Gondul is used at The Gathering and Digitality X. It was spun off as a
-separate project form the big "Tech:Server misc tools" git repository in
-2015.
-
-Deployment is still slightly awkward, as development and the state of the
-repository is largely focused around specific events. That said, if you
-want to use it, let us know and we'll avoid breaking things too badly.
+Gondul is used at The Gathering and Digitality X among other places. It was
+spun off as a separate project form the big "Tech:Server misc tools" git
+repository in 2015. It was also used extensively at The Gathering 2017.
 
 There is no "release" process for the time being since all development is
 directly linked to upcoming events and development continues throughout
 events.
 
+The current state of deployment is that it is in the middle of a re-design.
+As such, the current documentation is slightly out-of-date.
+
 Installation
 ------------
 
-For now, see the Testing-chapter.
+You will need Debian Stable, with backports enabled. Then ansible v2.2 or
+newer.
 
-Production is pretty much the exact same thing, but with a manually
-deployed postgres database. Graphs are persistent.
+As the deployment/installation instruction is in the middle of a re-write,
+this might not work flawlessly.
 
-Testing
--------
+However, the idea is::
 
-There is basic test and development infrastructure set up in
-``build/`` and ``ansible``. It uses Docker and Ansible.
+   $ cd ansible
+   // edit inventory-localhost (or copy it) to point to relevant hosts if
+   // your gondul installation will be split over multiple machines
+   $ ansible-playbook -i inventory-localhost site.yml
 
-To use it, first set up docker and install Ansible, then run::
+This will install (in theory) all required components, and they are mainly
+kept in /opt/gondul, with a couple of exceptions:
 
-        $ ansible-playbook -i inventory-localhost playbook-test.yml
-
-This will build the relevant Docker images, start them and run a very
-simple tests to see that the front works. It does some hacks to detect PWD
-(...), but does not use sudo/root and makes no attempt at configuring the
-host beyond interacting with docker images and containers.
-
-It will build and run 7 containers:
-
-- gondul-db-test - Database
-- gondul-front-test -  Frontend (apache)
-- gondul-varnish-test - Varnish
-- gondul-ping-test - Collector with ping
-- gondul-snmp-test - Collector with snmp AND an snmpd running on 127.0.0.1
-- gondul-graphite-test - Graphite-api and carbon daemon
-- gondul-grafana-test - ...
-
-The IP of the Varnish instance and apache/frontend is reported and can be
-used. The credentials used are 'demo/demo'. For development of
-javascript/html it is best to use the apache frontend, for API changes it
-is best to test with the Varnish frontend to ensure your API endpoints
-behave well behind a cache.
-
-The repository is mounted as a docker volume under /opt/gondul on all
-containers, which means you can do your editing outside of the containers.
-
-The last part of the test ansible playbook adds a handfull of
-dummy-switches with 127.0.0.1 as management IP.
-
-The following tags are defined: start, stop, build, test. To stop the
-containers, run::
-
-        $ ansible-playbook -i inventory-localhost -t stop playbook-test.yml
-
+- Collectors have service files, these are dropped in
+  ``/etc/systemd/system/`` and allow you to use regular systemctl-commands
+  to control the collectors.
+- Postgres is installed in the regular location, using ordinary
+  Debian-packages, but a user/db is set up and a config-file is
+  provided/installed.
 
 Architecture
 ------------
@@ -124,13 +138,13 @@ Gondul is split in multiple roles, at the very core is the database server
 (postgresql).
 
 The data is provided by three individual data collectors. They are found in
-clients/. Two of these can run on any host with database access. The third,
-the dhcptailer, need to run on your dhcp server, or some server with access
-to the DHCP log. It is picky about log formating (patches welcome).
+``collectors/``. Two of these can run on any host with database access. The
+third, the dhcptailer, need to run on your dhcp server, or some server with
+access to the DHCP log. It is picky about log formating (patches welcome).
 
-All three of these clients/collectors should be run in screen/tmux and in a
-'while sleep 1; do ./ping... ; done' type of loop. Yeah, we know, it sucks,
-but it works remarkably well. Patches are welcome.
+All three of these collectors provide systemd service-files which should
+keep them running even if they fall over. Which they might do if you fiddle
+with the database.
 
 In addition to the collectors, there is the API. The API provides three
 different sets of endpoints. Two of these are considered moderately
@@ -148,10 +162,9 @@ base model that is somewhat agnostic to what we collect (so we can add more
 interesting SNMP communities on the fly) and a front end that does a lot of
 magic.
 
-Recently, graphite was integrated. The authentication model isn't complete,
-but the regular Graphite rendering API is available on the front-end as
-``/render/``. Collectors push to both graphite and postgresql.
-
+Recently, graphite/grafana was added, but as it failed to deliver during
+The Gathering 2017, the integration is being re-worked slightly. It is
+currently non-functional.
 
 APIs
 ----
@@ -177,6 +190,9 @@ absolutely crucial to the entire process.
 
 We need more user-documentation though.
 
+Also, the front-end can be somewhat bandwidth intensive. Use gzip. Patches
+for variable polling frequency on mobile devices are welcome.
+
 Security
 --------
 
@@ -190,4 +206,26 @@ and in detailed form in the private API.
 Gondul it self does not implement any actual authentication mechanisms for
 the API. That is left up to the web server. An example Apache configuration
 file is provided and the default ansible recipies use them.
+
+Setting up your network...
+--------------------------
+
+Gondul tries to detect uplinks and clients on equipment automatically.
+
+This is done through the ifAlias MIB, e.g.: Interface description.
+
+You should (but don't have) set up your devices so that:
+
+- All client interfaces (e.g.: End user ports) are labeled "Client"
+- Physical uplinks are labeled "LAG member"
+- Aggregated uplinks (e.g.: a collection of LAG members) are labeled
+  "Uplink"
+
+Some of this is used for privacy and statistics (e.g.: Clients).
+
+The "LAG member"/"Uplinks" labels are used to ensure that all interfaces
+that are supposed to be up, are up, and that physical links that are up are
+also active in the LAG (e.g.: Gondul compares the speed of all LAG members
+on a device with the Uplink-ports. If there's a mismatch, you might have an
+interface that is physically up but not being used).
 

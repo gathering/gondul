@@ -1,0 +1,10 @@
+- name: Add systemd service file for gondul-ping
+  copy:
+      dest: /etc/systemd/system/gondul-pinger.service
+      src: gondul-pinger.service
+  notify: restart gondul-pinger
+- name: Enable ping service
+  systemd:
+     name: gondul-pinger.service
+     enabled: yes
+  notify: restart gondul-pinger

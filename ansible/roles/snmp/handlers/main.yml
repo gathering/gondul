@@ -1,0 +1,3 @@
+---
+- name: restart gondul-snmp
+  service: name=gondul-snmp state=restarted

@@ -882,10 +882,23 @@ var inventoryListingPanel = function() {
 						value = nmsData.snmp.snmp[sw]["misc"]["sysDescr"][0];
 						break;
 					case 'jnxBoxSerialNo':
+						if(testTree(nmsData,["snmp","snmp",sw,"misc","entPhysicalSerialNum"])) {
+							for (var x in nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"]) {
+								value = "misc" + x + ":" + nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"][x];
+								resultArray.push([sw, value]);
+							}
+						}
+						if (testTree(nmsData,["snmp","snmp",sw,"misc","jnxVirtualChassisMemberSerialnumber"])) {
+							for (var x in nmsData.snmp.snmp[sw]["misc"]["jnxVirtualChassisMemberSerialnumber"]) {
+								value = "member " + x + ":" + nmsData.snmp.snmp[sw]["misc"]["jnxVirtualChassisMemberSerialnumber"][x];
+								resultArray.push([sw, value]);
+							}
+						}
 						value = nmsData.snmp.snmp[sw]["misc"]["jnxBoxSerialNo"][0];
 						break;
 				}
-			} catch (e) {}
+			} catch (e) {console.log("sw: " + sw); console.log(e);}
+
 			resultArray.push([sw, value]);
 		}
 
@@ -1062,7 +1075,7 @@ var switchCommentsPanel = function () {
 			var tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
 			td1.textContent = tmp;
 			td1.classList.add("left");
-			td2.textContent = "[" + logs[v]['username'] + "] " + logs[v]['log'];
+			td2.textContent = logs[v]['systems'] + "[" + logs[v]['username'] + "] " + logs[v]['log'];
 		}
 		domObj.appendChild(table);
 		this._render(domObj);

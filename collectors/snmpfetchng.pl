@@ -7,7 +7,7 @@ use POSIX;
 use SNMP;
 use Data::Dumper;
 use lib '/opt/gondul/include';
-use nms qw(convert_mac);
+use nms qw(convert_mac convert_decimal);
 use IO::Socket::IP;
 
 SNMP::initMib();
@@ -56,15 +56,6 @@ sub mylog
 	printf STDERR "[%s] %s\n", $time, $msg;
 }
 
-# Hack to avoid starting the collector before graphite is up.
-sleep(5);
-my $sock = IO::Socket::IP->new(
-       PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
-        Timeout => 20,
-       ) or die "Cannot connect - $@";
- 
- $sock->blocking( 0 );
-
 sub populate_switches
 {
 	@switches = ();
@@ -109,7 +100,7 @@ sub inner_loop
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(10);
+	SNMP::MainLoop(6);
 }
 
 sub callback{
@@ -121,51 +112,39 @@ sub callback{
 	my @nicids;
 	my $total = 0;
 	my $now_graphite = time();
+	my %tree2;
 
 	for my $ret (@top) {
 		for my $var (@{$ret}) {
 			for my $inner (@{$var}) {
 				$total++;
 				my ($tag,$type,$name,$iid, $val) = ( $inner->tag ,$inner->type , $inner->name, $inner->iid, $inner->val);
-				if ($tag eq "ifPhysAddress") {
+				if ($tag eq "ifPhysAddress" or $tag eq "jnxVirtualChassisMemberMacAddBase") {
 					$val = convert_mac($val);
 				}
 				$tree{$iid}{$tag} = $val;
 				if ($tag eq "ifIndex") {
 					push @nicids, $iid;
 				}
+				if ($tag =~ m/^jnxVirtualChassisMember/) {
+					$tree2{'vcm'}{$tag}{$iid} = $val;
+				}
+				if ($tag =~ m/^jnxVirtualChassisPort/ ) {
+					my ($member,$lol,$interface) = split(/\./,$iid,3);
+					my $decoded_if = convert_decimal($interface);
+					$tree2{'vcp'}{$tag}{$member}{$decoded_if} = $val;
+				}
 			}
 		}
 	}
 
-	my %tree2;
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
-		for my $tmp_key (keys $tree{$nic}) {
-			my $field = $tree{$nic}{'ifName'};
-			$field =~ s/[^a-z0-9]/_/gi;
-			my $path = "snmp.$switch{'sysname'}.ports.$field.$tmp_key";
-			my $value = $tree{$nic}{$tmp_key};
-			if ($value =~ m/^\d+$/) {
-				print $sock "$path $value $now_graphite\n";
-			}
-
-		}
 		delete $tree{$nic};
 	}
 	for my $iid (keys %tree) {
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
-			my $localiid = $iid;
-			if ($localiid eq "") {
-				$localiid = "_";
-			}
-			$localiid =~ s/[^a-z0-9]/_/gi;
-			my $path = "snmp.$switch{'sysname'}.misc.$key.$localiid";
-			my $value = $tree{$iid}{$key};
-			if ($value =~ m/^\d+$/) {
-				print $sock "$path $value $now_graphite\n";
-			}
 		}
 	}
 	if ($total > 0) {
@@ -175,7 +154,9 @@ sub callback{
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 	if ($total > 0) {
-		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+		if ((time - $switch{'start'}) > 10) {
+			mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+		}
 	} else {
 		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s - no data. Timeout?");
 	}

@@ -1,0 +1,21 @@
+---
+- hosts: all
+  roles:
+    - common
+- hosts: postgres
+  become: true
+  roles:
+    - postgres
+- hosts: web
+  become: true
+  roles:
+    - web
+- hosts: ping
+  become: true
+  roles:
+    - ping
+- hosts: snmp
+  become: true
+  roles:
+    - snmp
+

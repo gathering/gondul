@@ -3,8 +3,39 @@ News - big changes for <event>
 
 This is the closest thing we have to releases.
 
-TG 17 - future event
+TG 18 - Future event
 ====================
+
+IN PROGRESS:
+
+- Back to basics with deployment on "bare metal" using ansible.
+
+TODO: 
+
+- Graphing that doesn't break down.
+- Better mobile-support
+- Proper "FAP"-integration, one way or an other.
+- Graphing based on polling postgres, not sending data to two different
+  places.
+- Better configuration infrastructure.
+- Easy overview of link utilization for "special" links.
+- Option to filter out ports without aliases to reduce bandwidth/storage.
+
+TG 17 - Added during the event
+==============================
+
+- "snmpup": Compare "LAG Member" ports with "Uplinks" ports
+- Numerous minor tweaks
+- Add Virtual Chassis MIBs and attempt to expose them sanely.
+- Added tags to override uplink-count (Not intended to be a permanent
+  requirement)
+- "ping" map-handler now checks if the assigned port on a distro is up if
+  an access switch is otherwise down, then suggests a "rollback" if the
+  distro sees the switch as alive.
+- Probably loads more.
+
+TG 17
+=====
 
 - Numerous bug-fixes and tweaks
 - Fully fledged internal graphing, powered by Graphite.
@@ -12,6 +43,7 @@ TG 17 - future event
 - Templating added to replace various things, including but not limited to
   FAP's internal templating and switches.txt etc.
 - Removed "Score card" (unused)
+
 
 DX 16
 =====

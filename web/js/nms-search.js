@@ -105,6 +105,22 @@ nmsSearch.searchTest = function(id, sw) {
 				}
 			}
 		} catch (e) {}
+		try {
+			for (var x in nmsData.snmp.snmp[sw].misc.jnxBoxSerialNo) {
+				if (nmsData.snmp.snmp[sw].misc.jnxBoxSerialNo[x] == null) {
+					continue;
+				}
+				if (nmsData.snmp.snmp[sw].misc.jnxBoxSerialNo[x] == undefined) {
+					continue;
+				}
+				if (nmsData.snmp.snmp[sw].misc.jnxBoxSerialNo[x] == "") {
+					continue;
+				}
+				if (re.test(nmsData.snmp.snmp[sw].misc.jnxBoxSerialNo[x])) {
+					return true;
+				}
+			}
+		} catch (e) {}
 		if (re.test(nmsData.snmp.snmp[sw].misc.sysDescr[0])) {
 			return true;
 		}

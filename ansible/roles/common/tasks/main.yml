@@ -1,0 +1,6 @@
+- name: Gondul-repo
+  become: true
+  tags:
+  - git-all
+  - git-gondul
+  git: repo=https://github.com/tech-server/gondul.git dest=/opt/gondul update=no accept_hostkey=yes

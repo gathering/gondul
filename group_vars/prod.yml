@@ -1,3 +1,0 @@
----
-front_ports: [  ]
-varnish_ports: [ "80:80" ]

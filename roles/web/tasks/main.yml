@@ -37,7 +37,6 @@
   notify: restart apache
 - command: a2dissite 000-default
   ignore_errors: true
-  notify: restart apache
 - name: Enable gondul-config
   copy:
       dest: /etc/apache2/sites-enabled/

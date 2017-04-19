@@ -1,0 +1,23 @@
+- file: 
+    path: /opt/gondul/data
+    state: directory
+    mode: 0755
+- stat:
+    path: /opt/gondul/data/mibs
+  register: mibdir
+- name: Get mibs
+  command: /opt/gondul/extras/tools/get_mibs.sh
+  args:
+     chdir: /opt/gondul/data/
+  when: not mibdir.stat.exists
+  notify: restart gondul-snmp
+- name: Add systemd service file for gondul-snmp
+  copy:
+      dest: /etc/systemd/system/gondul-snmp.service
+      src: gondul-snmp.service
+  notify: restart gondul-snmp
+- name: Enable snmp service
+  systemd:
+     name: gondul-snmp.service
+     enabled: yes
+  notify: restart gondul-snmp

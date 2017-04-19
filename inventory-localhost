@@ -4,3 +4,7 @@ localhost ansible_connection=local
 localhost ansible_connection=local
 [web]
 localhost ansible_connection=local
+[ping]
+localhost ansible_connection=local
+[snmp]
+localhost ansible_connection=local

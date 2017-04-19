@@ -56,15 +56,6 @@ sub mylog
 	printf STDERR "[%s] %s\n", $time, $msg;
 }
 
-# Hack to avoid starting the collector before graphite is up.
-sleep(5);
-my $sock = IO::Socket::IP->new(
-       PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
-        Timeout => 20,
-       ) or die "Cannot connect to graphite - $@";
- 
- $sock->blocking( 0 );
-
 sub populate_switches
 {
 	@switches = ();
@@ -149,31 +140,11 @@ sub callback{
 
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
-		for my $tmp_key (keys $tree{$nic}) {
-			my $field = $tree{$nic}{'ifName'};
-			$field =~ s/[^a-z0-9]/_/gi;
-			my $path = "snmp.$switch{'sysname'}.ports.$field.$tmp_key";
-			my $value = $tree{$nic}{$tmp_key};
-			if ($value =~ m/^\d+$/) {
-				print $sock "$path $value $now_graphite\n";
-			}
-
-		}
 		delete $tree{$nic};
 	}
 	for my $iid (keys %tree) {
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
-			my $localiid = $iid;
-			if ($localiid eq "") {
-				$localiid = "_";
-			}
-			$localiid =~ s/[^a-z0-9]/_/gi;
-			my $path = "snmp.$switch{'sysname'}.misc.$key.$localiid";
-			my $value = $tree{$iid}{$key};
-			if ($value =~ m/^\d+$/) {
-				print $sock "$path $value $now_graphite\n";
-			}
 		}
 	}
 	if ($total > 0) {

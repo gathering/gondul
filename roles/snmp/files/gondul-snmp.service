@@ -1,0 +1,14 @@
+[Unit]
+Description=Gondul snmp collector
+Documentation=http://google.com
+After=network.target
+
+[Service]
+ExecStart=/opt/gondul/collectors/snmpfetchng.pl
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

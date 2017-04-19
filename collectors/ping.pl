@@ -21,14 +21,6 @@ my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is 
 
 my $last = time();
 my $target = 0.7;
-# Hack to avoid starting the collector before graphite is up.
-sleep(5);
-my $sock = IO::Socket::IP->new(
-       PeerHost => "$nms::config::graphite_host:$nms::config::graphite_port",
-        Timeout => 20,
-       ) or die "Cannot connect - $@";
- 
- $sock->blocking( 0 );
 while (1) {
 	my $now = time();
 	my $elapsed = ($now - $last);
@@ -75,7 +67,6 @@ while (1) {
 
 	$dbh->do('COPY ping (switch, latency_ms) FROM STDIN');  # date is implicitly now.
 	my $drops = 0;
-	my $now_graphite = time();
 	while (my ($ip, $latency) = each %$result) {
 		my $switch = $ip_to_switch{$ip};
 		if (!defined($switch)) {
@@ -86,7 +77,6 @@ while (1) {
 		if (!defined($latency)) {
 			$drops += $dropped{$ip};
 		}
-		print $sock "ping.$sysname.ipv4 " . ($latency || "NaN") . " $now_graphite\n";
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}
@@ -103,7 +93,6 @@ while (1) {
 		next if (!defined($switch));
 		my $sysname = $sw_to_sysname{$switch};
 
-		print $sock "ping.$sysname.ipv6 " . ($latency || "NaN") . " $now_graphite\n";
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 	}

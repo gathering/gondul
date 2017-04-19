@@ -1,0 +1,45 @@
+- name: Install front-packages
+  apt:
+      name: "{{ item }}"
+      state: present
+  with_items:
+        - libcapture-tiny-perl
+        - libcommon-sense-perl
+        - libdata-dumper-simple-perl
+        - libdbd-pg-perl
+        - libdbi-perl
+        - libdigest-perl
+        - libgd-perl
+        - libgeo-ip-perl
+        - libhtml-parser-perl
+        - libhtml-template-perl
+        - libjson-perl
+        - libjson-xs-perl
+        - libnetaddr-ip-perl
+        - libnet-cidr-perl
+        - libnet-ip-perl
+        - libnet-oping-perl
+        - libnet-rawip-perl
+        - libsnmp-perl
+        - libsocket6-perl
+        - libsocket-perl
+        - libswitch-perl
+        - libtimedate-perl
+        - perl
+        - perl-base
+        - perl-modules
+        - libfreezethaw-perl
+        - apache2
+
+- apache2_module:
+    state: present
+    name: cgid
+  notify: restart apache
+- command: a2dissite 000-default
+  ignore_errors: true
+  notify: restart apache
+- name: Enable gondul-config
+  copy:
+      dest: /etc/apache2/sites-enabled/
+      src: gondul.conf
+  notify: restart apache

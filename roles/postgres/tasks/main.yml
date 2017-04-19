@@ -1,0 +1,31 @@
+- name: Install db-packages
+  apt:
+      name: "{{ item }}"
+      state: present
+  with_items:
+      - postgresql-9.4
+      - python-psycopg2
+- name: Drop postgresql-config
+  copy:
+      dest: /etc/postgresql/9.4/main/postgresql.conf
+      src: postgresql.conf
+- name: Whoami
+  become: false
+  command: whoami
+  register: whoami
+- name: Fix sudo
+  lineinfile:
+     dest: "/etc/sudoers"
+     state: present
+     line: "{{ whoami.stdout }} ALL=(postgres) NOPASSWD: ALL"
+- name: Make postgres-db
+  become_user: postgres
+  postgresql_db:
+    name: nms
+- name: Ensure a valid postgres-user
+  become_user: postgres
+  postgresql_user: 
+      db: nms
+      name: nms
+      password: risbrod
+     

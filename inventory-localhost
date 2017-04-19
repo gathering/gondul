@@ -1,2 +1,6 @@
 [front-test]
 localhost ansible_connection=local
+[postgres]
+localhost ansible_connection=local
+[web]
+localhost ansible_connection=local

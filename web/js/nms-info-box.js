@@ -76,6 +76,16 @@ var nmsInfoBox = nmsInfoBox || {
 			}
 		}
 	},
+        {
+                'id': 'searchResults',
+                'title': 'Search Results',
+                'views': {
+                        'initial': {
+                                'name': 'Search Results',
+                                'panels': ['searchResults']
+                        }
+                }
+        },
 	{
 		'id': 'inventoryListing',
 		'title': 'Inventory listing',
@@ -722,6 +732,36 @@ var searchHelpPanel = function() {
 	};
 };
 nmsInfoBox.addPanelType("searchHelp",searchHelpPanel);
+
+
+/*
+ * Panel type: Search Results
+ *
+ * Show the search results
+ *
+ */
+var searchResultsPanel = function() {
+	var searchPage = 0;
+        nmsInfoPanel.call(this,"searchResults");
+        this.refresh = function(reason) {
+		var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+                var switches = nmsSearch.matches.sort(collator.compare);	
+		var table = document.createElement('table');
+		table.className = "table table-condensed";
+		table.id = "searchResults-table"
+		for (var sw in switches) {
+			var row = table.insertRow(sw);
+			var cell1 = row.insertCell(0);
+			var cell2 = row.insertCell(1);
+			var cell3 = row.insertCell(2);
+                       	cell1.innerHTML = "<a href='#' onclick='nmsInfoBox.showWindow(\"switchInfo\",\""+switches[sw]+"\");'>"+switches[sw]+ '</a>';
+			cell2.innerHTML = nmsData.switches["switches"][switches[sw]].distro_name;
+			cell3.innerHTML = handlers[0].getInfo(switches[sw]).why;
+                	}
+		this._render(table);
+		}
+};
+nmsInfoBox.addPanelType("searchResults",searchResultsPanel);
 
 /*
  * Panel type: Add switch

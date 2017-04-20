@@ -171,17 +171,30 @@ nmsSearch.search = function() {
 		nmsMap.disableHighlights();
 	}
 	if(nmsSearch.matches.length == 0) {
+		document.getElementById("searchbox-submit").classList.remove("btn-success");
 		document.getElementById("searchbox-submit").classList.remove("btn-primary");
-		document.getElementById("searchbox").dataset.match = '';
 	}
+	else if(nmsSearch.matches.length == 1) {
+		document.getElementById("searchbox-submit").classList.add("btn-success");
+		document.getElementById("searchbox-submit").classList.remove("btn-primary");
+	}
+	else  {
+                document.getElementById("searchbox-submit").classList.add("btn-primary");
+		document.getElementById("searchbox-submit").classList.remove("btn-success");
+        }
+
 };
 
 nmsSearch.runSearch = function() {
 	if(nmsSearch.matches.length == 1) {
 		nmsInfoBox.showWindow("switchInfo",nmsSearch.matches[0]);
 	}
-	else {
+	else if(nmsSearch.matches.length > 1) {
         	nmsInfoBox.showWindow('searchResults',nmsSearch.matches.length);
+	}
+	else {
+		document.getElementById("searchbox-submit").classList.remove("btn-primary");
+		document.getElementById("searchbox").dataset.match = '';
 	}
 };
 

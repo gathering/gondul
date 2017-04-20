@@ -1,2 +1,0 @@
-host	nms		nms		172.17.0.0/16		md5
-host	grafana		grafana		172.17.0.0/16		md5

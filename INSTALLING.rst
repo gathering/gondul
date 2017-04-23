@@ -39,6 +39,29 @@ As ``$YOURUSER``::
 
 Then visit http://ip-your-boxen/
 
+Setting up your network...
+--------------------------
+
+Gondul tries to detect uplinks and clients on equipment automatically.
+
+This is done through the ``ifAlias`` MIB, e.g.: Interface descriptions when
+configuring your network equipment.
+
+You should (but don't have to) set up your devices so that:
+
+- All client interfaces (e.g.: End user ports) are labeled "Client"
+- Physical uplinks are labeled "LAG member"
+- Aggregated uplinks (e.g.: a collection of LAG members) are labeled
+  "Uplink"
+
+Some of this is used for privacy and statistics (e.g.: Clients).
+
+The "LAG member"/"Uplinks" labels are used to ensure that all interfaces
+that are supposed to be up, are up, and that physical links that are up are
+also active in the LAG (e.g.: Gondul compares the speed of all LAG members
+on a device with the Uplink-ports. If there's a mismatch, you might have an
+interface that is physically up but not being used).
+
 Hidden stuff we do to your VM
 -----------------------------
 

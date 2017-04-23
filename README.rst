@@ -108,28 +108,7 @@ As such, the current documentation is slightly out-of-date.
 Installation
 ------------
 
-You will need Debian Stable, with backports enabled. Then ansible v2.2 or
-newer.
-
-As the deployment/installation instruction is in the middle of a re-write,
-this might not work flawlessly.
-
-However, the idea is::
-
-   $ cd ansible
-   // edit inventory-localhost (or copy it) to point to relevant hosts if
-   // your gondul installation will be split over multiple machines
-   $ ansible-playbook -i inventory-localhost site.yml
-
-This will install (in theory) all required components, and they are mainly
-kept in /opt/gondul, with a couple of exceptions:
-
-- Collectors have service files, these are dropped in
-  ``/etc/systemd/system/`` and allow you to use regular systemctl-commands
-  to control the collectors.
-- Postgres is installed in the regular location, using ordinary
-  Debian-packages, but a user/db is set up and a config-file is
-  provided/installed.
+See ``INSTALLING.rst``.
 
 Architecture
 ------------
@@ -206,26 +185,3 @@ and in detailed form in the private API.
 Gondul it self does not implement any actual authentication mechanisms for
 the API. That is left up to the web server. An example Apache configuration
 file is provided and the default ansible recipies use them.
-
-Setting up your network...
---------------------------
-
-Gondul tries to detect uplinks and clients on equipment automatically.
-
-This is done through the ifAlias MIB, e.g.: Interface description.
-
-You should (but don't have) set up your devices so that:
-
-- All client interfaces (e.g.: End user ports) are labeled "Client"
-- Physical uplinks are labeled "LAG member"
-- Aggregated uplinks (e.g.: a collection of LAG members) are labeled
-  "Uplink"
-
-Some of this is used for privacy and statistics (e.g.: Clients).
-
-The "LAG member"/"Uplinks" labels are used to ensure that all interfaces
-that are supposed to be up, are up, and that physical links that are up are
-also active in the LAG (e.g.: Gondul compares the speed of all LAG members
-on a device with the Uplink-ports. If there's a mismatch, you might have an
-interface that is physically up but not being used).
-

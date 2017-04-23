@@ -92,12 +92,6 @@ Bonus level
 You can edit ``inventory-localhost`` and utilize multiple machines. This is
 particularly useful for the DHCP log tailer.
 
-HACKING
--------
-
-Hacking on Gondul is best done by doing a regular install, then working
-directly on the ``/opt/gondul`` git repo.
-
 
 TODO
 ----

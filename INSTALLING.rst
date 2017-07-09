@@ -49,7 +49,7 @@ configuring your network equipment.
 
 You should (but don't have to) set up your devices so that:
 
-- All client interfaces (e.g.: End user ports) are labeled "Client"
+- All client interfaces (e.g.: End user ports) are labeled "Clients"
 - Physical uplinks are labeled "LAG member"
 - Aggregated uplinks (e.g.: a collection of LAG members) are labeled
   "Uplink"

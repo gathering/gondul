@@ -33,7 +33,7 @@ As root:
 
 As ``$YOURUSER``::
 
-        $ git clone git@github.com:tech-server/gondul
+        $ git clone https://github.com/tech-server/gondul.git
         $ cd gondul/ansible
         $ ansible-playbook -i inventory-localhost site.yml
 

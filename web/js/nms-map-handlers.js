@@ -808,7 +808,7 @@ function mgmtInfo(sw) {
 				description: "Distro"
 			}];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
-			ret.why = "No IPv4 or IPv6 mamagement IP";
+			ret.why = "No IPv4 or IPv6 management IP";
 			ret.score = 1000;
 		} else if (mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") {
 			ret.why = "No IPv4 management IP";

@@ -95,7 +95,7 @@ Current state
 -------------
 
 Gondul is used at The Gathering and Digitality X among other places. It was
-spun off as a separate project form the big "Tech:Server misc tools" git
+spun off as a separate project from the big "Tech:Server misc tools" git
 repository in 2015. It was also used extensively at The Gathering 2017.
 
 There is no "release" process for the time being since all development is

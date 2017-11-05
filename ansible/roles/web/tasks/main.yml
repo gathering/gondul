@@ -30,15 +30,36 @@
         - perl-modules
         - libfreezethaw-perl
         - apache2
+        - libapache2-mod-proxy-html
+        - libxml2-dev
+        - build-essential
+        - cpanminus
+        - apt-transport-https
 
 - apache2_module:
     state: present
     name: cgid
   notify: restart apache
-- command: a2dissite 000-default
-  ignore_errors: true
+- apache2_module:
+    state: present
+    name: proxy
+  notify: restart apache
+- apache2_module:
+    state: present
+    name: proxy_http
+  notify: restart apache
 - name: Enable gondul-config
   copy:
       dest: /etc/apache2/sites-enabled/
       src: gondul.conf
   notify: restart apache
+- command: a2dissite 000-default
+  ignore_errors: true
+  notify: restart apache
+- name: Enable gondul-config
+  copy:
+      dest: /etc/apache2/sites-enabled/
+      src: gondul.conf
+  notify: restart apache
+- cpanm:
+    name: AnyEvent::InfluxDB

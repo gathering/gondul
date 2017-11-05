@@ -952,7 +952,7 @@ var switchEditPanel = function () {
 			var tmpsw = '\'' + this.sw + '\'';
 			var tmpv = '\'' + v + '\'';
 			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
-			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' || v == 'subnet4' || v == 'subnet6' || v == 'mgmt_v4_gw' || v == 'mgmt_v6_gw' ? "readonly" : "") + '>';
+			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' ? "readonly" : "") + '>';
 			if (v == "placement") {
 				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
 			}
@@ -1081,6 +1081,7 @@ nmsInfoBox.addPanelType("switchComments",switchCommentsPanel);
 var switchSummaryPanel = function() {
 	nmsInfoPanel.call(this,"switchSummary");
 	this.init = function() {
+		//TODO Fix this so the chart is automatic updated
 		//this.addHandler("ticker");
 		this.refresh();
 	};

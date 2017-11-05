@@ -15,6 +15,7 @@ our $graphite_port = "2003";
 our $influx_host = "http://localhost:8086";
 our $influx_username = "admin";
 our $influx_password = "admin";
+our $influx_database = "gondul";
 
 # Max SNMP polls to fire off at the same time.
 our $snmp_max = 20;

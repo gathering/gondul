@@ -11,4 +11,4 @@
   service: name=influxdb state=started
 
 - name: Create database
-command: /usr/bin/influx -execute 'CREATE DATABASE gondul'
+  command: /usr/bin/influx -execute 'CREATE DATABASE gondul'

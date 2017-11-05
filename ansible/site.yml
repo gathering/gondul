@@ -10,6 +10,10 @@
   become: true
   roles:
     - web
+- hosts: influx
+  become: true
+  roles:
+    - influx
 - hosts: ping
   become: true
   roles:
@@ -18,4 +22,3 @@
   become: true
   roles:
     - snmp
-

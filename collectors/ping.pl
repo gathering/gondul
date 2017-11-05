@@ -16,6 +16,8 @@ my $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
+my $influx = nms::influx_connect();
+
 my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random();");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
@@ -79,8 +81,31 @@ while (1) {
 		}
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
+		if($latency ne "\\N") {
+                	my $cv = AE::cv;
+                	$influx->write(
+                        	database => $nms::config::influx_database,
+                                	data => [
+                                	{
+                                        	measurement => 'ping',
+                                       		tags => {
+                                                	switch =>  $sysname,
+                                                	ip => $ip,
+							version => 'v4'
+                                        	},
+                                        	fields => {
+							latency => $latency,
+                                        	},
+                                	}],
+                        	on_success => $cv,
+				on_error => sub {
+                                        	$cv->croak("Failed to write data: @_");
+                                	}
+                        	);
+                	$cv->recv;
+		}
 	}
- 
+
 
 	if ($drops > 0) {
 		print "$drops ";
@@ -95,6 +120,29 @@ while (1) {
 
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
+		if($latency ne "\\N") {
+        		my $cv = AE::cv;
+        		$influx->write(
+                		database => $nms::config::influx_database,
+                        		data => [
+                        		{
+                                		measurement => 'ping',
+                                		tags => {
+                                        		switch =>  $sysname,
+                                        		ip => $ip,
+							version => 'v6'
+                                		},
+                                		fields => {
+                                        		latency => $latency,
+                                		},
+                        		}],
+				on_success => $cv,
+				on_error => sub {
+                        		        $cv->croak("Failed to write data: @_");
+                	        	}
+        	       		);
+	        	$cv->recv;
+		}
 	}
 	$dbh->pg_putcopyend();
 
@@ -110,7 +158,7 @@ while (1) {
 		$ping->host_add($ref->{'addr1'});
 		$ping->host_add($ref->{'addr2'});
 	}
-	if (@linknets) { 
+	if (@linknets) {
 		$result = $ping->ping();
 		die $ping->get_error if (!defined($result));
 
@@ -125,4 +173,3 @@ while (1) {
 	}
 	$dbh->commit;
 }
-

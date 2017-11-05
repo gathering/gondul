@@ -9,6 +9,8 @@ use Data::Dumper;
 use lib '/opt/gondul/include';
 use nms qw(convert_mac convert_decimal);
 use IO::Socket::IP;
+use Scalar::Util qw(looks_like_number);
+use Time::HiRes qw(time);
 
 SNMP::initMib();
 SNMP::addMibDirs("/opt/gondul/data/mibs/StandardMibs");
@@ -20,15 +22,16 @@ our $dbh = nms::db_connect();
 $dbh->{AutoCommit} = 0;
 $dbh->{RaiseError} = 1;
 
+my $influx = nms::influx_connect();
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
 AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
 AND (mgmt_v4_addr is not null or mgmt_v6_addr is not null)
 EOF
 
-# Borrowed from snmpfetch.pl 
+# Borrowed from snmpfetch.pl
 our $qswitch = $dbh->prepare(<<"EOF")
-SELECT 
+SELECT
   sysname,switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as ip2,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
@@ -111,7 +114,6 @@ sub callback{
 	my %nics;
 	my @nicids;
 	my $total = 0;
-	my $now_graphite = time();
 	my %tree2;
 
 	for my $ret (@top) {
@@ -122,29 +124,103 @@ sub callback{
 				if ($tag eq "ifPhysAddress" or $tag eq "jnxVirtualChassisMemberMacAddBase") {
 					$val = convert_mac($val);
 				}
-				$tree{$iid}{$tag} = $val;
-				if ($tag eq "ifIndex") {
+				elsif ($tag eq "ifIndex") {
 					push @nicids, $iid;
 				}
-				if ($tag =~ m/^jnxVirtualChassisMember/) {
+				elsif ($tag =~ m/^jnxVirtualChassisMember/) {
 					$tree2{'vcm'}{$tag}{$iid} = $val;
 				}
-				if ($tag =~ m/^jnxVirtualChassisPort/ ) {
+				elsif ($tag =~ m/^jnxVirtualChassisPort/ ) {
 					my ($member,$lol,$interface) = split(/\./,$iid,3);
 					my $decoded_if = convert_decimal($interface);
 					$tree2{'vcp'}{$tag}{$member}{$decoded_if} = $val;
 				}
+				elsif($tag eq "dot1dBasePortIfIndex") {
+					$val = $inner->iid;
+					$iid = $inner->val;
+				}
+				elsif($tag eq "dot1qTpFdbPort") {
+					$iid = substr(mac_dec_to_hex($iid),-17);
+				}
+				elsif($tag eq "ipNetToMediaPhysAddress") {
+					my @ip = split(/\./, $iid);
+					$iid = lc $ip[1].".".$ip[2].".".$ip[3].".".$ip[4];
+					$val = unpack 'H*', $val;
+					$val =~ s/(..)(?=.)/$1:/g;
+				}
+				elsif($tag eq "ipv6NetToMediaPhysAddress") {
+					$val = unpack 'H*', $val;
+					$val =~ s/(..)(?=.)/$1:/g;
+					my @ip = split(/\./, $iid);
+					$iid = sprintf("%X%X:%X%X:%X%X:%X%X:%X%X:%X%X:%X%X:%X%X", @ip[1], @ip[2], @ip[3], @ip[4], @ip[5], @ip[6], @ip[7], @ip[8], @ip[9], @ip[10], @ip[11], @ip[12], @ip[13], @ip[14], @ip[15], @ip[16]);
+				}
+				$tree{$iid}{$tag} = $val;
 			}
 		}
 	}
 
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
+		my $tmp_field = '';
+		for my $tmp_key (keys $tree{$nic}) {
+				if(looks_like_number($tree{$nic}{$tmp_key})) {
+					$tmp_field = $tree{$nic}{$tmp_key};
+				} else {
+					$tmp_field = '"'.$tree{$nic}{$tmp_key}.'"';
+				}
+
+                my $cv = AE::cv;
+                $influx->write(
+                        database => $nms::config::influx_database,
+                        data => [
+                                {
+                                        measurement => 'ports',
+                                        tags => {
+                                                switch =>  $switch{'sysname'},
+						interface => $tree{$nic}{'ifName'},
+                                                },
+                                        fields => { $tmp_key => $tmp_field },
+                                }],
+                        on_success => $cv,
+                        on_error => sub {
+                                $cv->croak("Failed to write data: @_");
+                        }
+                );
+                $cv->recv;
+		}
+
 		delete $tree{$nic};
 	}
 	for my $iid (keys %tree) {
+		my $tmp_field = '';
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
+
+				 if(looks_like_number($tree{$iid}{$key})) {
+                                        $tmp_field = $tree{$iid}{$key};
+                                } else {
+                                        $tmp_field = '"'.$tree{$iid}{$key}.'"';
+                                }
+
+                my $cv = AE::cv;
+                $influx->write(
+                        database => $nms::config::influx_database,
+                        data => [
+                                {
+                                        measurement => 'snmp',
+                                        tags => {
+                                                switch =>  $switch{'sysname'},
+                                                },
+                                        fields => { $key => $tmp_field },
+                                }],
+                        on_success => $cv,
+                        on_error => sub {
+                                $cv->croak("Failed to write data: @_");
+                        }
+                );
+                $cv->recv;
+
+
 		}
 	}
 	if ($total > 0) {
@@ -154,13 +230,42 @@ sub callback{
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 	if ($total > 0) {
-		if ((time - $switch{'start'}) > 10) {
-			mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
+			my $cv = AE::cv;
+                	$influx->write(
+                        database => $nms::config::influx_database,
+                        data => [
+                                {
+                                        measurement => 'snmp',
+                                        tags => {
+                                                switch =>  $switch{'sysname'},
+                                                },
+                                        fields => { 'execution_time' => (time - $switch{'start'}) },
+                                }],
+                        on_success => $cv,
+                        on_error => sub {
+                                $cv->croak("Failed to write data: @_");
+                        }
+                );
+                $cv->recv;
+
+                if ((time - $switch{'start'}) > 10) {
+                        mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
 		}
 	} else {
 		mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s - no data. Timeout?");
 	}
 }
+
+sub mac_dec_to_hex{
+	my $dec_mac = "@_";
+	my @octets;
+
+	foreach my $octet (split('\.', $dec_mac)){
+		push(@octets, sprintf("%02x", $octet));
+	}
+	return join(':', @octets);
+}
+
 while (1) {
 	inner_loop();
 }

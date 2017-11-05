@@ -8,3 +8,5 @@ localhost ansible_connection=local
 localhost ansible_connection=local
 [snmp]
 localhost ansible_connection=local
+[influx]
+localhost ansible_connection=local

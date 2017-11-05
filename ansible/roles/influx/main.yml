@@ -1,0 +1,14 @@
+- name: Import InfluxDB GPG signing key
+  apt_key: url=https://repos.influxdata.com/influxdb.key state=present
+
+- name: Add InfluxDB repository
+  apt_repository: repo='deb https://repos.influxdata.com/debian jessie stable' state=present
+
+- name: Install InfluxDB packages
+  apt: name=influxdb state=present update_cache=yes
+
+- name: Start the InfluxDB service
+  service: name=influxdb state=started
+
+- name: Create database
+command: /usr/bin/influx -execute 'CREATE DATABASE gondul'

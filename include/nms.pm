@@ -5,6 +5,7 @@ use DBI;
 use Data::Dumper;
 use FileHandle;
 use JSON;
+use AnyEvent::InfluxDB;
 package nms;
 
 use base 'Exporter';
@@ -26,7 +27,16 @@ sub db_connect {
 	                       $nms::config::db_username,
 	                       $nms::config::db_password, {AutoCommit => 0})
 	        or die "Couldn't connect to database";
-	return $dbh;	
+	return $dbh;
+}
+
+sub influx_connect {
+	my $ix = AnyEvent::InfluxDB->new(
+		server => $nms::config::influx_host,
+		username => $nms::config::influx_username,
+		password => $nms::config::influx_password,
+	) or die "Couldn't connect to InfluxDB";
+	return $ix;
 }
 
 # A few utilities to convert from SNMP binary address format to human-readable.

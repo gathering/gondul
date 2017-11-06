@@ -36,4 +36,4 @@
      password: risbrod
 - name: Import SQL
   become_user: postgres
-shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql
+  shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql

@@ -725,7 +725,7 @@ function snmpUpInfo(sw) {
 		ret.data[0].value = "LAG member speed and total speed is " + seen_up;
 		if (total_up != seen_up) {
 			ret.score = 500;
-			ret.why = "LAG member (ge/xt/etc) speed is " + seen_up + " but logical (ae) is " + total_up;
+			ret.why = "LAG member (ge/xe/et) speed is " + seen_up + " but logical (ae) is " + total_up;
 			ret.data[0].value = ret.why;
 		}
 	}

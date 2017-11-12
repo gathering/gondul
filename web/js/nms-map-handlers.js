@@ -638,13 +638,16 @@ function snmpUpdater() {
 }
 
 function secondsToTime(input) {
-	var h, m, s;
-	h = Math.floor(input / 60 / 60);
+	var d, h, m, s;
+	d = Math.floor(input / 60 / 60 / 24);
+	h = Math.floor((input - (d * 24 * 3600)) / 60 / 60);
 	m = Math.floor((input%3600)/60);
 	s = Math.floor(input%60);
 	var string = "";
+	if (d > 0)
+		string = d + " days ";
 	if (h > 0)
-		string = h + " hours ";
+		string += h + " hours ";
 	if (h > 0 || m > 0)
 		string += m + " minutes ";
 	if (string == "")

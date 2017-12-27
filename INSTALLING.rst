@@ -39,6 +39,10 @@ As ``$YOURUSER``::
 
 Then visit http://ip-your-boxen/
 
+Manualy import the database for now::
+
+        psql -h localhost -d nms -U nms -f /opt/gondul/build/schema.sql
+
 Setting up your network...
 --------------------------
 

@@ -5,7 +5,7 @@ package nms::config;
 
 # DB
 our $db_name = "nms";
-our $db_host = "db";
+our $db_host = "localhost";
 our $db_username = "nms";
 our $db_password = "risbrod";
 our $graphite_host = "graphite";

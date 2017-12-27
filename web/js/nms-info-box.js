@@ -609,15 +609,14 @@ var switchPortsPanel = function () {
 			this._renderError("Waiting for data.");
 			return;
 		}
-		var img = document.createElement("img");
-		var i = "totals";
-		img.src = '/render/?target=cactiStyle(group(aliasByMetric(perSecond(sum(snmp.' + this.sw + '.ports.*.ifHCInOctets))),aliasByMetric(perSecond(sum(snmp.' + this.sw + '.ports.*.ifHCOutOctets)))),"binary")' + nmsInfoBox._graphDefaults(this.sw + " totals");
-		img.classList.add("graph");
+		var chart = document.createElement("canvas");
+		chart.id = this.sw+'port-total-chart';
+		drawSumOfPorts(this.sw+'port-total-chart',this.sw)
 		var expanderButton = document.createElement("a");
 		expanderButton.innerHTML = "Toggle all";
 		expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
 		expanderButton.setAttribute("role","button");
-		domObj.appendChild(img);
+		domObj.appendChild(chart);
 		domObj.appendChild(expanderButton);
 		var indicies = [];
 		for (var obj in snmpJson) {
@@ -689,13 +688,13 @@ var switchPortsPanel = function () {
 			}
 
 			tableObj.appendChild(tbody);
-			if (snmpJson[obj].ifHCInOctets != 0 
+			if (snmpJson[obj].ifHCInOctets != 0
 			 || snmpJson[obj].ifHCOutOctets != 0) {
-				var img = document.createElement("img");
-				var port_id = nmsInfoBox._graphNormalize(obj);
-				img.src = '/render/?target=cactiStyle(aliasByMetric(perSecond(snmp.' + this.sw + '.ports.' + port_id + '.{ifHCOutOctets,ifHCInOctets})),"binary")&target=cactiStyle(aliasByMetric(secondYAxis(perSecond(snmp.' + this.sw + '.ports.' + port_id + '.{ifInDiscards,ifInErrors,ifOutDiscards,ifOutErrors}))),"binary")' + nmsInfoBox._graphDefaults();
-				img.classList.add("graph");
-				panelBodyObj.appendChild(img);
+				var chart = document.createElement("canvas");
+                		chart.id = this.sw+'port-'+obj+'-chart';
+                		drawPort(this.sw+'port-'+obj+'-chart',this.sw,obj)
+
+				panelBodyObj.appendChild(chart);
 			}
 			var tableTopObj = document.createElement("div");
 			tableTopObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-table-group">Details</a></span>';
@@ -745,7 +744,7 @@ var searchResultsPanel = function() {
         nmsInfoPanel.call(this,"searchResults");
         this.refresh = function(reason) {
 		var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-                var switches = nmsSearch.matches.sort(collator.compare);	
+                var switches = nmsSearch.matches.sort(collator.compare);
 		var table = document.createElement('table');
 		table.className = "table table-condensed";
 		table.id = "searchResults-table"
@@ -773,7 +772,7 @@ var switchAddPanel = function() {
 	nmsInfoPanel.call(this,"switchAdd");
 	this.refresh = function(reason) {
 		var domObj = document.createElement("div");
-		domObj.innerHTML = '<input type="text" class="form-control" id="create-sysname" placeholder="Space-seaprated list of system names"><button class="btn btn-default" onclick="nmsInfoBox._windowHandler.doInPanel(\'' + this.id +'\',\'save\');">Add switch</button>'
+		domObj.innerHTML = '<input type="text" class="form-control" id="create-sysname" placeholder="Space-seaprated list of system names"></br><button class="btn btn-default" onclick="nmsInfoBox._windowHandler.doInPanel(\'' + this.id +'\',\'save\');">Add switch</button>'
 		this._render(domObj);
 	};
 	this.save = function () {
@@ -1056,7 +1055,7 @@ var switchCommentsPanel = function () {
 		table.appendChild(cap);
 		for (var v in logs) {
 			tr = table.insertRow(-1);
-			tr.className = 
+			tr.className =
 				td1 = tr.insertCell(0);
 			td2 = tr.insertCell(1);
 			var date = new Date(logs[v]['timestamp']);
@@ -1082,7 +1081,8 @@ nmsInfoBox.addPanelType("switchComments",switchCommentsPanel);
 var switchSummaryPanel = function() {
 	nmsInfoPanel.call(this,"switchSummary");
 	this.init = function() {
-		this.addHandler("ticker");
+		//TODO Fix this so the chart is automatic updated
+		//this.addHandler("ticker");
 		this.refresh();
 	};
 	this.refresh = function(reason) {
@@ -1111,12 +1111,11 @@ var switchSummaryPanel = function() {
 			contentCleaned.push(content[i]);
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
-		var latency = document.createElement("img");
-		latency.src = '/render/?target=alias(ping.' + this.sw + '.ipv4,"Latency (ms)")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.ports.*.{ifInDiscards,ifInErrors}))),"Input errors and discards")&target=alias(secondYAxis(perSecond(sum(snmp.' + this.sw + '.ports.*.{ifOutDiscards,ifOutErrors}))),"Output errors and discards")' + nmsInfoBox._graphDefaults("Click to cycle");
-		latency.classList.add("graph");
-		
-		latency.setAttribute("onclick","nmsInfoBox._graphZoom();");
-		latency.setAttribute("role","button");
+		var latency = document.createElement("canvas");
+                latency.id = this.sw+'latency_chart';
+                latency.width = 500;
+                latency.height = 250;
+		drawLatency(this.sw+'latency_chart',this.sw);
 		topper.appendChild(latency);
 		topper.appendChild(table);
 

@@ -5,10 +5,16 @@
   with_items:
       - postgresql-9.4
       - python-psycopg2
+      - sudo
 - name: Drop postgresql-config
   copy:
       dest: /etc/postgresql/9.4/main/postgresql.conf
       src: postgresql.conf
+- name: Add db to hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "127.0.0.1 db"
+    state: present
 - name: Whoami
   become: false
   command: whoami
@@ -24,8 +30,10 @@
     name: nms
 - name: Ensure a valid postgres-user
   become_user: postgres
-  postgresql_user: 
-      db: nms
-      name: nms
-      password: risbrod
-     
+  postgresql_user:
+     db: nms
+     name: nms
+     password: risbrod
+- name: Import SQL
+  become_user: postgres
+  shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql

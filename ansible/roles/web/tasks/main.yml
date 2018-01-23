@@ -51,12 +51,6 @@
     name: "varnish"
     state: present
 
-- name: Copy varnish config
-  copy:
-      dest: /etc/varnish/default.vcl
-      src: varnish.vcl
-  notify: restart varnish
-
 - name: Ensure folder varnish.service.d exists
   file: path=/etc/systemd/system/varnish.service.d/ state=directory mode=0755
 
@@ -66,7 +60,12 @@
       src: varnish.service
   notify:
     - reload systemd
-    - restart varnish
+
+- name: Copy varnish config
+  copy:
+      dest: /etc/varnish/default.vcl
+      src: varnish.vcl
+  notify: restart varnish
 
 - name: Make apache listen on port 8080
   lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
@@ -80,17 +79,11 @@
 - name: Enable gondul-config
   copy:
       dest: /etc/apache2/sites-enabled/gondul.conf
-      src: apache-virtualhost
+      src: apache-virtualhost.conf
   notify: restart apache
 
 - command: a2dissite 000-default
   ignore_errors: true
-  notify: restart apache
-
-- name: Enable gondul-config
-  copy:
-      dest: /etc/apache2/sites-enabled/
-      src: gondul.conf
   notify: restart apache
 
 - cpanm:

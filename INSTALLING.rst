@@ -21,11 +21,11 @@ Quick-install
 
 As root:
 
-:: 
+::
 
         ### Set to your regular username, obviously
         # YOURUSER=kly
-        # apt-get install sudo
+        # apt-get install sudo git
         # echo ${YOURUSER} ALL=NOPASSWD: ALL >> /etc/sudoers
         # echo  deb http://http.debian.net/debian jessie-backports main non-free contrib > /etc/apt/sources.list.d/bp.list
         # apt-get update
@@ -38,10 +38,6 @@ As ``$YOURUSER``::
         $ ansible-playbook -i inventory-localhost site.yml
 
 Then visit http://ip-your-boxen/
-
-Manualy import the database for now::
-
-        psql -h localhost -d nms -U nms -f /opt/gondul/build/schema.sql
 
 Setting up your network...
 --------------------------
@@ -117,4 +113,3 @@ broken:
 - Distribution of configuration (config is being re-implemented)
 - Various test-cases (They are already there, just need to be fiddled with)
 - Graphite / Grafana. Most likely, this will be an external "optional dependency"
-

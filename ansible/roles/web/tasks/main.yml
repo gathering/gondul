@@ -36,30 +36,62 @@
         - cpanminus
         - apt-transport-https
 
+- name: Add packagecloud.io Varnish apt key.
+  apt_key:
+    url: https://packagecloud.io/varnishcache/varnish5/gpgkey
+    state: present
+
+- name: Add packagecloud.io Varnish apt repository.
+  apt_repository:
+    repo: "deb https://packagecloud.io/varnishcache/varnish5/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+    state: present
+
+- name: Ensure Varnish is installed.
+  apt:
+    name: "varnish"
+    state: present
+
+- name: Copy varnish config
+  copy:
+      dest: /etc/varnish/default.vcl
+      src: varnish.vcl
+  notify: restart varnish
+
+- name: Ensure folder varnish.service.d exists
+  file: path=/etc/systemd/system/varnish.service.d/ state=directory mode=0755
+
+- name: Change varnish service.d
+  copy:
+      dest: /etc/systemd/system/varnish.service.d/customexec.conf
+      src: varnish.service
+  notify:
+    - reload systemd
+    - restart varnish
+
+- name: Make apache listen on port 8080
+  lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
+  notify: restart apache
+
 - apache2_module:
     state: present
     name: cgid
   notify: restart apache
-- apache2_module:
-    state: present
-    name: proxy
-  notify: restart apache
-- apache2_module:
-    state: present
-    name: proxy_http
-  notify: restart apache
+
 - name: Enable gondul-config
   copy:
-      dest: /etc/apache2/sites-enabled/
-      src: gondul.conf
+      dest: /etc/apache2/sites-enabled/gondul.conf
+      src: apache-virtualhost
   notify: restart apache
+
 - command: a2dissite 000-default
   ignore_errors: true
   notify: restart apache
+
 - name: Enable gondul-config
   copy:
       dest: /etc/apache2/sites-enabled/
       src: gondul.conf
   notify: restart apache
+
 - cpanm:
     name: AnyEvent::InfluxDB

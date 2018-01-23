@@ -10,5 +10,9 @@
 - name: Start the InfluxDB service
   service: name=influxdb state=started
 
+- name: Wait a few seconds for InfluxDB to start
+  pause:
+    seconds: 5
+
 - name: Create database
   command: /usr/bin/influx -execute 'CREATE DATABASE gondul'

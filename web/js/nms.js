@@ -395,7 +395,7 @@ function initNMS() {
 		nmsData.registerSource("snmp","/api/read/snmp");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
-		nmsData.registerSource("networks","/api/private/networks");
+		nmsData.registerSource("networks","/api/read/networks");
 	//	setInterval(nmsUpdateNavbarGraph, 30000);
 	//	nmsUpdateNavbarGraph();
 		nmsOplog.init();

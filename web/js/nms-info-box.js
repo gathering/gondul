@@ -57,12 +57,36 @@ var nmsInfoBox = nmsInfoBox || {
 		}
 	},
 	{
+		'id': 'networkInfo',
+		'title': 'Network info',
+		'views': {
+			'initial': {
+				'name': 'Summary',
+				'panels': ['networkSummary']
+			},
+			'edit': {
+				'name': 'Edit settings',
+				'panels': ['networkEdit']
+			}
+		}
+	},
+	{
 		'id': 'addSwitch',
 		'title': 'Add new switch(es)',
 		'views': {
 			'initial': {
 				'name': 'Add switch',
 				'panels': ['switchAdd']
+			}
+		}
+	},
+	{
+		'id': 'addNetwork',
+		'title': 'Add new network(s)',
+		'views': {
+			'initial': {
+				'name': 'Add network',
+				'panels': ['networkAdd']
 			}
 		}
 	},
@@ -76,16 +100,16 @@ var nmsInfoBox = nmsInfoBox || {
 			}
 		}
 	},
-        {
-                'id': 'searchResults',
-                'title': 'Search Results',
-                'views': {
-                        'initial': {
-                                'name': 'Search Results',
-                                'panels': ['searchResults']
-                        }
-                }
-        },
+  {
+		'id': 'searchResults',
+		'title': 'Search Results',
+		'views': {
+			'initial': {
+				'name': 'Search Results',
+				'panels': ['searchResults']
+			}
+		}
+	},
 	{
 		'id': 'inventoryListing',
 		'title': 'Inventory listing',
@@ -103,8 +127,18 @@ var nmsInfoBox = nmsInfoBox || {
 				'panels': ['inventoryListing:jnxBoxSerialNo']
 			}
 		}
-	}
-	],
+	},
+	{
+		'id': 'listNetwork',
+		'title': 'Networks',
+		'views': {
+			'initial': {
+				'name': 'List all networks',
+				'panels': ['listNetworks']
+			}
+		}
+	},
+],
 	_panelTypes: {} //Populate by using the nmsInfoBox.addPanelType method
 };
 
@@ -952,7 +986,7 @@ var switchEditPanel = function () {
 			var tmpsw = '\'' + this.sw + '\'';
 			var tmpv = '\'' + v + '\'';
 			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
-			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' ? "readonly" : "") + '>';
+			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' || v == 'subnet4' || v == 'subnet6' || v == 'mgmt_v4_gw' || v == 'mgmt_v6_gw' ? "readonly" : "") + '>';
 			if (v == "placement") {
 				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
 			}
@@ -1132,6 +1166,212 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 	nms.legendPick = {handler: tag, idx: id};
 }
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
+
+/*
+* Panel type: Add network
+*
+* Lets you add a new network using the network-add api
+*
+*/
+var networkAddPanel = function() {
+	nmsInfoPanel.call(this,"networkAdd");
+	this.refresh = function(reason) {
+		var domObj = document.createElement("div");
+		domObj.innerHTML = '<input type="text" class="form-control" id="create-network-name" placeholder="Space-seaprated list of networks"><button class="btn btn-default" onclick="nmsInfoBox._windowHandler.doInPanel(\'' + this.id +'\',\'save\');">Add network</button>'
+		this._render(domObj);
+	};
+	this.save = function () {
+		var name = document.getElementById('create-network-name').value.split(" ");
+		var myData = [];
+		for (var v in name) {
+			myData.push({"name":name[v]});
+		}
+		var myData = JSON.stringify(myData);
+		$.ajax({
+			type: "POST",
+			url: "/api/write/network-add",
+			dataType: "text",
+			data:myData,
+			success: function (data, textStatus, jqXHR) {
+				var result = JSON.parse(data);
+				if(result.networks_added.length > 0) { // FIXME unresolved variable switches_addded
+					nmsInfoBox.hide();
+				}
+				nmsData.invalidate("switches");
+				nmsData.invalidate("smanagement");
+				nmsData.invalidate("networks");
+			}
+		});
+	};
+};
+nmsInfoBox.addPanelType("networkAdd",networkAddPanel);
+
+/*
+* List networks
+*
+* Shows all networks
+*
+*/
+var networkListPanel = function() {
+	nmsInfoPanel.call(this,"listNetworks");
+	this.refresh = function(reason) {
+		var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+		var networks = nmsData.networks.networks;
+		var table = document.createElement('table');
+		table.className = "table table-condensed";
+		table.id = "searchResults-table"
+		for (var net in networks) {
+			console.log(networks[net]);
+			var row = table.insertRow(net);
+			var cell1 = row.insertCell(0);
+			var cell2 = row.insertCell(1);
+			var cell3 = row.insertCell(2);
+			cell1.innerHTML = "<a href='#' onclick='nmsInfoBox.showWindow(\"networkInfo\",\""+net+"\");'>"+net+ '</a>';
+			cell2.innerHTML = networks[net].vlan;
+			cell3.innerHTML = networks[net].routing_point;
+		}
+		this._render(table);
+
+	};
+};
+nmsInfoBox.addPanelType("listNetworks",networkListPanel);
+
+/*
+* Panel type: Network summary
+*
+* Display a summary
+*
+*/
+var networkSummaryPanel = function() {
+	nmsInfoPanel.call(this,"networkSummary");
+	this.refresh = function(reason) {
+		var network = this.sw;
+
+	};
+}
+nmsInfoBox.addPanelType("networkSummary",networkSummaryPanel);
+
+/*
+* Panel type: Edit networki
+*
+*  Lets you edit basic networks data through the network-update api
+*
+*/
+var networkEditPanel = function() {
+	nmsInfoPanel.call(this,"networkEdit");
+	this.refresh = function(reason) {
+		var net = [];
+		try {
+			net = nmsData.networks.networks[this.sw];
+		} catch(e) {}
+
+
+		var domObj = document.createElement("div");
+		var template = {};
+
+		nmsInfoBox._editValues = {};
+		var place;
+		var tags;
+		for (var v in net) {
+			/*
+			* Placement and tags needs to be sent and edited
+			* as plain JSON...
+			*/
+			if (v == "placement") {
+				place = JSON.stringify(net[v]);
+				template[v] = place;
+				continue;
+			}
+			if (v == "tags") {
+				tags = JSON.stringify(net[v]);
+				template[v] = tags;
+				continue;
+			}
+			template[v] = nmsInfoBox._nullBlank(net[v]);
+		}
+		var content = [];
+		for (v in template) {
+			var tmpsw = '\'' + this.sw + '\'';
+			var tmpv = '\'' + v + '\'';
+			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
+			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'name' ? "readonly" : "") + '>';
+			if (v == "placement") {
+				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
+			}
+			content.push([v, html]);
+		}
+
+		content.sort();
+
+		var table = nmsInfoBox._makeTable(content);
+		domObj.appendChild(table);
+
+		var outputCont = document.createElement("div");
+		outputCont.id = "edit-output-cont";
+		outputCont.classList.add("collapse");
+		outputCont.innerHTML = "<h5>Request preview</h5>";
+		var output = document.createElement("output");
+		output.id = "edit-output";
+		outputCont.appendChild(output);
+		domObj.appendChild(outputCont);
+
+		var nav = document.createElement("nav");
+		nav.classList.add("nav","nav-pills");
+
+		var submit = document.createElement("button");
+		submit.innerHTML = "Save changes";
+		submit.classList.add("btn", "btn-primary");
+		submit.id = "edit-submit-" + this.sw;
+		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
+		nav.appendChild(submit);
+
+		var toggleDetails = document.createElement("button");
+		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
+		toggleDetails.classList.add("btn", "btn-default", "pull-right");
+		toggleDetails.dataset.toggle = "collapse";
+		toggleDetails.dataset.target = "#edit-output-cont";
+		toggleDetails.title = "Show request preview";
+		toggleDetails.id = "edit-toggle-details-" + this.sw;
+		nav.appendChild(toggleDetails);
+
+		domObj.appendChild(nav);
+
+		this._render(domObj);
+		if (place) {
+			var pval = document.getElementById("edit-" + this.sw + "-placement");
+			if (pval) {
+				pval.value = place;
+			}
+		}
+		if (tags) {
+			var ptags = document.getElementById("edit-" + this.sw + "-tags");
+			if (ptags) {
+				ptags.value = tags;
+			}
+		}
+
+	};
+	this.save = function () {
+		var myData = nmsInfoBox._editStringify(this.sw);
+		$.ajax({
+			type: "POST",
+			url: "/api/write/network-update",
+			dataType: "text",
+			data:myData,
+			success: function (data, textStatus, jqXHR) {
+				var result = JSON.parse(data);
+				if(result.switches_updated.length > 0) { // FIXME unresolved variable switches_addded
+					nmsInfoBox.hide();
+				}
+				nmsData.invalidate("switches");
+				nmsData.invalidate("smanagement");
+			}
+		});
+	};
+};
+nmsInfoBox.addPanelType("networkEdit",networkEditPanel);
+
+
 /*
  * General-purpose table-maker?
  *

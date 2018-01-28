@@ -1,0 +1,49 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+#use CGI qw(fatalsToBrowser);
+use DBI;
+use lib '/opt/gondul/include';
+use nms;
+use nms::web qw(%get_params %json finalize_output get_input $dbh);
+use nms::util qw(guess_placement);
+use strict;
+use warnings;
+use JSON;
+use Data::Dumper;
+use nms::oplog qw(oplog);
+
+$nms::web::cc{'max-age'} = "0";
+
+my $in = get_input();
+my @tmp = @{JSON::XS::decode_json($in)};
+
+my @added;
+my @dups;
+
+my $sth = $nms::web::dbh->prepare("SELECT name FROM networks WHERE name=?");
+
+foreach my $tmp2 (@tmp) {
+	my %network = %{$tmp2};
+	my $affected = 0;
+	my %template = ();
+	if (not defined($network{'name'})) {
+		next;
+	}
+
+	$sth->execute( $network{'name'});
+	while ( my @row = $sth->fetchrow_array ) {
+		$affected += 1;
+	}
+
+	if ($affected == 0) {
+		$nms::web::dbh->do("INSERT INTO NETWORKS (name)  VALUES ('$network{'name'}');");
+		push @added, $network{'name'};
+		oplog("\"" . $network{'name'} . "\"", "Network added: " . $network{'name'});
+	}
+}
+
+$json{'networks_addded'} = \@added;
+
+print "X-ban: /api/.*\n";
+finalize_output();

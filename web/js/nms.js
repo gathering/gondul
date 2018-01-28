@@ -27,7 +27,7 @@ var nms = {
 	timers: {
 		tvmode: false
 	},
-	
+
 	menuShowing:true,
 	get uptime() {
 		return (Date.now() - this._startTime)/1000;
@@ -105,13 +105,13 @@ function nmsTimer(handler, interval, name, description) {
 	this.interval = parseInt(interval);
 	this.name = name;
 	this.description = description;
-	this.start = function() { 
+	this.start = function() {
 		if (this.handle) {
 			this.stop();
 		}
 		this.handle = setInterval(this.handler,this.interval);
 		};
-	this.stop = function() { 
+	this.stop = function() {
 		if (this.handle)
 			clearInterval(this.handle);
 			this.handle = false;
@@ -370,7 +370,7 @@ function getInitialConfig() {
 function initNMS() {
 	// Only used for dev-purposes now. Accessible through nms.uptime.
 	nms._startTime = Date.now();
-	
+
 	// Public
 	nmsData.registerSource("config","/api/public/config");
 	nmsData.registerSource("ping", "/api/public/ping");
@@ -391,10 +391,11 @@ function initNMS() {
 	nmsData.registerSource("ticker","bananabananbanana");
 
 	if (!nms._public) {
-		// Private	
+		// Private
 		nmsData.registerSource("snmp","/api/read/snmp");
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
+		nmsData.registerSource("networks","/api/private/networks");
 	//	setInterval(nmsUpdateNavbarGraph, 30000);
 	//	nmsUpdateNavbarGraph();
 		nmsOplog.init();
@@ -414,7 +415,7 @@ function detectHandler() {
 	if (views == undefined || views == "")
 		views = "ping";
 	views = views.split(",");
-	
+
 	if (views.length > 1) {
 		nms.tvmode.start(views,interval);
 		return;
@@ -596,7 +597,7 @@ function restoreSettings()
 {
 	try {
 		var retrieve = JSON.parse(atob(getCookie("nms")));
-	} catch(e) { 
+	} catch(e) {
 	}
 	try {
 		var retrieve2 = getUrlVars()['nms'];
@@ -625,7 +626,7 @@ function restoreSettings()
 function nmsUpdateNavbarGraph() {
 	var img = document.getElementById("navbar-graph");
 	var w = 200;
-	
+
 	img.src = "/render/?target=movingAverage(averageSeries(ping.*.*.ipv4),%225min%22)&target=secondYAxis(averageSeries(perSecond(snmp.*.*.ports.*.{ifHCInOctets,ifHCOutOctets})))&bgcolor=%23ffffff00&width=" + w + "&height=20&format=svg&from=-30min&until=now&graphOnly=true";
 }
 /*

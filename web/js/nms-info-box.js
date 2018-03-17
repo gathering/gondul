@@ -981,7 +981,15 @@ var switchEditPanel = function () {
 		submit.classList.add("btn", "btn-primary");
 		submit.id = "edit-submit-" + this.sw;
 		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
+		submit.style = "margin-right: 5px";
 		nav.appendChild(submit);
+
+                var deleteButton = document.createElement("button");
+                deleteButton.innerHTML = "Delete switch";
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.id = "delete-submit-" + this.sw;
+                deleteButton.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','deleteSwitch');");
+                nav.appendChild(deleteButton);
 
 		var toggleDetails = document.createElement("button");
 		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
@@ -1025,6 +1033,24 @@ var switchEditPanel = function () {
 				nmsData.invalidate("smanagement");
 			}
 		});
+	};
+
+        this.deleteSwitch = function () {
+	if(confirm("This will delete the switch: " + this.sw)) {
+                var myData = [{'sysname': this.sw, 'deleted': true}]; 
+                myData = JSON.stringify(myData);
+                $.ajax({
+                        type: "POST", 
+                        url: "/api/write/switch-update",
+                        dataType: "text", 
+                        data:myData,
+                        success: function (data, textStatus, jqXHR) {
+                                nmsInfoBox.hide();
+                                nmsData.invalidate("switches");
+                                nmsData.invalidate("smanagement");
+                        }
+                });
+        };
 	};
 };
 nmsInfoBox.addPanelType("switchEdit",switchEditPanel);

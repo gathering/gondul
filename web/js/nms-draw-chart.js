@@ -124,14 +124,14 @@ function drawSumOfPorts(canvas, sw) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(38,105,28,200)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(58,125,48,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(64,64,122,225)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(84,84,142,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		});
@@ -256,14 +256,14 @@ function drawPort(canvas, sw, port) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(38,105,28,200)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(58,125,48,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(64,64,122,225)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(84,84,142,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		// Draw the chart

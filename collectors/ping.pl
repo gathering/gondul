@@ -18,7 +18,7 @@ $dbh->{RaiseError} = 1;
 
 my $influx = nms::influx_connect();
 
-my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE mgmt_v4_addr is not null or mgmt_v6_addr is not null ORDER BY random();");
+my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as secondary_ip FROM switches WHERE switches.deleted = false and (mgmt_v4_addr is not null or mgmt_v6_addr is not null) ORDER BY random();");
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();

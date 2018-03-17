@@ -10,7 +10,7 @@ function setNightModeChart(night) {
 }
 
 function drawLatency(canvas, sw) {
-        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 15m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
+        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 30m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
@@ -46,6 +46,11 @@ function drawLatency(canvas, sw) {
                                 },
                                 responsive: true,
 				animation: false,
+                                elements: {
+                                        line: {
+                                                tension: 0.05
+                                        }
+                                }
                         }
                 });
         });

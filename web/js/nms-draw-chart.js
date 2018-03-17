@@ -9,7 +9,7 @@ function setNightModeChart(night) {
 	}
 }
 
-function drawLatency(canvas, sw) {
+function drawLatency(canvas, sw, chart, callback) {
         var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 30m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
         var dataset = [];
 
@@ -21,7 +21,12 @@ function drawLatency(canvas, sw) {
                         });
                         dataset.push({data: data, backgroundColor:'rgba(66,139,202,255)', label:serie['tags']['version'] });
                 });
-                var ctx = document.getElementById(canvas).getContext('2d');
+		if(chart != false) {
+			chart.data.datasets = dataset;
+			chart.update();
+			return;	
+		}
+		var ctx = document.getElementById(canvas).getContext('2d');
                 var myChart = new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -43,6 +48,11 @@ function drawLatency(canvas, sw) {
                                                         },
                                                 }
                                         }],
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
                                 },
                                 responsive: true,
 				animation: false,
@@ -53,6 +63,9 @@ function drawLatency(canvas, sw) {
                                 }
                         }
                 });
+	if(callback != undefined) {
+		callback(myChart);
+	}
         });
 }
 

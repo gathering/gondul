@@ -1106,15 +1106,21 @@ nmsInfoBox.addPanelType("switchComments",switchCommentsPanel);
  */
 var switchSummaryPanel = function() {
 	nmsInfoPanel.call(this,"switchSummary");
+	var latencyChart;
 	this.init = function() {
-		//TODO Fix this so the chart is automatic updated
-		//this.addHandler("ticker");
+		this.addHandler("ticker");
 		this.refresh();
 	};
 	this.refresh = function(reason) {
 		var content = [];
 		if (this.sw == false) {
 			console.log("ugh, cleanup failed?");
+			return;
+		}
+
+		if(reason == 'handler-ticker' && latencyChart != undefined) {
+			drawLatency(this.sw+'latency_chart',this.sw, latencyChart);
+			//TODO Fix so it will update table to
 			return;
 		}
 		var topper = document.createElement("div");
@@ -1141,7 +1147,7 @@ var switchSummaryPanel = function() {
                 latency.id = this.sw+'latency_chart';
                 latency.width = 500;
                 latency.height = 250;
-		drawLatency(this.sw+'latency_chart',this.sw);
+		drawLatency(this.sw+'latency_chart',this.sw, false, function(chart) { latencyChart = chart; });
 		topper.appendChild(latency);
 		topper.appendChild(table);
 

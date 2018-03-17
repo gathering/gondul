@@ -1,5 +1,14 @@
 "use strict";
 
+function setNightModeChart(night) {
+	if(night) {
+		Chart.defaults.global.defaultFontColor = "#fff";
+	}
+	else {
+		Chart.defaults.global.defaultFontColor = "#222";
+	}
+}
+
 function drawLatency(canvas, sw) {
         var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 15m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
         var dataset = [];
@@ -10,7 +19,7 @@ function drawLatency(canvas, sw) {
                         serie['values'].forEach(function(element) {
                                 data.push({t: new Date(element[0]), y: element[1]});
                         });
-                        dataset.push({data: data, label:serie['tags']['version'] });
+                        dataset.push({data: data, backgroundColor:'rgba(66,139,202,255)', label:serie['tags']['version'] });
                 });
                 var ctx = document.getElementById(canvas).getContext('2d');
                 var myChart = new Chart(ctx, {
@@ -110,14 +119,14 @@ function drawSumOfPorts(canvas, sw) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(0,204,255,10)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(38,105,28,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(204,255,102,10)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(64,64,122,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		});
@@ -166,6 +175,9 @@ function drawSumOfPorts(canvas, sw) {
 				elements: { 
 					point: {
 						radius: 0
+					},
+					line: {
+						tension: 0
 					}
 				}
                         }
@@ -239,14 +251,14 @@ function drawPort(canvas, sw, port) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(0,204,255,10)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(38,105,28,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(204,255,102,10)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(64,64,122,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		// Draw the chart
@@ -286,6 +298,12 @@ function drawPort(canvas, sw, port) {
                                 },
                                 responsive: true,
                                 animation: false,
+                                elements: {
+					line: {
+						tension: 0
+					}
+				}
+
                         }
                 });
         });

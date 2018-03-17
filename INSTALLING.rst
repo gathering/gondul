@@ -39,6 +39,32 @@ As ``$YOURUSER``::
 
 Then visit http://ip-your-boxen/
 
+Securing InfluxDB
+.................
+
+Default InfluxDB is wide open, to limit this a little we need to configure a few users
+
+Create the users needed
+1. Admin
+	CREATE USER gondulAdmin WITH PASSWORD 'FancyPassword' WITH ALL PRIVILEGES
+2. Write only user
+	CREATE USER gondulWrite WITH PASSWORD 'funfunfunWrite'
+	GRANT WRITE ON gondul to gondulWrite
+3. Read only user
+	CREATE USER gondulRead WITH PASSWORD 'funfunfun'
+	GRANT READ ON gondul to gondulRead
+
+Enable authentication
+Enable authentication by setting the auth-enabled option to true in the [http] section of the configuration file for influxDB /etc/influxdb/influxdb.conf
+
+Set the influxdb write user and password in /includes/config.pm
+Add the read user to varnish so all read requests are authenticated
+Example varnish config:
+`if (req.url ~ "^/query") {
+        set req.backend_hint = influx;
+	set req.http.Authorization = "Basic Z29uZHVsUmVhZDpmdW5mdW5mdW4=";
+}`
+
 Setting up your network...
 --------------------------
 
@@ -75,6 +101,8 @@ Each collector establishes a service on your system, found in
 gondul-services with regular systemd-commands.
 
 Apache is installed and set to listen to port 8080.
+Varnish is installed and listens to port 80
+InfluxDB is installed and listens to port 8086 
 
 SNMP mibs are downloaded to ``/opt/gondul/data/mibs``. Both for Cisco and
 Juniper. If either vendor changes their FTP servers or whatever, this might
@@ -108,8 +136,6 @@ broken:
 
 - DHCP log tailer (this is easy to fix, just need to copy ping/snmp
   basically)
-- Varnish
-- Bootstrapping the database
 - Distribution of configuration (config is being re-implemented)
 - Various test-cases (They are already there, just need to be fiddled with)
-- Graphite / Grafana. Most likely, this will be an external "optional dependency"
+- Grafana. Most likely, this will be an external "optional dependency"

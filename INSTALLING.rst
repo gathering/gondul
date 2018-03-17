@@ -44,26 +44,30 @@ Securing InfluxDB
 
 Default InfluxDB is wide open, to limit this a little we need to configure a few users
 
-Create the users needed
-1. Admin
-	CREATE USER gondulAdmin WITH PASSWORD 'FancyPassword' WITH ALL PRIVILEGES
-2. Write only user
-	CREATE USER gondulWrite WITH PASSWORD 'funfunfunWrite'
-	GRANT WRITE ON gondul to gondulWrite
-3. Read only user
-	CREATE USER gondulRead WITH PASSWORD 'funfunfun'
-	GRANT READ ON gondul to gondulRead
+Create the users needed:
 
-Enable authentication
-Enable authentication by setting the auth-enabled option to true in the [http] section of the configuration file for influxDB /etc/influxdb/influxdb.conf
+1. Admin
+        ``CREATE USER gondulAdmin WITH PASSWORD 'FancyPassword' WITH ALL PRIVILEGES;`` 
+2. Write only user
+        ``CREATE USER gondulWrite WITH PASSWORD 'funfunfunWrite';``
+        ``GRANT WRITE ON gondul to gondulWrite;``
+3. Read only user
+        ``CREATE USER gondulRead WITH PASSWORD 'funfunfun';``
+        ``GRANT READ ON gondul to gondulRead;``
+
+Enable authentication by setting the ``auth-enabled`` option to true in the [http] section of the configuration file for influxDB (/etc/influxdb/influxdb.conf)
 
 Set the influxdb write user and password in /includes/config.pm
-Add the read user to varnish so all read requests are authenticated
-Example varnish config:
-`if (req.url ~ "^/query") {
-        set req.backend_hint = influx;
-	set req.http.Authorization = "Basic Z29uZHVsUmVhZDpmdW5mdW5mdW4=";
-}`
+
+| Add the read only user to varnish so all read requests are authenticated
+| Example varnish config:
+
+| if (req.url ~ "^/query") {
+| set req.backend_hint = influx;
+| set req.http.Authorization = "Basic Z29uZHVsUmVhZDpmdW5mdW5mdW4="; 
+| }
+
+Generate the base64 string using ``echo -n "gondulRead:funfunfun" | base64``
 
 Setting up your network...
 --------------------------

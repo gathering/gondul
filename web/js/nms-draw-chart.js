@@ -3,9 +3,11 @@
 function setNightModeChart(night) {
 	if(night) {
 		Chart.defaults.global.defaultFontColor = "#fff";
+		Chart.defaults.scale.gridLines.color = "#444"
 	}
 	else {
 		Chart.defaults.global.defaultFontColor = "#222";
+		Chart.defaults.scale.gridLines.color = "#ddd"
 	}
 }
 
@@ -19,7 +21,12 @@ function drawLatency(canvas, sw, chart, callback) {
                         serie['values'].forEach(function(element) {
                                 data.push({t: new Date(element[0]), y: element[1]});
                         });
-                        dataset.push({data: data, backgroundColor:'rgba(66,139,202,255)', label:serie['tags']['version'] });
+			var borderColor = "rgba(0,155,200,255)";
+			console.log(serie['tags']['version']);
+			if(serie['tags']['version'] === "v6") {
+				borderColor = "rgba(100,155,100,255)";
+			}
+                        dataset.push({data: data, fill:false, borderColor:borderColor, label:serie['tags']['version'] });
                 });
 		if(chart != false) {
 			chart.data.datasets = dataset;
@@ -33,6 +40,9 @@ function drawLatency(canvas, sw, chart, callback) {
                                 datasets: dataset
                         },
                         options: {
+				legend: {
+					display: false
+				},
                                 scales: {
                                         xAxes:[{
                                                 type: 'time',
@@ -81,7 +91,6 @@ function drawSumOfPorts(canvas, sw) {
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
-                console.log(results);
 
                 var bits_in = [];
                 var bits_out = [];
@@ -211,14 +220,11 @@ function drawPort(canvas, sw, port) {
         var gigabit = megabit * 1024;
         var terabit = gigabit * 1024;
 
-	console.log(sw);
-	console.log(port);
 	var q = encodeURIComponent('SELECT non_negative_derivative(first("ifHCInOctets"), 1s) * 8 AS "ifHCInOctets", non_negative_derivative(first("ifHCOutOctets"), 1s) * 8 AS "ifHCOutOctets" FROM "ports" WHERE time > now() - 30m AND "switch"=\''+sw+'\' AND "interface"=\''+port+'\' GROUP BY time(30s) fill(null)');
 
 	var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
-		console.log(results);
 
 		var serie = results['results'][0]['series'][0];
                 

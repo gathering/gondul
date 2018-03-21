@@ -684,12 +684,12 @@ function snmpInfo(sw) {
 		var uptime = parseInt(nmsData.snmp.snmp[sw]["misc"]["sysUpTimeInstance"][""]) / 100;
 		var upstring = secondsToTime(uptime);
 		ret.data.push({value: upstring, description: "System uptime"});
-		if (uptime < 60*5 && ret.score < 500) {
-			ret.score = 550;
+		if (uptime < 60*5 && ret.score < 300) {
+			ret.score = 300;
 			ret.why = "System rebooted last 5 minutes";
 		}
 		if (uptime < 60*15 && ret.score < 250) {
-			ret.score = 350;
+			ret.score = 250;
 			ret.why = "System rebooted last 15 minutes";
 		}
 	}

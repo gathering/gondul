@@ -427,7 +427,7 @@ function detectHandler() {
 			}
 		}
 	}
-	setUpdater(handler_ping);
+	setUpdater(handler_health);
 }
 
 function getUrlVars() {
@@ -462,7 +462,7 @@ function setMapModeFromN(e,key)
 {
 	switch(key) {
 		case '1':
-			setUpdater(handler_ping);
+			setUpdater(handler_health);
 			break;
 		case '2':
 			setUpdater(handler_uplinks);
@@ -471,7 +471,7 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_dhcp);
 			break;
 		case '4':
-			setUpdater(handler_health);
+			setUpdater(handler_ping);
 			break;
 		case '5':
 			setUpdater(handler_temp);

@@ -19,7 +19,7 @@ my $q2;
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 
-$q2 = $nms::web::dbh->prepare('SELECT distro_name,sysname,subnet4,subnet6,traffic_vlan,distro_phy_port FROM switches WHERE placement is not null AND distro_name is not null AND distro_phy_port is not null');
+$q2 = $nms::web::dbh->prepare('SELECT distro_name,sysname,subnet4,subnet6,traffic_vlan,distro_phy_port FROM switches WHERE placement is not null AND distro_name is not null AND distro_phy_port is not null and deleted = false');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {

@@ -1015,7 +1015,15 @@ var switchEditPanel = function () {
 		submit.classList.add("btn", "btn-primary");
 		submit.id = "edit-submit-" + this.sw;
 		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
+		submit.style = "margin-right: 5px";
 		nav.appendChild(submit);
+
+                var deleteButton = document.createElement("button");
+                deleteButton.innerHTML = "Delete switch";
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.id = "delete-submit-" + this.sw;
+                deleteButton.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','deleteSwitch');");
+                nav.appendChild(deleteButton);
 
 		var toggleDetails = document.createElement("button");
 		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
@@ -1059,6 +1067,24 @@ var switchEditPanel = function () {
 				nmsData.invalidate("smanagement");
 			}
 		});
+	};
+
+        this.deleteSwitch = function () {
+	if(confirm("This will delete the switch: " + this.sw)) {
+                var myData = [{'sysname': this.sw, 'deleted': true}]; 
+                myData = JSON.stringify(myData);
+                $.ajax({
+                        type: "POST", 
+                        url: "/api/write/switch-update",
+                        dataType: "text", 
+                        data:myData,
+                        success: function (data, textStatus, jqXHR) {
+                                nmsInfoBox.hide();
+                                nmsData.invalidate("switches");
+                                nmsData.invalidate("smanagement");
+                        }
+                });
+        };
 	};
 };
 nmsInfoBox.addPanelType("switchEdit",switchEditPanel);
@@ -1114,15 +1140,21 @@ nmsInfoBox.addPanelType("switchComments",switchCommentsPanel);
  */
 var switchSummaryPanel = function() {
 	nmsInfoPanel.call(this,"switchSummary");
+	var latencyChart;
 	this.init = function() {
-		//TODO Fix this so the chart is automatic updated
-		//this.addHandler("ticker");
+		this.addHandler("ticker");
 		this.refresh();
 	};
 	this.refresh = function(reason) {
 		var content = [];
 		if (this.sw == false) {
 			console.log("ugh, cleanup failed?");
+			return;
+		}
+
+		if(reason == 'handler-ticker' && latencyChart != undefined) {
+			drawLatency(this.sw+'latency_chart',this.sw, latencyChart);
+			//TODO Fix so it will update table to
 			return;
 		}
 		var topper = document.createElement("div");
@@ -1149,7 +1181,7 @@ var switchSummaryPanel = function() {
                 latency.id = this.sw+'latency_chart';
                 latency.width = 500;
                 latency.height = 250;
-		drawLatency(this.sw+'latency_chart',this.sw);
+		drawLatency(this.sw+'latency_chart',this.sw, false, function(chart) { latencyChart = chart; });
 		topper.appendChild(latency);
 		topper.appendChild(table);
 

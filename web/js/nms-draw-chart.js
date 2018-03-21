@@ -1,7 +1,18 @@
 "use strict";
 
-function drawLatency(canvas, sw) {
-        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 15m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
+function setNightModeChart(night) {
+	if(night) {
+		Chart.defaults.global.defaultFontColor = "#fff";
+		Chart.defaults.scale.gridLines.color = "#444"
+	}
+	else {
+		Chart.defaults.global.defaultFontColor = "#222";
+		Chart.defaults.scale.gridLines.color = "#ddd"
+	}
+}
+
+function drawLatency(canvas, sw, chart, callback) {
+        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 30m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
@@ -10,15 +21,28 @@ function drawLatency(canvas, sw) {
                         serie['values'].forEach(function(element) {
                                 data.push({t: new Date(element[0]), y: element[1]});
                         });
-                        dataset.push({data: data, label:serie['tags']['version'] });
+			var borderColor = "rgba(0,155,200,255)";
+			console.log(serie['tags']['version']);
+			if(serie['tags']['version'] === "v6") {
+				borderColor = "rgba(100,155,100,255)";
+			}
+                        dataset.push({data: data, fill:false, borderColor:borderColor, label:serie['tags']['version'] });
                 });
-                var ctx = document.getElementById(canvas).getContext('2d');
+		if(chart != false) {
+			chart.data.datasets = dataset;
+			chart.update();
+			return;	
+		}
+		var ctx = document.getElementById(canvas).getContext('2d');
                 var myChart = new Chart(ctx, {
                         type: 'line',
                         data: {
                                 datasets: dataset
                         },
                         options: {
+				legend: {
+					display: false
+				},
                                 scales: {
                                         xAxes:[{
                                                 type: 'time',
@@ -34,11 +58,24 @@ function drawLatency(canvas, sw) {
                                                         },
                                                 }
                                         }],
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
                                 },
                                 responsive: true,
 				animation: false,
+                                elements: {
+                                        line: {
+                                                tension: 0.05
+                                        }
+                                }
                         }
                 });
+	if(callback != undefined) {
+		callback(myChart);
+	}
         });
 }
 
@@ -54,7 +91,6 @@ function drawSumOfPorts(canvas, sw) {
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
-                console.log(results);
 
                 var bits_in = [];
                 var bits_out = [];
@@ -110,14 +146,14 @@ function drawSumOfPorts(canvas, sw) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(0,204,255,10)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(58,125,48,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(204,255,102,10)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(84,84,142,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		});
@@ -166,6 +202,9 @@ function drawSumOfPorts(canvas, sw) {
 				elements: { 
 					point: {
 						radius: 0
+					},
+					line: {
+						tension: 0
 					}
 				}
                         }
@@ -181,14 +220,11 @@ function drawPort(canvas, sw, port) {
         var gigabit = megabit * 1024;
         var terabit = gigabit * 1024;
 
-	console.log(sw);
-	console.log(port);
 	var q = encodeURIComponent('SELECT non_negative_derivative(first("ifHCInOctets"), 1s) * 8 AS "ifHCInOctets", non_negative_derivative(first("ifHCOutOctets"), 1s) * 8 AS "ifHCOutOctets" FROM "ports" WHERE time > now() - 30m AND "switch"=\''+sw+'\' AND "interface"=\''+port+'\' GROUP BY time(30s) fill(null)');
 
 	var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
-		console.log(results);
 
 		var serie = results['results'][0]['series'][0];
                 
@@ -239,14 +275,14 @@ function drawPort(canvas, sw, port) {
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: element[1] / size_divider });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(0,204,255,10)', label:'Traffic in (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(58,125,48,200)', label:'Traffic in (' + sizeToText(size)+')'});
 
                 // Bytes out
                 data = [];
                 serie['values'].forEach(function(element) {
                     data.push({t: new Date(element[0]), y: -Math.abs(element[2] / size_divider) });
                 });
-                dataset.push({data: data, backgroundColor:'rgba(204,255,102,10)', label:'Traffic out (' + sizeToText(size)+')'});
+                dataset.push({data: data, backgroundColor:'rgba(84,84,142,225)', label:'Traffic out (' + sizeToText(size)+')'});
 
 
 		// Draw the chart
@@ -286,6 +322,12 @@ function drawPort(canvas, sw, port) {
                                 },
                                 responsive: true,
                                 animation: false,
+                                elements: {
+					line: {
+						tension: 0
+					}
+				}
+
                         }
                 });
         });

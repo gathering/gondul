@@ -26,7 +26,7 @@ my $influx = nms::influx_connect();
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
 AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
-AND (mgmt_v4_addr is not null or mgmt_v6_addr is not null)
+AND (mgmt_v4_addr is not null or mgmt_v6_addr is not null) AND deleted = false
 EOF
 
 # Borrowed from snmpfetch.pl

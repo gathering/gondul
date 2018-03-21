@@ -14,9 +14,9 @@ my ($switch, $port) = split(/\//,$target,2);
 my $q;
 
 if (!defined($switch)) {
-	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch);');
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . ' and switches.deleted = false group by switch);');
 } else {
-	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ' and switches.deleted = false;');
 }
 
 $q->execute();
@@ -24,7 +24,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 	my $sysname = $ref->{'sysname'};
 
 	my %data = %{JSON::XS::decode_json($ref->{'data'})};
-	
+
 	$json{'switches'}{$sysname}{'clients'}{'live'} = 0;
 	$json{'then'}{$sysname}{'clients'}{'live'} = 0;
 	for my $porti (keys %{$data{'ports'}}) {
@@ -93,7 +93,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 	my $sysname = $ref->{'sysname'};
 
 	my %data = %{JSON::XS::decode_json($ref->{'data'})};
-	
+
 	for my $porti (keys %{$data{'ports'}}) {
 		if (defined($port) and $port ne "" and $port ne $porti) {
 			next;
@@ -149,3 +149,4 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 finalize_output();
+

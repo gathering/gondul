@@ -2,11 +2,11 @@
 localhost ansible_connection=local
 [postgres]
 localhost ansible_connection=local
+[influx]
+localhost ansible_connection=local
 [web]
 localhost ansible_connection=local
 [ping]
 localhost ansible_connection=local
 [snmp]
-localhost ansible_connection=local
-[influx]
 localhost ansible_connection=local

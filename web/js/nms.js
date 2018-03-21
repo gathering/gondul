@@ -324,6 +324,7 @@ function setNightMode(toggle) {
 		document.body.classList.remove("nightmode");
 	}
 	nmsMap.setNightMode(toggle);
+	setNightModeChart(toggle);
 }
 
 /*

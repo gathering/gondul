@@ -20,9 +20,9 @@ $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 
 if (!defined($switch)) {
-	$q2 = $nms::web::dbh->prepare('select sysname,host(mgmt_v4_addr) as mgmt_v4_addr,subnet4,subnet6,host(mgmt_v6_addr) as mgmt_v6_addr,host(mgmt_v4_gw) as mgmt_v4_gw,host(mgmt_v6_gw) as mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null');
+	$q2 = $nms::web::dbh->prepare('select sysname,host(mgmt_v4_addr) as mgmt_v4_addr,subnet4,subnet6,host(mgmt_v6_addr) as mgmt_v6_addr,host(mgmt_v4_gw) as mgmt_v4_gw,host(mgmt_v6_gw) as mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null and deleted = false');
 } else {
-	$q2 = $nms::web::dbh->prepare('select sysname,host(mgmt_v4_addr) as mgmt_v4_addr,subnet4,subnet6,host(mgmt_v6_addr) as mgmt_v6_addr,host(mgmt_v4_gw) as mgmt_v4_gw,host(mgmt_v6_gw) as mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+	$q2 = $nms::web::dbh->prepare('select sysname,host(mgmt_v4_addr) as mgmt_v4_addr,subnet4,subnet6,host(mgmt_v6_addr) as mgmt_v6_addr,host(mgmt_v4_gw) as mgmt_v4_gw,host(mgmt_v6_gw) as mgmt_v6_gw,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null and deleted = false and sysname = ' . $nms::web::dbh->quote($switch) . ';');
 }
 
 $q2->execute();

@@ -3,4 +3,4 @@
   tags:
   - git-all
   - git-gondul
-  git: repo=https://github.com/tech-server/gondul.git dest=/opt/gondul update=no accept_hostkey=yes
+  git: repo={{ git_repo }} dest=/opt/gondul update=no accept_hostkey=yes version={{ git_branch }}

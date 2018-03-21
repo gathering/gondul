@@ -2,6 +2,9 @@
 - hosts: all
   roles:
     - common
+  vars:
+    git_repo: https://github.com/tech-server/gondul.git
+    git_branch: master
 - hosts: postgres
   become: true
   roles:

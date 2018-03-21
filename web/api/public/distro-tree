@@ -12,7 +12,7 @@ use Data::Dumper;
 
 $nms::web::cc{'max-age'} = "20";
 
-my $q2 = $nms::web::dbh->prepare('select sysname,distro_phy_port,distro_name from switches where placement is not null and distro_name is not null and distro_phy_port is not null');
+my $q2 = $nms::web::dbh->prepare('select sysname,distro_phy_port,distro_name from switches where placement is not null and distro_name is not null and distro_phy_port is not null and deleted = false');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {

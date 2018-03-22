@@ -1,0 +1,21 @@
+#! /usr/bin/perl
+# vim:ts=8:sw=8
+
+use lib '/opt/gondul/include';
+use nms::web;
+use strict;
+use warnings;
+
+my $template_dir = "/opt/gondul/web/templates";
+
+opendir (DIR, $template_dir) or die $!;
+
+while (my $file = readdir(DIR)) {
+        next if ($file =~ m/^\./);
+        my %meh;
+        $meh{'file'} = $file;
+
+        push @{$nms::web::json{'templates'}},\%meh;
+}
+
+nms::web::finalize_output();

@@ -6,7 +6,7 @@ import json
 import http.server
 from enum import Enum
 
-endpoints = "read/oplog read/snmp read/switches-management public/config public/dhcp public/dhcp-summary public/ping public/switches public/switch-state".split()
+endpoints = "read/networks read/oplog read/snmp read/switches-management public/distro-tree public/config public/dhcp public/dhcp-summary public/ping public/switches public/switch-state".split()
 objects = dict()
 
 def getEndpoint(endpoint):

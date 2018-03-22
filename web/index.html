@@ -143,11 +143,11 @@
 		<div class="span3 col-lg-6">
 		<textarea id="template-input" class="form-control" cols="80" rows="25"></textarea>
 		<div class="form-inline">
-			<div class="form-group">
-				<button onclick="nmsTemplate.fromFile('HOWTO.txt')" class="btn btn-info">Load HOWTO.txt</button>
-				<button onclick="nmsTemplate.fromFile('switches.txt')" class="btn btn-info">Load switches.txt</button>
-				<button onclick="nmsTemplate.fromFile('switch.txt')" class="btn btn-info">Load switch.txt</button>
-			</div>
+                        <div class="form-group">
+                                <select onchange="nmsTemplate.fromFile(this.value)" class="form-control" id="nmsTemplate-select">
+                                         <option value="">Select template</option>
+                                </select>
+                        </div>
 			<div class="form-group">
 				<label for="template-query-params">Query parameters</label>
 				<input type="text" class="form-control" id="template-query-params" value="?switch=e13-1&foo=bar" />

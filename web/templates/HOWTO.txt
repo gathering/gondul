@@ -8,7 +8,7 @@ We utilize Jinja2 templates.
 -#}
 
 {% set url = "localhost" -%}
-{% set example_switch = "distro0" -%}
+{% set example_switch = "r1.tele" -%}
 
 See http://jinja.pocoo.org/ for the full documentation of the templating
 language.

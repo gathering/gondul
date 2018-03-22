@@ -986,7 +986,12 @@ var switchEditPanel = function () {
 			var tmpsw = '\'' + this.sw + '\'';
 			var tmpv = '\'' + v + '\'';
 			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
+			if(v == 'community') {
+				var html = '<input type="password" autocomplete="off" onfocus="this.type = \'text\'" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + '>';
+			}
+			else {
 			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' || v == 'subnet4' || v == 'subnet6' || v == 'mgmt_v4_gw' || v == 'mgmt_v6_gw' ? "readonly" : "") + '>';
+			}
 			if (v == "placement") {
 				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
 			}

@@ -3,6 +3,7 @@
 import requests,traceback
 from jinja2 import Template,Environment,FileSystemLoader,TemplateNotFound
 import json
+import netaddr
 import http.server
 from enum import Enum
 
@@ -19,7 +20,27 @@ def updateData():
     for a in endpoints:
         objects[a] = getEndpoint(a)
 
-env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/data/templates', '/opt/gondul/web/templates']),lstrip_blocks=True, trim_blocks=True)
+def netmask(ip):
+    return netaddr.IPNetwork(ip).netmask
+def networkId(ip):
+    return netaddr.IPNetwork(ip).ip
+def getFirstDhcpIp(ip):
+    return netaddr.IPNetwork(ip)[3]
+def getLastDhcpIp(ip):
+    return netaddr.IPNetwork(ip)[-1]
+def getDistro(src):
+    return src.split(":")[0]
+def getPort(src):
+    return src.split(":")[1]
+
+env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/data/templates', '/opt/gondul/web/templates']), trim_blocks=True)
+
+env.filters["netmask"] = netmask
+env.filters["networkId"] = networkId
+env.filters["getFirstDhcpIp"] = getFirstDhcpIp
+env.filters["getLastDhcpIp"] = getLastDhcpIp
+env.filters["agentDistro"] = getDistro
+env.filters["agentPort"] = getPort
 
 class Mode(Enum):
     Get = 1

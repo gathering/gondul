@@ -14,9 +14,9 @@ my ($switch, $port) = split(/\//,$target,2);
 my $q;
 
 if (!defined($switch)) {
-	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . ' and switches.deleted = false group by switch);');
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . ' and switches.deleted = false group by switch) and switches.deleted = false and not switches.tags \?& array[\'switchstateignore\'];');
 } else {
-	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ' and switches.deleted = false;');
+	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ' and switches.deleted = false and not switches.tags \?& array[\'switchstateignore\'];');
 }
 
 $q->execute();
@@ -83,9 +83,9 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 nms::web::setwhen('15m','10m');
 my $q2;
 if (!defined($switch)) {
-	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch);');
+	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . ' and switches.deleted = false group by switch) and switches.deleted = false and not switches.tags \?& array[\'switchstateignore\'];');
 } else {
-	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+	$q2 = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ' and switches.deleted = false and not switches.tags \?& array[\'switchstateignore\'];');
 }
 
 $q2->execute();

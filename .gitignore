@@ -1,2 +1,4 @@
 .*.swp
 data/
+web/templates/
+web/files/

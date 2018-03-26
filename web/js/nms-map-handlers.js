@@ -516,13 +516,13 @@ function getDhcpColor(stop)
 
 function dhcpUpdater()
 {
-	if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches'])) {
+	if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
 		return
 	}
 	var now = nmsData.dhcp.time;
 	for (var sw in nmsData.switches.switches) {
 		var c = nmsColor.blue;
-		var s = nmsData.dhcp.dhcp[sw];
+		var s = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
 		if (s == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
@@ -536,9 +536,9 @@ function dhcpInfo(sw) {
 	var ret = new handlerInfo("dhcp","DHCP state");
 	ret.why = "No DHCP data";
 	ret.data[0].description = "DHCP age";
-	if (testTree(nmsData,['dhcp','dhcp',sw])) {
+	if (testTree(nmsData,['dhcp','dhcp',nmsData.smanagement.switches[sw].traffic_vlan])) {
 		var now = nmsData.dhcp.time;
-		var then = nmsData.dhcp.dhcp[sw];
+		var then = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
 		var diff = now - then;
 		var divider = 6;
 		if(tagged(sw,'slowdhcp')) {
@@ -551,11 +551,11 @@ function dhcpInfo(sw) {
 	} else {
 		ret.data[0].value = "No DHCP data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
-			if (nmsData.smanagement.switches[sw].subnet4 == undefined ||
-				nmsData.smanagement.switches[sw].subnet4 == "") {
-				ret.data[0].value = "No associated subnets";
+			if (nmsData.smanagement.switches[sw].traffic_vlan == undefined ||
+				nmsData.smanagement.switches[sw].traffic_vlan == "") {
+				ret.data[0].value = "No associated networks";
 				ret.score = 0;
-				ret.why = "No subnet registered";
+				ret.why = "No network associated";
 			} else {
 				ret.score = 350;
 				ret.why = "No DHCP data";
@@ -565,9 +565,10 @@ function dhcpInfo(sw) {
 			ret.why = "No management data for DHCP";
 		}
 	}
-	if (testTree(nmsData,['dhcp','switches',sw,'clients'])) {
+	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
 		ret.data[1] = {};
-		ret.data[1].value = nmsData.dhcp.switches[sw].clients;
+		ret.data[1].value = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
+		console.log()
 		ret.data[1].description = "DHCP clients";
 	}
 	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {

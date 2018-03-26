@@ -23,51 +23,23 @@ my @dups;
 my $sth = $nms::web::dbh->prepare("SELECT name FROM networks WHERE name=?");
 
 
-my @fields = ('name','last_updated','placement','subnet4','subnet6','gw4','gw6','routing_point','vlan','tags');
-
-sub convertplace
-{
-	my %in = %{$_[0]};
-	my %out = ();
-
-	if (not defined $in{'x1'} and defined($in{'x'})) {
-		$out{'x1'} = int($in{'x'});
-		$out{'y1'} = int($in{'y'});
-		$out{'xx'} = int($in{'x'} + $in{'width'});
-		$out{'yy'} = int($in{'y'} + $in{'height'});
-	} else {
-		return \%in;
-	}
-	return \%out;
-}
+my @fields = ('name','last_updated','subnet4','subnet6','gw4','gw6','routing_point','vlan','tags');
 
 foreach my $tmp2 (@tmp) {
 	my %network = %{$tmp2};
 	my $affected = 0;
 	my %template = ();
 	map { $template{$_} = 'DEFAULT' } @fields;
-	if (not defined($network{'sysname'})) {
+	if (not defined($network{'name'})) {
 		next;
 	}
 
-	$sth->execute( $network{'sysname'});
+	$sth->execute( $network{'name'});
 	while ( my @row = $sth->fetchrow_array ) {
 		$affected += 1;
 	}
 
 	if ($affected == 0) {
-		my %placement;
-		if (not defined ($network{'placement'})) {
-			%placement = guess_placement($network{'sysname'});
-		} else {
-			%placement = %{convertplace($network{'sysname'})};
-		}
-		my ($x1,$x2,$y1,$y2);
-		$x1 = $placement{'x1'};
-		$y1 = $placement{'y1'};
-		$x2 = $placement{'xx'};
-		$y2 = $placement{'yy'};
-		$network{'placement'} = "(($x1,$y1),($x2,$y2))";
 
 		map {
 			if (defined ($template{$_})) {
@@ -76,24 +48,9 @@ foreach my $tmp2 (@tmp) {
 		} keys %network;
 
 
-		$nms::web::dbh->do("INSERT INTO NETWORKS (name, last_updated, placement, subnet4, subnet6, routing_point, gw4, gw6, vlan, tags)  VALUES ($template{'sysname'}, $template{'last_updated'}, $template{'placement'}, $template{'subnet4'}, $template{'subnet6'}, $template{'routing_point'}, $template{'gw4'}, $template{'gw6'}, $template{'vlan'}, $template{'tags'});");
-		push @added, $network{'sysname'};
+		$nms::web::dbh->do("INSERT INTO NETWORKS (name, last_updated, subnet4, subnet6, routing_point, gw4, gw6, vlan, tags)  VALUES ($template{'name'}, $template{'last_updated'}, $template{'subnet4'}, $template{'subnet6'}, $template{'routing_point'}, $template{'gw4'}, $template{'gw6'}, $template{'vlan'}, $template{'tags'});");
+		push @added, $network{'name'};
 	} else {
-		if (defined($network{'placement'})) {
-			my %placement;
-			if ($network{'placement'} eq "reset") {
-				%placement = guess_placement($network{'sysname'});
-			} else {
-				%placement = %{convertplace($network{'placement'})};
-			}
-			my ($x1,$x2,$y1,$y2);
-			$x1 = $placement{'x1'};
-			$y1 = $placement{'y1'};
-			$x2 = $placement{'xx'};
-			$y2 = $placement{'yy'};
-			$network{'placement'} = "(($x1,$y1),($x2,$y2))";
-			push @dups, "not really, but: " . $network{'placement'};
-		}
 		if (defined($network{'tags'})) {
 			$network{'tags'} =~ s/'/"/g;
 		}
@@ -103,8 +60,8 @@ foreach my $tmp2 (@tmp) {
 				push @set, "$_=" . $dbh->quote($network{$_});
 			}
 		} keys %network;
-		$nms::web::dbh->do("UPDATE NETWORKS SET " . join(", ", @set) . "WHERE name=" . $dbh->quote($network{'sysname'}) . ";");
-		push @dups, $network{'sysname'};
+		$nms::web::dbh->do("UPDATE networks SET " . join(", ", @set) . "WHERE name=" . $dbh->quote($network{'name'}) . ";");
+		push @dups, $network{'name'};
 	}
 }
 $json{'networks_addded'} = \@added;

@@ -91,10 +91,11 @@ sub guess_placement_dx {
 		$y = 880;
 		$xx = $x + 230;
 		$yy = $y + 40;
-	} elsif ($name =~ /^distro(\d)$/) {
+	} elsif ($name =~ /^s(\d).floor$/) {
 		my $d = ($1);
+		$d -= 1;
 		$src = "distro";
-		$x = 1550 - $d * 700;
+		$x = 1550 - $d * 600;
 		$y = 410;
 		$xx = $x + 230;
 		$yy = $y + 40;
@@ -180,11 +181,12 @@ sub guess_placement_tg {
 		$y = int(759 + 20.5 * $s);
 		$xx = $x + 65;
 		$yy = $y + 14;
-	} elsif ($name =~ /^distro(\d)/) {
+	} elsif ($name =~ /^s(\d).floor/) {
 		my $d = ($1);
 		$src = "distro";
-		$x = 292 + $d * 165;
-		$y = 415;
+		$d -= 1;
+		$x = 260 + $d * 145;
+		$y = 417;
 		$xx = $x + 130;
 		$yy = $y + 20;
 	} else {

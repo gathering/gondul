@@ -32,7 +32,7 @@ EOF
 # Borrowed from snmpfetch.pl
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT
-  sysname,switch,host(mgmt_v4_addr) as ip,host(mgmt_v6_addr) as ip2,community,
+  sysname,switch,host(mgmt_v6_addr) as ip,host(mgmt_v4_addr) as ip2,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
@@ -70,7 +70,9 @@ sub populate_switches
 		my $ip;
 		$ip = $ref->{'ip'};
 		if (!defined($ip) or $ip eq "") {
-			$ip = 'udp6:[' . $ref->{'ip2'} . ']';
+			$ip = 'udp:[' . $ref->{'ip2'} . ']';
+		} else {
+			$ip = 'udp6:[' . $ip . ']';
 		}
 		push @switches, {
 			'sysname' => $ref->{'sysname'},
@@ -95,6 +97,7 @@ sub inner_loop
 		$dbh->commit;
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
+					  Timeout => 1000000,
 					  UseEnums => 1,
 					  Version => '2');
 		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
@@ -162,7 +165,7 @@ sub callback{
 	for my $nic (@nicids) {
 		$tree2{'ports'}{$tree{$nic}{'ifName'}} = $tree{$nic};
 		my $tmp_field = '';
-		for my $tmp_key (keys $tree{$nic}) {
+		for my $tmp_key (keys %{$tree{$nic}}) {
 				if(looks_like_number($tree{$nic}{$tmp_key})) {
 					$tmp_field = $tree{$nic}{$tmp_key};
 				} else {
@@ -170,23 +173,25 @@ sub callback{
 				}
 
                 my $cv = AE::cv;
-                $influx->write(
-                        database => $nms::config::influx_database,
-                        data => [
-                                {
-                                        measurement => 'ports',
-                                        tags => {
-                                                switch =>  $switch{'sysname'},
-						interface => $tree{$nic}{'ifName'},
-                                                },
-                                        fields => { $tmp_key => $tmp_field },
-                                }],
-                        on_success => $cv,
-                        on_error => sub {
-                                $cv->croak("Failed to write data: @_");
-                        }
-                );
-                $cv->recv;
+		if (defined($tree{$nic}{'ifName'}) and $tree{$nic}{'ifName'} ne "") {
+			$influx->write(
+				database => $nms::config::influx_database,
+				data => [
+					{
+						measurement => 'ports',
+						tags => {
+							switch =>  $switch{'sysname'},
+							interface => $tree{$nic}{'ifName'},
+							},
+						fields => { $tmp_key => $tmp_field },
+					}],
+				on_success => $cv,
+				on_error => sub {
+					$cv->croak("Failed to write data: @_");
+				}
+			);
+			$cv->recv;
+			}
 		}
 
 		delete $tree{$nic};

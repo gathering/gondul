@@ -686,7 +686,7 @@ var switchPortsPanel = function () {
 				}
 			} catch(e) {};
 
-			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifDescr + ' </a><small>' + snmpJson[obj].ifAlias + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
+			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifDescr + ' </a><small>' + snmpJson[obj].ifName + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
 
 			var groupObjCollapse = document.createElement("div");
 			groupObjCollapse.id = cleanObj + "-group";
@@ -1389,7 +1389,7 @@ var networkEditPanel = function() {
 
 	};
 	this.save = function () {
-		var myData = nmsInfoBox._editStringify(this.sw);
+		var myData = nmsInfoBox._editStringify(this.sw,"name");
 		$.ajax({
 			type: "POST",
 			url: "/api/write/network-update",
@@ -1505,7 +1505,7 @@ nmsInfoBox._editChange = function(sw, v) {
 	out.value = myData;
 };
 
-nmsInfoBox._editStringify = function(sw) {
-	nmsInfoBox._editValues['sysname'] = sw;
+nmsInfoBox._editStringify = function(sw, sysname='sysname') {
+	nmsInfoBox._editValues[sysname] = sw;
 	return JSON.stringify([nmsInfoBox._editValues]);
 };

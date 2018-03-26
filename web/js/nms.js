@@ -134,7 +134,7 @@ function nmsTimer(handler, interval, name, description) {
 function byteCount(bytes,precision) {
 	if (precision ==undefined)
 		precision = 1;
-	var units = ['', 'K', 'M', 'G', 'T', 'P'];
+	var units = ['', 'K', 'M', 'G', 'T', 'P', 'E','Z'];
 	var i = 0;
 	while (bytes > 1024) {
 		bytes = bytes / 1024;

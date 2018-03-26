@@ -27,7 +27,7 @@ my %months = (
 my $realtime = 0;
 my ($dbh, $q,$check);
 $dbh = nms::db_connect();
-$q = $dbh->prepare("INSERT INTO dhcp (dhcp_server,switch,time,ip,mac) VALUES($nms::config::dhcp_id,(SELECT switch FROM switches WHERE ?::inet << subnet4 and deleted = false ORDER BY sysname LIMIT 1),?,?,?)");
+$q = $dbh->prepare("INSERT INTO dhcp (dhcp_server,network,time,ip,mac) VALUES($nms::config::dhcp_id,(SELECT network FROM networks WHERE ?::inet << subnet4 ORDER BY name LIMIT 1),?,?,?)");
 $check = $dbh->prepare("SELECT max(time)::timestamp - ?::timestamp < '0s'::interval as doit FROM dhcp where dhcp_server = $nms::config::dhcp_id;");
 
 open(SYSLOG, "tail -n 9999999 -F /var/log/messages |") or die "Unable to tail syslog: $!";

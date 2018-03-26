@@ -22,6 +22,8 @@ def updateData():
 
 def netmask(ip):
     return netaddr.IPNetwork(ip).netmask
+def cidr(ip):
+    return netaddr.IPNetwork(ip).prefixlen
 def networkId(ip):
     return netaddr.IPNetwork(ip).ip
 def getFirstDhcpIp(ip):
@@ -36,6 +38,7 @@ def getPort(src):
 env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/data/templates', '/opt/gondul/web/templates']), trim_blocks=True)
 
 env.filters["netmask"] = netmask
+env.filters["cidr"] = cidr
 env.filters["networkId"] = networkId
 env.filters["getFirstDhcpIp"] = getFirstDhcpIp
 env.filters["getLastDhcpIp"] = getLastDhcpIp

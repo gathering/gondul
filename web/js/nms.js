@@ -414,7 +414,7 @@ function detectHandler() {
 	var views = document.location.hash.slice(1);
 	var interval = nms.interval;
 	if (views == undefined || views == "")
-		views = "ping";
+		views = "health";
 	views = views.split(",");
 
 	if (views.length > 1) {

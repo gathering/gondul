@@ -11,7 +11,7 @@ endpoints = "read/networks read/oplog read/snmp read/switches-management public/
 objects = dict()
 
 def getEndpoint(endpoint):
-    r = requests.get("http://localhost:8080/api/%s" % endpoint)
+    r = requests.get("http://localhost:80/api/%s" % endpoint)
     if (r.status_code != 200):
         raise Exception("Bad status code for endpoint %s: %s" % (endpoint, r.status_code))
     return r.json()
@@ -34,6 +34,8 @@ def getDistro(src):
     return src.split(":")[0]
 def getPort(src):
     return src.split(":")[1]
+def getFirstFapIp(ip):
+    return netaddr.IPNetwork(ip)[netaddr.IPNetwork(ip).size/2]
 
 env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/data/templates', '/opt/gondul/web/templates']), trim_blocks=True)
 
@@ -44,6 +46,7 @@ env.filters["getFirstDhcpIp"] = getFirstDhcpIp
 env.filters["getLastDhcpIp"] = getLastDhcpIp
 env.filters["agentDistro"] = getDistro
 env.filters["agentPort"] = getPort
+env.filters["getFirstFapIP"] = getFirstFapIp
 
 class Mode(Enum):
     Get = 1
@@ -105,7 +108,7 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         self.generic(Mode.Post) 
 
 def run(server_class=http.server.HTTPServer, handler_class=http.server.BaseHTTPRequestHandler):
-    server_address = ('localhost', 8081)
+    server_address = ('localhost', 8084)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever() 
 

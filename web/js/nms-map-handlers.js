@@ -73,6 +73,13 @@ var handler_cpu = {
 	name:"CPU utilization"
 };
 
+var handler_memory = {
+	init:memoryInit,
+	getInfo:memoryInfo,
+	tag:"memory",
+	name:"Memory utilization"
+};
+
 var handler_health = {
 	init:healthInit,
 	getInfo:healthInfo,
@@ -133,6 +140,7 @@ var handlers = [
 	handler_dhcp,
 	handler_snmp,
 	handler_cpu,
+	handler_memory,
 	handler_snmpup
 	];
 
@@ -478,7 +486,7 @@ function pingInfo(sw)
 						ret.data[3].description = "Distro-port";
 						ret.data[3].value = "Distro port is live";
 						if (isNaN(ping) && isNaN(ping6)) {
-							ret.score = 850;
+							ret.score = 700;
 							ret.why = "Distro port is alive, but no IPv4/IPv6 ping. ROLLBACK!";
 						}
 					}
@@ -517,7 +525,7 @@ function getDhcpColor(stop)
 function dhcpUpdater()
 {
 	if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
-		return
+		return;
 	}
 	var now = nmsData.dhcp.time;
 	for (var sw in nmsData.switches.switches) {
@@ -536,6 +544,9 @@ function dhcpInfo(sw) {
 	var ret = new handlerInfo("dhcp","DHCP state");
 	ret.why = "No DHCP data";
 	ret.data[0].description = "DHCP age";
+        if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
+                return ret.data[1] = {};
+        }
 	if (testTree(nmsData,['dhcp','dhcp',nmsData.smanagement.switches[sw].traffic_vlan])) {
 		var now = nmsData.dhcp.time;
 		var then = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
@@ -719,16 +730,20 @@ function snmpUpInfo(sw) {
 		var seen_up = 0;
 		for (var port in nmsData.snmp.snmp[sw].ports) {
 			var x = nmsData.snmp.snmp[sw].ports[port];
-			if (x["ifAlias"].match(/Uplink/i) && x["ifOperStatus"] == "up") {
+			if (x["ifAlias"].match(/Gruppe/i) && x["ifOperStatus"] == "up") {
 				total_up += parseInt(x["ifHighSpeed"]);
 			}
-			if (x["ifAlias"].match(/LAG Member/i) && x["ifOperStatus"] == "up") {
+			if (x["ifAlias"].match(/Fysisk/i) && x["ifOperStatus"] == "up") {
 				seen_up += parseInt(x["ifHighSpeed"]);
 			}
 		}
 		ret.data[0].value = "LAG member speed and total speed is " + seen_up;
 		if (total_up != seen_up) {
 			ret.score = 500;
+			if (tagged(sw,'ignoreuplink')) {
+				ret.score = 0;
+			}
+
 			ret.why = "LAG member (ge/xe/et) speed is " + seen_up + " but logical (ae) is " + total_up;
 			ret.data[0].value = ret.why;
 		}
@@ -778,6 +793,47 @@ function cpuUpdater() {
 		}
 	}
 }
+function memoryUpdater() {
+	for (var sw in nmsData.switches.switches) {
+		try {
+			var buffer = 0;
+			for (var u in nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer) {
+				var local = nmsData.snmp.snmp[sw].misc['jnxOperatingBuffer'][u];
+				buffer = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer[u],buffer);
+			}
+			nmsMap.setSwitchColor(sw, nmsColor.getColorStop(buffer * 10));
+			nmsMap.setSwitchInfo(sw, buffer + " % ");
+		} catch (e) {
+			nmsMap.setSwitchColor(sw, "white");
+			nmsMap.setSwitchInfo(sw, "N/A");
+		}
+	}
+}
+function memoryInfo(sw) {
+	var ret = new handlerInfo("memory","Memory utilization");
+	ret.why = "No Memory info";
+	ret.score = 0;
+
+	if (testTree(nmsData,['snmp','snmp',sw, 'misc','jnxOperatingBuffer'])) {
+		var memory = 0;
+		for (var u in nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer) {
+			var local = nmsData.snmp.snmp[sw].misc['jnxOperatingBuffer'][u];
+			memory = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer[u],memory);
+		}
+		if (memory < 30) {
+			ret.score = 0;
+		} else if (memory < 60) {
+			ret.score = 100;
+		} else if (memory < 90) {
+			ret.score = memory * 2;
+		} else {
+			ret.score = memory * 6;
+		}
+		ret.why = "Memory utilization: " + memory + "%";
+		ret.data[0].value = memory + "%";
+	}
+	return ret;
+}
 
 function tagged(sw, tag) {
 	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
@@ -794,6 +850,14 @@ function mgmtInfo(sw) {
 	ret.why = "All good";
 	if (testTree(nmsData,['smanagement','switches',sw])) {
 		var mg = nmsData.smanagement.switches[sw];
+		var traffic_vlan = "N/A";
+		var mgmt_vlan = "N/A";
+		if (testTree(nmsData,['networks','networks',mg.traffic_vlan,"vlan"])) {
+			traffic_vlan = nmsData["networks"]["networks"][mg.traffic_vlan]["vlan"];
+		}
+		if (testTree(nmsData,['networks','networks',mg.mgmt_vlan,"vlan"])) {
+			mgmt_vlan = nmsData["networks"]["networks"][mg.mgmt_vlan]["vlan"];
+		}
 		ret.data =
 			[{
 				value: mg.mgmt_v4_addr || "N/A",
@@ -810,7 +874,14 @@ function mgmtInfo(sw) {
 			}, {
 				value: mg.distro_name || "N/A",
 				description: "Distro"
-			}];
+			}, {
+				value: traffic_vlan || "N/A",
+				description: "Client VLAN" 
+			}, {
+				value: mgmt_vlan || "N/A",
+				description: "Management VLAN"
+			}
+			];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
 			ret.why = "No IPv4 or IPv6 management IP";
 			ret.score = 1000;
@@ -843,6 +914,16 @@ function cpuInit() {
 	setLegend(4,getColorStop(1000),"100 %");
 	setLegend(5,"white","N/A");
 	cpuUpdater();
+}
+function memoryInit() {
+	nmsData.addHandler("snmp", "mapHandler", memoryUpdater);
+	nmsColor.drawGradient([nmsColor.green,nmsColor.orange,nmsColor.red]);
+	setLegend(1,getColorStop(0),"0 %");
+	setLegend(2,getColorStop(250),"25 %");
+	setLegend(3,getColorStop(600),"60 %");
+	setLegend(4,getColorStop(1000),"100 %");
+	setLegend(5,"white","N/A");
+	memoryUpdater();
 }
 
 function healthInfo(sw) {

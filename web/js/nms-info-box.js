@@ -50,6 +50,10 @@ var nmsInfoBox = nmsInfoBox || {
 				'name': 'SNMP',
 				'panels': ['switchSNMP:misc']
 			},
+			'links': {
+				'name': 'Links',
+				'panels': ['switchLinks']
+			},
 			'edit': {
 				'name': 'Edit settings',
 				'panels': ['switchEdit']
@@ -125,7 +129,11 @@ var nmsInfoBox = nmsInfoBox || {
 			'jnxBoxSerialNo': {
 				'name': 'Serial numbers',
 				'panels': ['inventoryListing:jnxBoxSerialNo']
-			}
+			},
+                        'transceiver': {
+                                'name': 'Transceivers',
+                                'panels': ['inventoryListing:transceiver']
+                        }
 		}
 	},
 	{
@@ -657,7 +665,13 @@ var switchPortsPanel = function () {
 			indicies.push(obj);
 		}
 		indicies.sort(function(a,b) {
-			return snmpJson[a].ifIndex - snmpJson[b].ifIndex;
+			var tmpx = [ snmpJson[a].ifName, snmpJson[b].ifName ];
+			tmpx.sort();
+			if (tmpx[0] == snmpJson[a].ifName) {
+				return -1;
+			} else {
+				return 1;
+			}
 		});
 		for(var obji in indicies) {
 			var obj = indicies[obji];
@@ -686,7 +700,7 @@ var switchPortsPanel = function () {
 				}
 			} catch(e) {};
 
-			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifDescr + ' </a><small>' + snmpJson[obj].ifName + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
+			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifName + ' </a><small>' + snmpJson[obj].ifAlias + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
 
 			var groupObjCollapse = document.createElement("div");
 			groupObjCollapse.id = cleanObj + "-group";
@@ -885,6 +899,9 @@ var inventoryListingPanel = function() {
 			case 'jnxBoxSerialNo':
 				listTitle = 'Serial Numbers';
 				break;
+			case 'transceiver':
+				listTitle = 'Transceivers';
+				break;
 			default:
 				listTitle = 'Distro names';
 		}
@@ -900,15 +917,18 @@ var inventoryListingPanel = function() {
 				switch (this.mode) {
 					case 'distro_name':
 						value = nmsData.switches.switches[sw]["distro_name"];
+						resultArray.push([sw, value]);	
 						break;
 					case 'sysDescr':
 						value = nmsData.snmp.snmp[sw]["misc"]["sysDescr"][0];
+						resultArray.push([sw, value]);
 						break;
 					case 'jnxBoxSerialNo':
 						if(testTree(nmsData,["snmp","snmp",sw,"misc","entPhysicalSerialNum"])) {
 							for (var x in nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"]) {
 								value = "misc" + x + ":" + nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"][x];
-								resultArray.push([sw, value]);
+								var entPhysicalDescr = nmsData.snmp.snmp[sw]["misc"]["entPhysicalDescr"][x]; 
+								resultArray.push([sw, entPhysicalDescr+': '+value]);
 							}
 						}
 						if (testTree(nmsData,["snmp","snmp",sw,"misc","jnxVirtualChassisMemberSerialnumber"])) {
@@ -918,11 +938,23 @@ var inventoryListingPanel = function() {
 							}
 						}
 						value = nmsData.snmp.snmp[sw]["misc"]["jnxBoxSerialNo"][0];
+						resultArray.push([sw, value]);
 						break;
+					case 'transceiver':
+                                                if(testTree(nmsData,["snmp","snmp",sw,"misc","entPhysicalSerialNum"])) {
+                                                        for (var x in nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"]) {
+								var entPhysicalDescr = nmsData.snmp.snmp[sw]["misc"]["entPhysicalDescr"][x];
+								if(!entPhysicalDescr.match(/^SFP/)) {
+									continue;
+								}
+                                                                value = entPhysicalDescr  + ": " + nmsData.snmp.snmp[sw]["misc"]["entPhysicalSerialNum"][x];
+								resultArray.push([sw, entPhysicalDescr+': '+value]);
+                                                        }
+                                                }
+                                                break;
+
 				}
 			} catch (e) {console.log("sw: " + sw); console.log(e);}
-
-			resultArray.push([sw, value]);
 		}
 
 		resultArray.sort();
@@ -1204,6 +1236,40 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 }
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
 
+var switchLinks = function() {
+	nmsInfoPanel.call(this,"switchLinks");
+	var latencyChart;
+	this.init = function() {
+		this.refresh();
+	};
+	this.refresh = function(reason) {
+		var content = [];
+		if (this.sw == false) {
+			console.log("ugh, cleanup failed?");
+			return;
+		}
+		var sw = this.sw;
+		
+		var topp = document.createElement("div")
+		var urls = [ "https://gondul.tg.lol/api/templates/magic.conf/switch=" + sw,
+			     "http://185.110.148.5/api/templates/magic.conf/switch=" + sw,
+			     "http://gondul.tg.lol/api/templates/magic.conf/switch=" + sw ];
+		if (testTree(nmsData,['smanagement','switches',sw])) {
+			var mg = nmsData["smanagement"]["switches"][sw];
+			urls.push("ssh://[" + mg.mgmt_v6_addr + "]");
+			urls.push("ssh://" + mg.mgmt_v4_addr);
+		}
+		for (var x in urls) {
+			topp.appendChild(document.createElement("br"));
+			var link = document.createElement("a");
+			link.href = urls[x];
+			link.textContent = urls[x];
+			topp.appendChild(link);
+		}
+		this._render(topp);
+	};
+};
+nmsInfoBox.addPanelType("switchLinks",switchLinks);
 /*
 * Panel type: Add network
 *
@@ -1258,7 +1324,6 @@ var networkListPanel = function() {
 		table.className = "table table-condensed";
 		table.id = "searchResults-table"
 		for (var net in networks) {
-			console.log(networks[net]);
 			var row = table.insertRow(net);
 			var cell1 = row.insertCell(0);
 			var cell2 = row.insertCell(1);

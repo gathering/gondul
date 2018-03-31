@@ -46,12 +46,10 @@ nmsTemplate.getTemplates = function() {
                 async: false,
                 dataType: "json",
                 success: function (indata, textStatus, jqXHR) {
-                        console.log(indata['templates']);
                         $.each( indata['templates'], function( value ) {
                                 $('#nmsTemplate-select').append($("<option></option>").attr("value",indata['templates'][value]['file']).text(indata['templates'][value]['file']));
                         });
                 }
         });
 }
-
-nmsTemplate.getTemplates();
+//nmsTemplate.getTemplates();

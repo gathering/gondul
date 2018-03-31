@@ -29,6 +29,9 @@ while (1) {
 	if ($elapsed < $target) {
 		sleep($target - ($now - $last));
 	}
+
+	my @influx_tree = ();
+
 	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;
@@ -82,27 +85,18 @@ while (1) {
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
 		if($latency ne "\\N") {
-                	my $cv = AE::cv;
-                	$influx->write(
-                        	database => $nms::config::influx_database,
-                                	data => [
-                                	{
-                                        	measurement => 'ping',
-                                       		tags => {
-                                                	switch =>  $sysname,
-                                                	ip => $ip,
-							version => 'v4'
-                                        	},
-                                        	fields => {
-							latency => $latency,
-                                        	},
-                                	}],
-                        	on_success => $cv,
-				on_error => sub {
-                                        	$cv->croak("Failed to write data: @_");
-                                	}
-                        	);
-                	$cv->recv;
+                    push (@influx_tree,
+                    {
+                        measurement => 'ping',
+                        tags => {
+                            switch =>  $sysname,
+                            ip => $ip,
+                            version => 'v4'
+                        },
+                        fields => {
+                            latency => $latency,
+                        },
+                    });
 		}
 	}
 
@@ -120,29 +114,20 @@ while (1) {
 
 		$latency //= "\\N";
 		$dbh->pg_putcopydata("$switch\t$latency\n");
-		if($latency ne "\\N") {
-        		my $cv = AE::cv;
-        		$influx->write(
-                		database => $nms::config::influx_database,
-                        		data => [
-                        		{
-                                		measurement => 'ping',
-                                		tags => {
-                                        		switch =>  $sysname,
-                                        		ip => $ip,
-							version => 'v6'
-                                		},
-                                		fields => {
-                                        		latency => $latency,
-                                		},
-                        		}],
-				on_success => $cv,
-				on_error => sub {
-                        		        $cv->croak("Failed to write data: @_");
-                	        	}
-        	       		);
-	        	$cv->recv;
-		}
+                if($latency ne "\\N") {
+                    push (@influx_tree,
+                    {   
+                        measurement => 'ping',
+                        tags => {
+                            switch =>  $sysname,
+                            ip => $ip, 
+                            version => 'v6'
+                        },
+                        fields => { 
+                            latency => $latency,
+                        },              
+                    }); 
+                }
 	}
 	$dbh->pg_putcopyend();
 
@@ -172,4 +157,16 @@ while (1) {
 		$dbh->pg_putcopyend();
 	}
 	$dbh->commit;
+
+        my $cv = AE::cv;
+            $influx->write(
+                database => $nms::config::influx_database,
+                 data => [@influx_tree],
+                 on_success => $cv,
+                 on_error => sub {
+                     $cv->croak("Failed to write data: @_");
+                 }
+            );
+        $cv->recv;
+
 }

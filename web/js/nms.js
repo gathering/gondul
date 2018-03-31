@@ -356,6 +356,7 @@ function getInitialConfig() {
 			} else {
 				nms._public = false;
 				document.body.classList.add("gondul-private");
+				nmsTemplate.getTemplates();
 			}
 		}
 	});

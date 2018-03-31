@@ -4,9 +4,10 @@ use warnings;
 use DBI;
 use POSIX;
 #use Time::HiRes qw(time);
+use lib '/opt/gondul/include';
+use FixedSNMP; 
 use SNMP;
 use Data::Dumper;
-use lib '/opt/gondul/include';
 use nms qw(convert_mac convert_decimal);
 use IO::Socket::IP;
 use Scalar::Util qw(looks_like_number);
@@ -32,7 +33,7 @@ EOF
 # Borrowed from snmpfetch.pl
 our $qswitch = $dbh->prepare(<<"EOF")
 SELECT
-  sysname,switch,host(mgmt_v6_addr) as ip,host(mgmt_v4_addr) as ip2,community,
+  sysname,switch,host(mgmt_v6_addr) as ip2,host(mgmt_v4_addr) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
 FROM
   switches
@@ -70,9 +71,7 @@ sub populate_switches
 		my $ip;
 		$ip = $ref->{'ip'};
 		if (!defined($ip) or $ip eq "") {
-			$ip = 'udp:[' . $ref->{'ip2'} . ']';
-		} else {
-			$ip = 'udp6:[' . $ip . ']';
+			$ip = 'udp6:[' . $ref->{'ip2'} . ']';
 		}
 		push @switches, {
 			'sysname' => $ref->{'sysname'},
@@ -97,7 +96,6 @@ sub inner_loop
 		$dbh->commit;
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
-					  Timeout => 1000000,
 					  UseEnums => 1,
 					  Version => '2');
 		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
@@ -106,7 +104,7 @@ sub inner_loop
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(6);
+	SNMP::MainLoop(5);
 }
 
 sub callback{
@@ -118,6 +116,7 @@ sub callback{
 	my @nicids;
 	my $total = 0;
 	my %tree2;
+	my @influx_tree = ();
 
 	for my $ret (@top) {
 		for my $var (@{$ret}) {
@@ -171,61 +170,39 @@ sub callback{
 				} else {
 					$tmp_field = '"'.$tree{$nic}{$tmp_key}.'"';
 				}
-
-                my $cv = AE::cv;
-		if (defined($tree{$nic}{'ifName'}) and $tree{$nic}{'ifName'} ne "") {
-			$influx->write(
-				database => $nms::config::influx_database,
-				data => [
-					{
-						measurement => 'ports',
-						tags => {
-							switch =>  $switch{'sysname'},
-							interface => $tree{$nic}{'ifName'},
-							},
-						fields => { $tmp_key => $tmp_field },
-					}],
-				on_success => $cv,
-				on_error => sub {
-					$cv->croak("Failed to write data: @_");
-				}
-			);
-			$cv->recv;
-			}
+				push (@influx_tree,
+                                {
+                                        measurement => 'ports',
+                                        tags => {
+                                                switch =>  $switch{'sysname'},
+                                                interface => $tree{$nic}{'ifName'},
+                                                },
+                                        fields => { $tmp_key => $tmp_field },
+                                });
 		}
 
 		delete $tree{$nic};
 	}
+
 	for my $iid (keys %tree) {
 		my $tmp_field = '';
 		for my $key (keys %{$tree{$iid}}) {
 			$tree2{'misc'}{$key}{$iid} = $tree{$iid}{$key};
 
-				 if(looks_like_number($tree{$iid}{$key})) {
+				if(looks_like_number($tree{$iid}{$key})) {
                                         $tmp_field = $tree{$iid}{$key};
                                 } else {
                                         $tmp_field = '"'.$tree{$iid}{$key}.'"';
                                 }
 
-                my $cv = AE::cv;
-                $influx->write(
-                        database => $nms::config::influx_database,
-                        data => [
+                                push (@influx_tree,
                                 {
                                         measurement => 'snmp',
                                         tags => {
                                                 switch =>  $switch{'sysname'},
                                                 },
                                         fields => { $key => $tmp_field },
-                                }],
-                        on_success => $cv,
-                        on_error => sub {
-                                $cv->croak("Failed to write data: @_");
-                        }
-                );
-                $cv->recv;
-
-
+                                });
 		}
 	}
 	if ($total > 0) {
@@ -235,21 +212,22 @@ sub callback{
 		or die "Couldn't unlock switch";
 	$dbh->commit;
 	if ($total > 0) {
-			my $cv = AE::cv;
-                	$influx->write(
-                        database => $nms::config::influx_database,
-                        data => [
-                                {
-                                        measurement => 'snmp',
-                                        tags => {
-                                                switch =>  $switch{'sysname'},
-                                                },
-                                        fields => { 'execution_time' => (time - $switch{'start'}) },
-                                }],
-                        on_success => $cv,
-                        on_error => sub {
-                                $cv->croak("Failed to write data: @_");
-                        }
+                push (@influx_tree,
+                {
+                    measurement => 'snmp',
+                    tags => {
+                        switch =>  $switch{'sysname'},
+                    },
+                    fields => { 'execution_time' => (time - $switch{'start'}) },
+                });
+                my $cv = AE::cv;
+                $influx->write(
+                    database => $nms::config::influx_database,
+                    data => [@influx_tree],
+                    on_success => $cv,
+                    on_error => sub {
+                        $cv->croak("Failed to write data: @_");
+                    }
                 );
                 $cv->recv;
 

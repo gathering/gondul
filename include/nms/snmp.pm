@@ -1,6 +1,7 @@
 #! /usr/bin/perl
 use strict;
 use warnings;
+use FixedSNMP; 
 use SNMP;
 use nms;
 package nms::snmp;

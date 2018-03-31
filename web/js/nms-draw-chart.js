@@ -22,7 +22,6 @@ function drawLatency(canvas, sw, chart, callback) {
                                 data.push({t: new Date(element[0]), y: element[1]});
                         });
 			var borderColor = "rgba(0,155,200,255)";
-			console.log(serie['tags']['version']);
 			if(serie['tags']['version'] === "v6") {
 				borderColor = "rgba(100,155,100,255)";
 			}
@@ -94,6 +93,7 @@ function drawSumOfPorts(canvas, sw) {
 
                 var bits_in = [];
                 var bits_out = [];
+
 
                 results['results'][0]['series'].forEach(function(serie) {
 

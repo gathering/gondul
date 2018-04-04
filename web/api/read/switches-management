@@ -13,7 +13,13 @@ use Data::Dumper;
 my $target = $ENV{REQUEST_URI};
 $target =~ s/$ENV{SCRIPT_NAME}//;
 $target =~ s/^\///;
-my ($switch, $port) = split(/\//,$target,2);
+my $switch;
+my $port;
+
+if ($target !~ m/now=/) {
+	($switch, $port) = split(/\//,$target,2);
+}
+	
 my $q2;
 
 $nms::web::cc{'max-age'} = "5";

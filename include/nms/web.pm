@@ -85,7 +85,8 @@ sub finalize_output {
 	$json{'time'} = int($query->fetchrow_hashref()->{'time'});
 	$json{'hash'} = $hash;
 	if (defined($get_params{'now'})) {
-		$cc{'max-age'} = "3600";
+		$cc{'max-age'} = "60";
+		$cc{'stale-while-revalidate'} = "3600";
 	}
 	
 	printcc;

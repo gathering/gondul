@@ -7,17 +7,19 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my $target = $ENV{REQUEST_URI};
-$target =~ s/$ENV{SCRIPT_NAME}//;
-$target =~ s/^\///;
-my ($switch, $port) = split(/\//,$target,2);
+#my $target = $ENV{REQUEST_URI};
+#$target =~ s/$ENV{SCRIPT_NAME}//;
+#$target =~ s/^\///;
+#my ($switch, $port) = split(/\//,$target,2);
+my $port;
+my  $switch;
 my $q;
 
-if (!defined($switch)) {
+#if (!defined($switch)) {
 	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . '  group by switch) and  switches.deleted = \'f\' and not switches.tags \?& array[\'ignoreswitchstate\'];');
-} else {
-	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
-}
+#} else {
+#	$q = $nms::web::dbh->prepare('select sysname,extract(epoch from date_trunc(\'second\',time)) as time,data from snmp natural join switches where id in (select max(id) from snmp where ' . $nms::web::when . 'group by switch) and sysname = ' . $nms::web::dbh->quote($switch) . ';');
+#}
 
 $q->execute();
 while ( my $ref = $q->fetchrow_hashref() ) {

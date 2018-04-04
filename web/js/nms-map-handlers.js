@@ -146,7 +146,7 @@ var handlers = [
 
 function uplinkInfo(sw)
 {
-	var ret = new handlerInfo("uplink","Uplinks");
+	var ret = new handlerInfo("snmpup","Uplinks");
 	ret.why = "Uplinks";
 	ret.score = 0;
 	var u = 0;
@@ -188,7 +188,7 @@ function uplinkInfo(sw)
 		    }
 		}
 	}
-	if (testTree(nmsData,['switchstate','switches',sw,'clients','live'])) {
+	if (testTree(nmsData,['switchstate','switches',sw,'clients','total'])) {
 		var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
 		var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
 		ret.data[1] = {};
@@ -547,11 +547,21 @@ function dhcpInfo(sw) {
         if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
                 return ret.data[1] = {};
         }
+	var dhcpClients = 0;
+	var clientPortsUp = 0;
+	var clientPortsUp = setTree(nmsData,['switchstate','switches',sw,'clients','live'],0);
+	var clientPortsTotal = setTree(nmsData,['switchstate','switches',sw,'clients','total'],0);
+	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
+		dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
+	}
 	if (testTree(nmsData,['dhcp','dhcp',nmsData.smanagement.switches[sw].traffic_vlan])) {
 		var now = nmsData.dhcp.time;
 		var then = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
 		var diff = now - then;
 		var divider = 6;
+		if (dhcpClients < 10) {
+			divider = 12;
+		}
 		if(tagged(sw,'slowdhcp')) {
 			divider = 12;
 		}
@@ -568,8 +578,12 @@ function dhcpInfo(sw) {
 				ret.score = 0;
 				ret.why = "No network associated";
 			} else {
-				ret.score = 350;
-				ret.why = "No DHCP data";
+				if (!(clientPortsUp < 2 && clientPortsTotal > 20)) {
+					ret.score = 350;
+					ret.why = "No DHCP data";
+				} else {
+					ret.data[0].value = "No DHCP data, but too few clients anyway";
+				}
 			}
 		} else {
 			ret.score = 100;
@@ -577,10 +591,20 @@ function dhcpInfo(sw) {
 		}
 	}
 	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
+		var dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
 		ret.data[1] = {};
 		ret.data[1].value = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
-		console.log()
 		ret.data[1].description = "DHCP clients";
+		if (testTree(nmsData,['switchstate','switches',sw,'clients','live'])) {
+			var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
+			var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
+			if (tu - dhcpClients > 5) {
+				if (ret.score < 450) {
+					ret.score = 450;
+					ret.why = "Far more client ports than dhcp clients";
+				}
+			}
+		}
 	}
 	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
 		if (tagged(sw,'ignoredhcp')) {
@@ -721,7 +745,7 @@ function snmpInit() {
 }
 
 function snmpUpInfo(sw) {
-	var ret = new handlerInfo("snmpup","SNMP uplink data");
+	var ret = new handlerInfo("uplink","SNMP uplink data");
 	ret.why = "No SNMP data";
 	ret.score = 0;
 
@@ -820,9 +844,9 @@ function memoryInfo(sw) {
 			var local = nmsData.snmp.snmp[sw].misc['jnxOperatingBuffer'][u];
 			memory = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer[u],memory);
 		}
-		if (memory < 30) {
+		if (memory < 70) {
 			ret.score = 0;
-		} else if (memory < 60) {
+		} else if (memory < 80) {
 			ret.score = 100;
 		} else if (memory < 90) {
 			ret.score = memory * 2;

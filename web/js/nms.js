@@ -640,14 +640,25 @@ function nmsUpdateNavbarGraph() {
  * 	do stuff with nmsData.snmp.snmp[sw].misc
  * }
  *
+ * New: setTree(root, array, default):
+ * same thing, but instead of just returing true/false, return the value found
+ * or the provided default.
  */
-function testTree(root, ar) {
-	if (ar == undefined || root == undefined)
-		return false;
-	for (var i in ar) {
-		root = root[ar[i]];
-		if (root == undefined)
-			return false;
+function setTree(root, ar, def) {
+	if (ar == undefined || root == undefined) {
+		return def;
+	} else {
+		for (var i in ar) {
+			root = root[ar[i]];
+			if (root == undefined)
+				return def;
+		}
 	}
-	return true;
+	return root;
 }
+function testTree(root, ar) {
+	var x = setTree(root,ar,false);
+	if (x != false)
+		return true;
+}
+

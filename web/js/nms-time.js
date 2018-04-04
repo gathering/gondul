@@ -10,11 +10,15 @@
  */
 var nmsTime = nmsTime || {
 	_now: undefined,
-	_handle: undefined
+	_handle: undefined,
+	_stopTime: undefined
 }
 
 nmsTime.replayEvent = function() {
-	throw "Not yet implemented.";
+	var eStart = setTree(nmsData,["config","config","data","start"],"2018-03-23T00:00:00+0200");
+	nmsTime._stopTime = new Date(setTree(nmsData,["config","config","data","end"],"2018-04-01T14:30:00+0200"));
+	nmsTime.setNow(eStart);
+	nmsTime.startPlayback(10);
 }
 
 nmsTime.isRealTime = function() {
@@ -88,6 +92,10 @@ nmsTime.step = function(amount) {
 	if (nmsTime._now.getTime() + (amount * 1000 * 60 ) > Date.now()) {
 		nmsTime.realTime();
 		return;
+	}
+	if (nmsTime._stopTime != undefined && nmsTime._now.getTime() >= nmsTime._stopTime.getTime()) {
+		nmsTime.stopPlayback();
+		nmsTime._stopTime = undefined;
 	}
 	nmsTime._now.setMinutes(nmsTime._now.getMinutes() + amount);
 	nmsTime._updateData();

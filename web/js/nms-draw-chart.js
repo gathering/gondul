@@ -16,62 +16,65 @@ function drawLatency(canvas, sw, chart, callback) {
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
-                results['results'][0]['series'].forEach(function(serie) {
-                        var data = [];
-                        serie['values'].forEach(function(element) {
-                                data.push({t: new Date(element[0]), y: element[1]});
-                        });
-			var borderColor = "rgba(0,155,200,255)";
-			if(serie['tags']['version'] === "v6") {
-				borderColor = "rgba(100,155,100,255)";
+		try {
+			results['results'][0]['series'].forEach(function(serie) {
+				var data = [];
+				serie['values'].forEach(function(element) {
+					data.push({t: new Date(element[0]), y: element[1]});
+				});
+				var borderColor = "rgba(0,155,200,255)";
+				if(serie['tags']['version'] === "v6") {
+					borderColor = "rgba(100,155,100,255)";
+				}
+				dataset.push({data: data, fill:false, borderColor:borderColor, label:serie['tags']['version'] });
+			});
+			if(chart != false) {
+				chart.data.datasets = dataset;
+				chart.update();
+				return;	
 			}
-                        dataset.push({data: data, fill:false, borderColor:borderColor, label:serie['tags']['version'] });
-                });
-		if(chart != false) {
-			chart.data.datasets = dataset;
-			chart.update();
-			return;	
-		}
-		var ctx = document.getElementById(canvas).getContext('2d');
-                var myChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                                datasets: dataset
-                        },
-                        options: {
-				legend: {
-					display: false
+			var ctx = document.getElementById(canvas).getContext('2d');
+			var myChart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					datasets: dataset
 				},
-                                scales: {
-                                        xAxes:[{
-                                                type: 'time',
-                                                time: {
-                                                        format: "HH:mm",
-                                                        unit: 'minute',
-                                                        tooltipFormat: 'HH:mm',
-                                                        displayFormats: {
-                                                                'minute': 'HH:mm',
-                                                                'hour': 'HH:mm',
-                                                                min: '00:00',
-                                                                max: '23:59'
-                                                        },
-                                                }
-                                        }],
-					yAxes: [{
-						ticks: {
-							beginAtZero: true
+				options: {
+					legend: {
+						display: false
+					},
+					scales: {
+						xAxes:[{
+							type: 'time',
+							time: {
+								format: "HH:mm",
+								unit: 'minute',
+								tooltipFormat: 'HH:mm',
+								displayFormats: {
+									'minute': 'HH:mm',
+									'hour': 'HH:mm',
+									min: '00:00',
+									max: '23:59'
+								},
+							}
+						}],
+						yAxes: [{
+							ticks: {
+								beginAtZero: true
+							}
+						}]
+					},
+					responsive: true,
+					animation: false,
+					elements: {
+						line: {
+							tension: 0.05
 						}
-					}]
-                                },
-                                responsive: true,
-				animation: false,
-                                elements: {
-                                        line: {
-                                                tension: 0.05
-                                        }
-                                }
-                        }
-                });
+					}
+				}
+			});
+		} catch(e) {
+		}
 	if(callback != undefined) {
 		callback(myChart);
 	}

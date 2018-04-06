@@ -192,7 +192,7 @@ function uplinkInfo(sw)
 		var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
 		var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
 		ret.data[1] = {};
-		ret.data[1].value = (tu) + " / " + (tt);
+		ret.data[1].value = (tu && tt) ? (tu) + " / " + (tt) : "None configured";
 		ret.data[1].description = "Client ports (live/total)";
 	}
 	if (testTree(nmsData,['switchstate','switches',sw,'totals','live'])) {

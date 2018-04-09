@@ -29,6 +29,7 @@ var nms = {
 	},
 
 	menuShowing:true,
+	oplogShowing:true,
 	get uptime() {
 		return (Date.now() - this._startTime)/1000;
 	},
@@ -60,6 +61,7 @@ var nms = {
 		'menuShowing',
 		'vertical',
 		'interval',
+		'oplogShowing',
 		'user'
 	],
 	keyBindings:{
@@ -81,6 +83,7 @@ var nms = {
 		'l':moveTimeFromKey,
 		'p':moveTimeFromKey,
 		'r':moveTimeFromKey,
+		'o':toggleOplog,
 		'Escape':hideWindow,
 		'?':toggleHelp
 	},
@@ -445,11 +448,22 @@ function setMenu()
 	var nav = document.getElementsByTagName("nav")[0];
 	nav.style.display = nms.menuShowing ? '' : 'none';
 }
+function setOplog()
+{
+	var nav = document.getElementById("oplog-parent-mini");
+	nav.style.display = nms.oplogShowing ? '' : 'none';
+}
 
 function toggleMenu()
 {
 	nms.menuShowing = ! nms.menuShowing;
 	setMenu();
+	saveSettings();
+}
+function toggleOplog()
+{
+	nms.oplogShowing = ! nms.oplogShowing;
+	setOplog();
 	saveSettings();
 }
 function hideWindow(e,key)
@@ -614,6 +628,7 @@ function restoreSettings()
 		nms[v] = retrieve[v];
 	}
 	setMenu();
+	setOplog();
 }
 
 /*

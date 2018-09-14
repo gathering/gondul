@@ -40,7 +40,7 @@ var nmsInfoBox = nmsInfoBox || {
 		'views': {
 			'initial': {
 				'name': 'Summary',
-				'panels': ['switchSummary','switchComments']
+				'panels': ['switchLatency','switchSummary','switchComments']
 			},
 			'ports': {
 				'name': 'Ports',
@@ -1170,6 +1170,42 @@ var switchCommentsPanel = function () {
 nmsInfoBox.addPanelType("switchComments",switchCommentsPanel);
 
 /*
+ * Panel type: Switch latency
+ *
+ * Display a live line chart with latency
+ *
+ */
+var switchLatencyPanel = function() {
+	nmsInfoPanel.call(this,"switchLatency");	
+	var latencyChart;
+        this.init = function() {
+                this.addHandler("ticker");
+                this.refresh();
+        };
+	this.refresh = function(reason) {
+		if (this.sw == false) {
+                        console.log("ugh, cleanup failed?");
+                        return;
+                }
+
+		if(reason == 'handler-ticker' && latencyChart != undefined) {
+			drawLatency(this.sw+'latency_chart',this.sw, latencyChart);
+			return;
+		}
+
+		var topper = document.createElement("div");
+                var latency = document.createElement("canvas");
+                latency.id = this.sw+'latency_chart';
+                latency.width = 500;
+                latency.height = 250;
+                drawLatency(this.sw+'latency_chart',this.sw, false, function(chart) { latencyChart = chart; });
+                topper.appendChild(latency);
+                this._render(topper);
+	};
+};
+nmsInfoBox.addPanelType("switchLatency",switchLatencyPanel);
+
+/*
  * Panel type: Switch summary
  *
  * Display a live summary of key metrics
@@ -1186,12 +1222,6 @@ var switchSummaryPanel = function() {
 		var content = [];
 		if (this.sw == false) {
 			console.log("ugh, cleanup failed?");
-			return;
-		}
-
-		if(reason == 'handler-ticker' && latencyChart != undefined) {
-			drawLatency(this.sw+'latency_chart',this.sw, latencyChart);
-			//TODO Fix so it will update table to
 			return;
 		}
 		var topper = document.createElement("div");
@@ -1214,12 +1244,6 @@ var switchSummaryPanel = function() {
 			contentCleaned.push(content[i]);
 		}
 		var table = nmsInfoBox._makeTable(contentCleaned);
-		var latency = document.createElement("canvas");
-                latency.id = this.sw+'latency_chart';
-                latency.width = 500;
-                latency.height = 250;
-		drawLatency(this.sw+'latency_chart',this.sw, false, function(chart) { latencyChart = chart; });
-		topper.appendChild(latency);
 		topper.appendChild(table);
 
 		this._render(topper);
@@ -1234,6 +1258,7 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 	}
 	nms.legendPick = {handler: tag, idx: id};
 }
+
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
 
 var switchLinks = function() {

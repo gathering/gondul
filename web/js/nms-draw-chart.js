@@ -12,7 +12,7 @@ function setNightModeChart(night) {
 }
 
 function drawLatency(canvas, sw, chart, callback) {
-        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 30m AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
+        var q = encodeURIComponent('SELECT mean("latency") AS "mean_latency" FROM "ping" WHERE time > now() - 3h AND "switch"=\''+sw+'\' GROUP BY time(60s), "version" fill(null)');
         var dataset = [];
 
         $.getJSON( "/query?db=gondul&q="+q, function( results ) {
@@ -47,7 +47,7 @@ function drawLatency(canvas, sw, chart, callback) {
 						xAxes:[{
 							type: 'time',
 							time: {
-								format: "HH:mm",
+								parser: "HH:mm",
 								unit: 'minute',
 								tooltipFormat: 'HH:mm',
 								displayFormats: {
@@ -176,7 +176,7 @@ function drawSumOfPorts(canvas, sw) {
                                         xAxes:[{
                                                 type: 'time',
                                                 time: {
-                                                        format: "HH:mm",
+                                                        parser: "HH:mm",
                                                         unit: 'minute',
                                                         tooltipFormat: 'HH:mm',
                                                         displayFormats: {
@@ -300,7 +300,7 @@ function drawPort(canvas, sw, port) {
                                         xAxes:[{
                                                 type: 'time',
                                                 time: {
-                                                        format: "HH:mm",
+                                                        parser: "HH:mm",
                                                         unit: 'minute',
                                                         tooltipFormat: 'HH:mm',
                                                         displayFormats: {

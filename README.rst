@@ -32,7 +32,7 @@ Some facts from The Gathering 2016:
 - Active network devices at 2016-03-22T12:00:00: 206
 - Active network devices at 2016-03-23T08:00:00: 346
 - Active network devices at 2016-03-23T20:00:00: 6467
-- 180+ switches and routers. Pinged seceral times per second. Polled for
+- 180+ switches and routers. Pinged several times per second. Polled for
   SNMP every minute. Every reply (or lack thereof) is kept.
 - Collected roughly 300 million database rows, or 30GB of data in postgresql.
 - Public NMS and API provided to all participants and the world at large.

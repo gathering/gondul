@@ -218,7 +218,7 @@ nmsMap.drawNow = function ()
 	} else {
 		now = new Date(nmsData.now); //Date assumes UTC
 	}
-	now = now.toString().split(' ').splice(1,4).join(' '); //Date returns local time
+	now = now.toString().split(' ').splice(0,5).join(' '); //Date returns local time
 	if (nmsMap._lastNow == now) {
 		nmsMap.stats.nowDups++;
 		return;
@@ -231,6 +231,7 @@ nmsMap.drawNow = function ()
 	ctx.clearRect(0,0,800,100);
 	ctx.fillStyle = "white";
 	ctx.strokeStyle = "black";
+	ctx.translate(200,0);
 	ctx.lineWidth = nms.fontLineFactor;
 	ctx.strokeText(now, this._settings.textMargin, 25);
 	ctx.fillText(now, this._settings.textMargin, 25);

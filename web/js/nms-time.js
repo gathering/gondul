@@ -18,7 +18,7 @@ nmsTime.replayEvent = function() {
 	var eStart = setTree(nmsData,["config","config","data","start"],"2018-03-23T00:00:00+0200");
 	nmsTime._stopTime = new Date(setTree(nmsData,["config","config","data","end"],"2018-04-01T14:30:00+0200"));
 	nmsTime.setNow(eStart);
-	nmsTime.startPlayback(10);
+	nmsTime.startPlayback(60);
 }
 
 nmsTime.isRealTime = function() {
@@ -135,7 +135,7 @@ nmsTime.startPlayback = function(speed) {
 		return;
 	}
 	nmsTime._speed = speed;
-	nmsTime._handle = setInterval(nmsTime._tick,1000);
+	nmsTime._handle = setInterval(nmsTime._tick,2000);
 }
 
 nmsTime.togglePause = function() {
@@ -145,7 +145,7 @@ nmsTime.togglePause = function() {
 		if (nmsTime.isRealTime()) {
 			nmsTime.setNow(Date.now());
 		} else {
-			nmsTime.startPlayback(nmsTime._speed ? nmsTime._speed : 5);
+			nmsTime.startPlayback(nmsTime._speed ? nmsTime._speed : 60);
 		}
 	}
 }

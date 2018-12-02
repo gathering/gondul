@@ -30,7 +30,6 @@
         - perl-modules
         - libfreezethaw-perl
         - apache2
-        - libapache2-mod-proxy-html
         - libxml2-dev
         - build-essential
         - cpanminus

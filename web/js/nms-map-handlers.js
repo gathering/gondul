@@ -598,7 +598,7 @@ function dhcpInfo(sw) {
 		if (testTree(nmsData,['switchstate','switches',sw,'clients','live'])) {
 			var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
 			var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
-			if (tu - dhcpClients > 5) {
+			if (tu - dhcpClients > 12) {
 				if (ret.score < 450) {
 					ret.score = 450;
 					ret.why = "Far more client ports than dhcp clients";

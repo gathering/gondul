@@ -77,10 +77,12 @@ var nms = {
 		'8':setMapModeFromN,
 		'9':setMapModeFromN,
 		'c':toggleConnect,
+		'H':moveTimeFromKey,
 		'h':moveTimeFromKey,
 		'j':moveTimeFromKey,
 		'k':moveTimeFromKey,
 		'l':moveTimeFromKey,
+		'L':moveTimeFromKey,
 		'p':moveTimeFromKey,
 		'r':moveTimeFromKey,
 		'o':toggleOplog,
@@ -511,6 +513,9 @@ function setMapModeFromN(e,key)
 function moveTimeFromKey(e,key)
 {
 	switch(key) {
+		case 'H':
+			nmsTime.stepKey(-1440);
+			break;
 		case 'h':
 			nmsTime.stepKey(-60);
 			break;
@@ -522,6 +527,9 @@ function moveTimeFromKey(e,key)
 			break;
 		case 'l':
 			nmsTime.stepKey(60);
+			break;
+		case 'L':
+			nmsTime.stepKey(1440);
 			break;
 		case 'p':
 			nmsTime.togglePause();

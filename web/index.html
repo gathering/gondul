@@ -46,34 +46,21 @@
 		<span class="caret"></span>
 	      </a>
 	      <ul class="dropdown-menu" role="menu">
-		<li class="gondul-is-private"><a href="#health" onclick="setUpdater(handler_health)">Health</a></li>
-		<li><a href="#ping" onclick="setUpdater(handler_ping)">Ping</a></li>
-		<li><a href="#uplink" onclick="setUpdater(handler_uplinks)">Uplink</a></li>
-		<li><a href="#dhcp" onclick="setUpdater(handler_dhcp)">DHCP</a></li>
-		<li><a href="#temp" onclick="setUpdater(handler_temp)">Temperature</a></li>
-		<li><a href="#traffic" onclick="setUpdater(handler_traffic)">Traffic</a></li>
-		<li><a href="#traffictot" onclick="setUpdater(handler_traffic_tot)">Total switch traffic</a></li>
-		<li class="gondul-is-private"><a href="#snmp" onclick="setUpdater(handler_snmp)">SNMP</a></li>
-		<li class="gondul-is-private"><a href="#cpu" onclick="setUpdater(handler_cpu)">CPU</a></li>
-		<li><a href="#disco" onclick="setUpdater(handler_disco)">DISCO</a></li>
+		<li class="gondul-is-private dropdown-header">Switches</li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
+      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addNetwork')">Add network</a></li>
+      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('listNetwork')">List networks</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
+	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+      <li class="gondul-is-private divider"> </li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">Time</li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');nmsTime.startNowPicker();">Travel in time</a></li>
 		<li><a href="#" onclick="nmsTime.replayEvent();" title="Replay from opening 120 minutes per second">Replay event</a></li>
 		<li class="divider"> </li>
 		<li class="dropdown-header">View</li>
-		<li><a href="#" onclick="toggleNightMode()">Toggle Night Mode</a></li>
-		<li><a href="#" onclick="toggleConnect()">Toggle linknets</a></li>
 		<li><a href="#" onclick="nmsUi.toggleVertical()">Toggle vertical mode</a></li>
 		<li class="divider"> </li>
-		<li class="gondul-is-private dropdown-header">Switches</li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
-      <li class="gondul-is-private divider"> </li>
-      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('listNetwork')">List networks</a></li>
-      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addNetwork')">Add network</a></li>
-      <li class="gondul-is-private divider"> </li>
       <li class="gondul-is-private dropdown-header">Inventory lists</li>
 	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','distro_name');">Distro names</a></li>
 	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('inventoryListing','sysDescr')">System description</a></li>

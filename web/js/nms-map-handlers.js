@@ -160,32 +160,34 @@ function uplinkInfo(sw)
 		ret.data[0].description = "Uplinks (live/configured)";
 		if (nmsData.switches.switches[sw].subnet4 == undefined ||
 		    nmsData.switches.switches[sw].subnet4 == null) {
-		    if (tagged(sw,'3up')) {
-			    known_t = 3;
-		    } else if (tagged(sw,'2up')) {
-			    known_t = 2;
-		    } else if (tagged(sw, '1up')) {
-			    known_t = 1;
-		    } else if (tagged(sw,'4up')) {
-			    known_t = 4;
-		    }
-		    if (known_t != t) {
-			    ret.data[0].value += "(Overridden: " + known_t + ")";
-		    }
-
-		    if (u == known_t) {
-			    ret.score = 0;
-			    ret.why = "All uplinks up";
-		    } else if (u == 1) {
-			    ret.score = 800;
-			    ret.why = "Only 1 of " + known_t + " uplinks alive";
-		    } else if (u < known_t) {
-			    ret.score = 450;
-			    ret.why = u + " of " + known_t + " uplinks alive";
-		    } else if (u > known_t) {
-			    ret.score = 350;
-			    ret.why = u + " of " + known_t + " uplinks alive";
-		    }
+			if (tagged(sw,'3up')) {
+				known_t = 3;
+			} else if (tagged(sw,'2up')) {
+				known_t = 2;
+			} else if (tagged(sw, '1up')) {
+				known_t = 1;
+			} else if (tagged(sw,'4up')) {
+				known_t = 4;
+			}
+			if (known_t != t) {
+				ret.data[0].value += "(Overridden: " + known_t + ")";
+			}
+			if (u == known_t) {
+				ret.score = 0;
+				ret.why = "All uplinks up";
+			} else if (u == 1) {
+				ret.score = 800;
+				ret.why = "Only 1 of " + known_t + " uplinks alive";
+			} else if (u < known_t && !(t >= 10 && u <5)) {
+				ret.score = 450;
+				ret.why = u + " of " + known_t + " uplinks alive";
+			} else if (u > known_t) {
+				ret.score = 350;
+				ret.why = u + " of " + known_t + " uplinks alive";
+			} else if (u < known_t && (t >= 10 && u < 5)) {
+				ret.score = 150;
+				ret.why = u + " of " + known_t + " uplinks alive (huge diff suggests WIP - downgrading)";
+			}
 		}
 	}
 	if (testTree(nmsData,['switchstate','switches',sw,'clients','total'])) {

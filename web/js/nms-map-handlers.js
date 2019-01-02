@@ -481,8 +481,12 @@ function pingInfo(sw)
 			if (!(distro == "" || phy == "" || distro == undefined || phy == undefined)) {
 				if (testTree(nmsData,['snmp','snmp',distro, 'ports',phy,'ifOperStatus'])) {
 					var x = nmsData['snmp']['snmp'][distro]['ports'][phy]['ifOperStatus'];
-					var ping = parseFloat(nmsData["ping"]["switches"][sw]["latency4"]);
-					var ping6 = parseFloat(nmsData["ping"]["switches"][sw]["latency6"]);
+					var ping = "no";
+					var ping6 = "no ";
+					try {
+						ping = parseFloat(nmsData["ping"]["switches"][sw]["latency4"]);
+						ping6 = parseFloat(nmsData["ping"]["switches"][sw]["latency6"]);
+					} catch(e) {}
 					if (x == "up") {
 						ret.data[3] = {};
 						ret.data[3].description = "Distro-port";
@@ -495,7 +499,8 @@ function pingInfo(sw)
 				}
 			}
 		} catch(e) {
-			console.log("lol");
+			console.log("Lazy about errors....");
+			console.log(e);
 		}
 	}
 	return ret;

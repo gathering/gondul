@@ -504,6 +504,9 @@ function setMapModeFromN(e,key)
 			setUpdater(handler_snmp);
 			break;
 		case '9':
+			setUpdater(handler_cpu);
+			break;
+		case '0':
 			setUpdater(handler_disco);
 			break;
 	}

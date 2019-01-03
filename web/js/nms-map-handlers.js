@@ -92,6 +92,11 @@ var handler_mgmt = {
 	tag:"mgmt",
 	name:"Management info"
 };
+var handler_net = {
+	getInfo:networkInfo,
+	tag:"net",
+	name:"Network info"
+};
 var handler_snmpup = {
 	getInfo:snmpUpInfo,
 	tag:"snmpup",
@@ -131,6 +136,7 @@ var handlerInfo = function(tag,desc) {
 var handlers = [
 	handler_health,
 	handler_mgmt,
+	handler_net,
 	handler_uplinks,
 	handler_temp,
 	handler_ping,
@@ -875,20 +881,69 @@ function tagged(sw, tag) {
 	return false;
 }
 
+function networkInfo(sw) {
+	var ret = new handlerInfo("net","Network info");
+	ret.score = 0;
+	ret.why = "All good";
+	if (testTree(nmsData,['smanagement','switches',sw])) {
+		var i = 0;
+		var mg = nmsData.smanagement.switches[sw];
+		var objs = [{
+			d: "Management",
+			v: setTree(nmsData,['networks','networks',mg.mgmt_vlan],undefined)
+			},{
+			d: "Traffic",
+			v: setTree(nmsData,['networks','networks',mg.traffic_vlan],undefined)
+			}
+			];
+		for (var x in objs) {
+			a = objs[x];
+			if (a.v == undefined) {
+				ret.data[i++] = {
+					value: 'Not set',
+					description: a.d + ' network'
+				};	
+				continue;
+			}
+			
+			ret.data[i++] = {
+				value: a.v.name || "Not set",
+				description: a.d + " network"
+			}
+			ret.data[i++] = {
+				value: a.v.vlan || "Not set",
+				description: a.d + " vlan"
+			}
+			ret.data[i++]  = {
+				value: a.v.subnet4 || "Not set",
+				description: a.d + " subnet IPv4"
+			}
+			ret.data[i++]  = {
+				value: a.v.gw4 || "Not set",
+				description: a.d + " gw IPv4"
+			}
+			ret.data[i++]  = {
+				value: a.v.subnet6 || "Not set",
+				description: a.d + " subnet IPv6"
+			}
+			ret.data[i++]  = {
+				value: a.v.gw6 || "Not set",
+				description: a.d + " gw IPv6"
+			}
+			ret.data[i++]  = {
+				value: a.v.router || "Not set",
+				description: a.d + " net router"
+			}
+		}
+	}
+	return ret;
+}
 function mgmtInfo(sw) {
 	var ret = new handlerInfo("mgmt","Management info");
 	ret.score = 0;
 	ret.why = "All good";
 	if (testTree(nmsData,['smanagement','switches',sw])) {
 		var mg = nmsData.smanagement.switches[sw];
-		var traffic_vlan = "N/A";
-		var mgmt_vlan = "N/A";
-		if (testTree(nmsData,['networks','networks',mg.traffic_vlan,"vlan"])) {
-			traffic_vlan = nmsData["networks"]["networks"][mg.traffic_vlan]["vlan"];
-		}
-		if (testTree(nmsData,['networks','networks',mg.mgmt_vlan,"vlan"])) {
-			mgmt_vlan = nmsData["networks"]["networks"][mg.mgmt_vlan]["vlan"];
-		}
 		ret.data =
 			[{
 				value: mg.mgmt_v4_addr || "N/A",
@@ -897,20 +952,8 @@ function mgmtInfo(sw) {
 				value: mg.mgmt_v6_addr || "N/A",
 				description: "Management IP (v6)"
 			}, {
-				value: mg.subnet4 || "N/A",
-				description: "Subnet (v4)"
-			}, {
-				value: mg.subnet6 || "N/A",
-				description: "Subnet (v6)"
-			}, {
 				value: mg.distro_name || "N/A",
 				description: "Distro"
-			}, {
-				value: traffic_vlan || "N/A",
-				description: "Client VLAN" 
-			}, {
-				value: mgmt_vlan || "N/A",
-				description: "Management VLAN"
 			}
 			];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {

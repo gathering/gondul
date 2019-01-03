@@ -13,23 +13,12 @@ use Data::Dumper;
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 
-my $q2 = $nms::web::dbh->prepare('select network, name, vlan, tags, routing_point, placement, last_updated, subnet4, subnet6, gw4, gw6 from networks');
+my $q2 = $nms::web::dbh->prepare('select name, vlan, networks.tags, switches.sysname as router, subnet4, subnet6, gw4, gw6 from networks left join switches on switches.switch = networks.router');
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {
-	$ref->{'placement'} =~ /\((-?\d+),(-?\d+)\),\((-?\d+),(-?\d+)\)/;
-	my ($x1, $y1, $x2, $y2) = ($1, $2, $3, $4);
 	my $name = $ref->{'name'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'vlan'} = $ref->{'vlan'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'subnet4'} = $ref->{'subnet4'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'subnet6'} = $ref->{'subnet6'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'gw4'} = $ref->{'gw4'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'gw6'} = $ref->{'gw6'};
-	$nms::web::json{'networks'}{$ref->{'name'}}{'placement'}{'x'} = $x2;
-	$nms::web::json{'networks'}{$ref->{'name'}}{'placement'}{'y'} = $y2;
-	$nms::web::json{'networks'}{$ref->{'name'}}{'placement'}{'width'} = $x1 - $x2;
-	$nms::web::json{'networks'}{$ref->{'name'}}{'placement'}{'height'} = $y1 - $y2;
-	$nms::web::json{'networks'}{$ref->{'name'}}{'routing_point'} = $ref->{'routing_point'};
+	$nms::web::json{'networks'}{$ref->{'name'}} = $ref;
 	my $data = JSON::XS::decode_json($ref->{'tags'});
 	$nms::web::json{'networks'}{$ref->{'name'}}{'tags'} = $data;
 }

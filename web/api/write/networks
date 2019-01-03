@@ -6,7 +6,6 @@ use DBI;
 use lib '/opt/gondul/include';
 use nms;
 use nms::web qw(%get_params %json finalize_output get_input $dbh);
-use nms::util qw(guess_placement);
 use strict;
 use warnings;
 use JSON;
@@ -23,7 +22,7 @@ my @dups;
 my $sth = $nms::web::dbh->prepare("SELECT name FROM networks WHERE name=?");
 
 
-my @fields = ('name','last_updated','subnet4','subnet6','gw4','gw6','routing_point','vlan','tags');
+my @fields = ('name','subnet4','subnet6','gw4','gw6','router','vlan','tags');
 
 foreach my $tmp2 (@tmp) {
 	my %network = %{$tmp2};
@@ -47,8 +46,16 @@ foreach my $tmp2 (@tmp) {
 			}
 		} keys %network;
 
-
-		$nms::web::dbh->do("INSERT INTO NETWORKS (name, last_updated, subnet4, subnet6, routing_point, gw4, gw6, vlan, tags)  VALUES ($template{'name'}, $template{'last_updated'}, $template{'subnet4'}, $template{'subnet6'}, $template{'routing_point'}, $template{'gw4'}, $template{'gw6'}, $template{'vlan'}, $template{'tags'});");
+		if ($template{'router'} ne 'DEFAULT') {
+			$template{'router'}  = "(select switch from switches where sysname = $template{'router'})";
+		}
+		if ($template{'gw4'} eq 'DEFAULT' and $template{'subnet4'} ne 'DEFAULT') {
+			$template{'gw4'} = "host(inet $template{'subnet4'} + 1)";
+		}
+		if ($template{'gw6'} eq 'DEFAULT' and $template{'subnet6'} ne 'DEFAULT') {
+			$template{'gw6'} = "host(inet $template{'subnet6'} + 1)";
+		}
+		$nms::web::dbh->do("INSERT INTO NETWORKS (name, subnet4, subnet6, router, gw4, gw6, vlan, tags)  VALUES ($template{'name'}, $template{'subnet4'}, $template{'subnet6'}, $template{'router'}, $template{'gw4'}, $template{'gw6'}, $template{'vlan'}, $template{'tags'});");
 		push @added, $network{'name'};
 	} else {
 		if (defined($network{'tags'})) {
@@ -57,7 +64,11 @@ foreach my $tmp2 (@tmp) {
 		my @set;
 		map {
 			if (defined($template{$_})) {
-				push @set, "$_=" . $dbh->quote($network{$_});
+				if ($_ eq "router") {
+					push @set, "router=(select switch from switches where sysname = " . $dbh->quote($network{$_}) . ")";
+				} else {
+					push @set, "$_=" . $dbh->quote($network{$_});
+				}
 			}
 		} keys %network;
 		$nms::web::dbh->do("UPDATE networks SET " . join(", ", @set) . "WHERE name=" . $dbh->quote($network{'name'}) . ";");

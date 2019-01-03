@@ -6,10 +6,10 @@ use nms::web;
 use strict;
 use warnings;
 
-my $template_dir = "/opt/gondul/web/templates";
+my @dirs = ("/opt/gondul/web/templates","/opt/gondul/data/templates");
 
-opendir (DIR, $template_dir) or die $!;
-
+foreach my $template_dir (@dirs) {
+opendir (DIR, $template_dir) or next;
 while (my $file = readdir(DIR)) {
         next if ($file =~ m/^\./);
         my %meh;
@@ -17,5 +17,5 @@ while (my $file = readdir(DIR)) {
 
         push @{$nms::web::json{'templates'}},\%meh;
 }
-
+}
 nms::web::finalize_output();

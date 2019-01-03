@@ -25,23 +25,28 @@ my $q2;
 $nms::web::cc{'max-age'} = "5";
 $nms::web::cc{'stale-while-revalidate'} = "30";
 
-if (!defined($switch)) {
-	$q2 = $nms::web::dbh->prepare('select switches.sysname, host(switches.mgmt_v4_addr) as mgmt_v4_addr, host(switches.mgmt_v6_addr) as mgmt_v6_addr, switches.mgmt_vlan, switches.traffic_vlan, switches.poll_frequency, switches.last_updated, switches.distro_name, switches.distro_phy_port, switches.community, traffic_net.subnet4, traffic_net.subnet6, host(mgmt_net.gw4) as mgmt_v4_gw, host(mgmt_net.gw6) as mgmt_v6_gw from switches left join networks as traffic_net on (switches.traffic_vlan = traffic_net.name) left join networks as mgmt_net on (switches.mgmt_vlan = mgmt_net.name) where switches.placement is not null and switches.deleted = false;');
-} else {
-	$q2 = $nms::web::dbh->prepare('select sysname,host(mgmt_v4_addr) as mgmt_v4_addr,host(mgmt_v6_addr) as mgmt_v6_addr,mgmt_vlan,traffic_vlan,poll_frequency,last_updated,distro_name,distro_phy_port,community from switches where placement is not null and sysname = ' . $nms::web::dbh->quote($switch) . ' and switches.deleted = false;');
+my $limit = '';
+if (defined($switch)) {
+	$limit = ' and sysname = ' . $nms::web::dbh->quote($switch);
 }
+
+$q2 = $nms::web::dbh->prepare("select 
+		switches.sysname, 
+		host(switches.mgmt_v4_addr) as mgmt_v4_addr, 
+		host(switches.mgmt_v6_addr) as mgmt_v6_addr,
+		switches.mgmt_vlan,
+		switches.traffic_vlan,
+		switches.poll_frequency,
+		switches.last_updated,
+		switches.distro_name,
+		switches.distro_phy_port,
+		switches.community
+	from switches where switches.placement is not null and switches.deleted = false $limit;");
 
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {
 	my $sysname = $ref->{'sysname'};
 	$nms::web::json{'switches'}{$ref->{'sysname'}} = $ref;
-}
-
-my $q4 = $nms::web::dbh->prepare('select linknet, (select sysname from switches where switch = switch1) as sysname1, addr1, (select sysname from switches where switch = switch2) as sysname2,addr2 from linknets');
-
-$q4->execute();
-while (my $ref = $q4->fetchrow_hashref()) {
-	$nms::web::json{'linknets'}{$ref->{'linknet'}} = $ref;
 }
 
 finalize_output();

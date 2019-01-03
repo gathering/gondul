@@ -11,6 +11,7 @@ use strict;
 use warnings;
 use JSON;
 use Data::Dumper;
+use nms::oplog qw(oplog);
 
 $nms::web::cc{'max-age'} = "0";
 
@@ -84,6 +85,7 @@ foreach my $tmp2 (@tmp) {
 
 		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, last_updated, locked, poll_frequency, tags, community, secondary_ip, placement,subnet4,subnet6,distro)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'tags'}, $template{'community'}, $template{'secondary_ip'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro'});");
 		push @added, $switch{'sysname'};
+		oplog("\"" . $switch{'sysname'} . "\"", "Switch added: " . $switch{'sysname'});
 	} else {
 		if (defined($switch{'placement'})) {
 			my %placement;

@@ -832,7 +832,7 @@ var switchAddPanel = function() {
 		var myData = JSON.stringify(myData);
 		$.ajax({
 			type: "POST",
-			url: "/api/write/switch-add",
+			url: "/api/write/switches",
 			dataType: "text",
 			data:myData,
 			success: function (data, textStatus, jqXHR) {
@@ -1092,7 +1092,7 @@ var switchEditPanel = function () {
 		var myData = nmsInfoBox._editStringify(this.sw);
 		$.ajax({
 			type: "POST",
-			url: "/api/write/switch-update",
+			url: "/api/write/switches",
 			dataType: "text",
 			data:myData,
 			success: function (data, textStatus, jqXHR) {
@@ -1112,7 +1112,7 @@ var switchEditPanel = function () {
                 myData = JSON.stringify(myData);
                 $.ajax({
                         type: "POST", 
-                        url: "/api/write/switch-update",
+                        url: "/api/write/switches",
                         dataType: "text", 
                         data:myData,
                         success: function (data, textStatus, jqXHR) {
@@ -1292,7 +1292,7 @@ var networkAddPanel = function() {
 		var myData = JSON.stringify(myData);
 		$.ajax({
 			type: "POST",
-			url: "/api/write/network-add",
+			url: "/api/write/networks",
 			dataType: "text",
 			data:myData,
 			success: function (data, textStatus, jqXHR) {
@@ -1330,7 +1330,7 @@ var networkListPanel = function() {
 			var cell3 = row.insertCell(2);
 			cell1.innerHTML = "<a href='#' onclick='nmsInfoBox.showWindow(\"networkInfo\",\""+net+"\");'>"+net+ '</a>';
 			cell2.innerHTML = networks[net].vlan;
-			cell3.innerHTML = networks[net].routing_point;
+			cell3.innerHTML = networks[net].router;
 		}
 		this._render(table);
 
@@ -1376,14 +1376,9 @@ var networkEditPanel = function() {
 		var tags;
 		for (var v in net) {
 			/*
-			* Placement and tags needs to be sent and edited
+			* Tags needs to be sent and edited
 			* as plain JSON...
 			*/
-			if (v == "placement") {
-				place = JSON.stringify(net[v]);
-				template[v] = place;
-				continue;
-			}
 			if (v == "tags") {
 				tags = JSON.stringify(net[v]);
 				template[v] = tags;
@@ -1457,7 +1452,7 @@ var networkEditPanel = function() {
 		var myData = nmsInfoBox._editStringify(this.sw,"name");
 		$.ajax({
 			type: "POST",
-			url: "/api/write/network-update",
+			url: "/api/write/networks",
 			dataType: "text",
 			data:myData,
 			success: function (data, textStatus, jqXHR) {
@@ -1466,6 +1461,7 @@ var networkEditPanel = function() {
 					nmsInfoBox.hide();
 				}
 				nmsData.invalidate("switches");
+				nmsData.invalidate("networks");
 				nmsData.invalidate("smanagement");
 			}
 		});

@@ -140,6 +140,20 @@ nmsMap._initContexts = function() {
 	}
 };
 
+/*
+ * Used to force a resize if a regular event isn't sent. Typically if the
+ * window itself isn't resized, but available space for the map is still
+ * changed. Example: The menu is toggled. So far this is the same as
+ * _resizeEvent, but there is no guarantee that will stay true.
+ */
+nmsMap.forceResize = function() {
+	if (this._init == true) {
+		return;
+	}
+	nmsMap._resizeEvent();
+}
+
+
 nmsMap._resizeEvent = function() {
 	var width = window.innerWidth - nmsMap._c.bg.c.offsetLeft;
 	var height = window.innerHeight - nmsMap._c.bg.c.offsetTop;

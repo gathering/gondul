@@ -449,7 +449,9 @@ function setMenu()
 {
 	var nav = document.getElementsByTagName("nav")[0];
 	nav.style.display = nms.menuShowing ? '' : 'none';
+	nmsMap.forceResize();
 }
+
 function setOplog()
 {
 	var nav = document.getElementById("oplog-parent-mini");

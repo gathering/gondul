@@ -1,7 +1,7 @@
 "use strict";
 
 var nmsOplog = nmsOplog || {
-
+	table: {}
 }
 
 nmsOplog.init = function() {
@@ -78,42 +78,43 @@ nmsOplog.getSwitchLogs = function(sw) {
 	return logs;
 }
 
+/*
+ * This can be re-written now that it uses nmsBox... That rewrite was just a short
+ * test of nmsBox...
+ */
 nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
-	var table = document.createElement("table");
-	var tr;
-	var td1;
-	var td2;
-	var td3;
-	table.className = "table";
-	table.classList.add("table");
-	table.classList.add("table-condensed");
+	var table = new nmsTable([]);
 	var i = 0;
 	for (var v in nmsData['oplog']['oplog']) {
 		if (cutoff && nmsData.oplog.oplog[v]['username'] == "system") {
 			continue;
 		}
-		tr = table.insertRow(-1);
-		td1 = tr.insertCell(0);
-		td2 = tr.insertCell(1);
+		var col1;
 		var date = new Date(nmsData.oplog.oplog[v]['timestamp'].replace(" ","T").replace("+00",""));
 		if (timefield == "time") {
-			td1.textContent = date.toTimeString().replace(/:\d\d .*$/,"");
+			col1 = date.toTimeString().replace(/:\d\d .*$/,"");
 		} else {
 			var month = date.getMonth() + 1;
 			var day = date.getDate();
 			var tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
-			td1.textContent = tmp;
+			col1 = tmp;
 		}
-		td1.classList.add("left");
 		var data = nmsData['oplog']['oplog'][v]['log'];
+		var col2 = new nmsBox("p");
 		if (cutoff && data.length > cutoff) {
-			td2.title = data;
+			col2.html.title = data;
 			data = data.slice(0,cutoff);
 			data = data + "(...)";
 		}
-		td2.textContent = nmsData['oplog']['oplog'][v]['systems'] + " [" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
-		td2.hiddenthing = v;
-		td2.onclick = function(e){ var x = document.getElementById("searchbox"); var v = e.path[0].hiddenthing; x.value = nmsData['oplog']['oplog'][v]['systems']; x.oninput(); }
+		col2.html.textContent = nmsData['oplog']['oplog'][v]['systems'] + " [" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
+		col2.html.hiddenthing = v;
+		col2.html.onclick = function(e) { 
+			var x = document.getElementById("searchbox");
+			var v = e.path[0].hiddenthing;
+			x.value = nmsData['oplog']['oplog'][v]['systems'];
+			x.oninput();
+		}
+		table.add([col1,col2]);
 		if (++i == limit)
 			break;
 	}
@@ -122,7 +123,8 @@ nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
 		old.parentElement.removeChild(old);
 	} catch(e) {}
 	var par = document.getElementById("oplog-parent" + prefix);
-	table.id = "oplog-table" + prefix;
-	par.appendChild(table);
+	table.html.id = "oplog-table" + prefix;
+	par.appendChild(table.html);
+	nmsOplog.table["x" + prefix] = table;
 };
 

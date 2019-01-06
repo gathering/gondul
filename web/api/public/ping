@@ -29,12 +29,6 @@ while (my $ref = $q2->fetchrow_hashref()) {
     my ( $h, $m, $s ) = split( ':|\.', $ref->{'age'} );
     $nms::web::json{'switches'}{$ref->{'sysname'}}{'age6'} = ($h*60*60) + ($m*60) + $s; # $$ref->{'age'};
 }
-my $lq = $nms::web::dbh->prepare("SELECT DISTINCT ON (linknet) linknet, latency1_ms, latency2_ms FROM linknet_ping WHERE "
-        . $nms::web::when . " ORDER BY linknet, time DESC;");
-$lq->execute();
-while ( my $ref = $lq->fetchrow_hashref() ) {
-    $nms::web::json{'linknets'}{$ref->{'linknet'}} = [ $ref->{'latency1_ms'}, $ref->{'latency2_ms'} ];
-}
 
 $nms::web::cc{'max-age'} = "1";
 $nms::web::cc{'stale-while-revalidate'} = "5";

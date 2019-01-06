@@ -166,7 +166,7 @@ class nmsPanel extends nmsBox{
 	/* Mainly just to make the constructor more readable. */
 	makeHeading(title) {
 		var titleObject = new nmsBox("div",{html:{classList: ["panel-heading"]}});
-		this._titleText = new nmsBox("p",{html:{textContent: title}});
+		this._titleText = new nmsBox("h4",{html:{textContent: title}});
 		var closeButton = new nmsBox("button");
 		closeButton.html.className = "close";
 		closeButton.panel = this;

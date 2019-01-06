@@ -1,6 +1,16 @@
 "use strict";
 
-class nmsUiSwitch extends nmsPanel {
+/* Basic editor for switches, and possibly networks and whatever.
+ * This is the first real use of both the nmsBox and nmsType, so
+ * expect changes as the need(s) arise.
+ * 
+ * The general idea is simple, though: Editing and adding is to be treated
+ * as similar as possible, and there should be no hard-coding anywhere. If
+ * we need a "one-off" for whatever, we should find a genric way of solving
+ * it to avoid complicating things. 
+ * 
+ */
+class nmsModSwitch extends nmsPanel {
 	constructor(sw) {
 		var title;
 		if (sw == undefined) {
@@ -10,23 +20,50 @@ class nmsUiSwitch extends nmsPanel {
 		}
 		super(title)
 		this._sw = sw;
+		this.nav.add(new nmsString("Adding and editing stuff has immediate effects and blah blah blah, insert sensible help-text here."));
+		this.generateBaseTemplate()
 		this.populate()
 	}
-	/*
-	 * We really should base this on a backend-API exposing relevant fields...
+	/* Pretty sure that the type-thing is OK, but what I want is to
+	 * generate a nmsTemplate or something that can be used to get/set
+	 * variables generically, and replaces nmsEditRow. Since right now,
+	 * both the template and the row is fiddling with values, luckily
+	 * all through the same actual object, but still....
+	 * This is because I wrote nmsEditRow before I added a type-system.
+	 *
+	 * The fundamental problem is that the row-rendering is obviously
+	 * affected by the type, and the overall "template"/parent
+	 * (nmsModSwitch right now) is also obviously affected by changes to
+	 * the individual rows.
+	 *
+	 * Right now a change in a value means nmsEditRow will get the
+	 * event, it will use the nmsType to validate, and ultimately set,
+	 * but it ALSO has to store a text-representation of the value if it
+	 * changes from other sources (e.g.: auto-complete), and we need to
+	 * alert nmsModSwitch that a change has occurred so it can act
+	 * approrpiately (e.g.: Enabling/disabling a save button).
+	 * 
+	 * This means that nmsType instances, nmsEditRow instances and
+	 * nmsModSwitch instance is tightly coupled in non-obvious ways.
+	 * 
+	 * Which means bugs.
 	 */
-	getTemplate(sw) {
-		if (sw == undefined) {
-			return { 
-				mgmt_v4_addr: null, 
-				mgmt_v6_addr: null,
-				community: null,
-				placement: null,
-				mgmt_vlan: null,
-				poll_frequency: null,
-				tags: null
-			};
-		}
+	generateBaseTemplate() {
+		this._template = {
+			sysname: new nmsTypeSysname("Unique systemname/switch name. Only required field." ),
+			mgmt_v4_addr: new nmsTypeIP("Management address IPv4"),
+			mgmt_v6_addr: new nmsTypeIP("Management address IPv6"),
+			mgmt_vlan: new nmsTypeNetwork("Management VLAN"),
+			traffic_vlan: new nmsTypeNetwork("Traffic VLAN"),
+			distro_name: new nmsTypeSysnameReference("Distro switch upstream of this system. Required for provisioning."),
+			distro_phy_port: new nmsTypePort("Name of port we connect to at the distro switch. Used for provisioning, among other things."),
+			poll_frequency: new nmsTypeInterval("Poll frequency for SNMP (will use default from backend)"),
+			community: new nmsTypeSecret("SNMP community (will use default from backend)"),
+			placement: new nmsTypePlace("Map placement (If following a regular naming scheme, the backend will place it poperly, otherwise a random place will be chose)"),
+			tags: new nmsTypeTags("Additional tags in JSON text array format. Can be anything. Used to provide a simple escape hatch mechanism to tag systems.")
+	      }
+	}
+	_populateTemplate(sw) {
 		var swi = [];
 		var swm = [];
 		try {
@@ -38,32 +75,25 @@ class nmsUiSwitch extends nmsPanel {
 
 		var template = {}
 		for (var v in swi) {
-			template[v] = swi[v];
+			console.assert(this._template[v] instanceof nmsType)
+			this._template[v].value = swi[v];
 		}
 		for (var v in swm) {
 			if (v == "last_updated") {
 				continue;
 			}
-			template[v] = swm[v];
+			console.assert(this._template[v] instanceof nmsType)
+			this._template[v].value = swm[v];
 		}
-		return template;
 	}
 	populate() {
-		var template = this.getTemplate(this._sw);
-		this.table = new nmsTable();
-		var first = new Array("sysname","distro_name","distro_phy_port","traffic_vlan")
-		var sorted = new Array();
-		for (var v in template) {
-			if (!first.includes(v)) {
-				sorted.push(v);
-			}
+		if (this._sw != undefined) {
+			this._populateTemplate(this._sw);
 		}
-		sorted.sort();
-		var finals = first.concat(sorted);
+		this.table = new nmsTable();
 		this.rows = {}
-		for (var i in finals) {
-			var v = finals[i];
-			this.rows[v] = new nmsEditRow(v, nmsInfoBox._nullBlank(template[v]));
+		for (var v in this._template) {
+			this.rows[v] = new nmsEditRow(v, this._template[v]);
 			this.rows[v].parent = this;
 			this.table.add(this.rows[v]);
 		}
@@ -81,19 +111,19 @@ class nmsEditRow extends nmsBox {
 	constructor(text,value) {
 		super("tr")
 		// This should/could be smarter in the future.
-		if (value instanceof Object) {
-			value = JSON.stringify(value);
-		}
+		console.assert(value instanceof nmsType)
 		this.name = text;
 		this._value = value;
-		this.original = value;
+		this.original = value.value;
 		var td1 = new nmsBox("td")
-		td1.add(new nmsString(text))
+		var name = new nmsString(text);
+		name.html.title = value.description;
+		td1.add(name)
 		this.add(td1);
 
 		var td2 = new nmsBox("td")
 		var input = new nmsBox("input")
-		input.html.value = value;
+		input.html.value = value.value;
 		input.html.className = "form-control";
 		input.html.type = "text";
 		input.row = this;
@@ -109,17 +139,24 @@ class nmsEditRow extends nmsBox {
 		this.add(td2)
 	}
 	get value() {
-		return this._value;
+		return this._value.value;
 	}
+	/* THIS IS A MESS */
 	set value(value) {
-		this._value = value;
-		if (this._input.html.value != value) {
-			this._input.html.value = value
-		}
-		if (this._value != this.original) {
-			this._td2.html.classList.add("has-warning");
+		if (!this._value.validate(value)) {
+			this._td2.html.classList.add("has-error");
+			return;
 		} else {
-			this._td2.html.classList.remove("has-warning");
+			this._td2.html.classList.remove("has-error");
+			this._value.value = value;
+		}
+		if (this._input.html.value != this._value.value) {
+			this._input.html.value = this._value.value
+		}
+		if (this._value.value != this.original) {
+			this._td2.html.classList.add("has-success");
+		} else {
+			this._td2.html.classList.remove("has-success");
 		}
 		this.parent.changed(this) 
 	}

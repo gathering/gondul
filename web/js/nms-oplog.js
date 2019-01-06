@@ -47,9 +47,9 @@ class nmsOplog2 {
 }
 class nmsOplogInput extends nmsBox {
 	constructor() {
-		super("div",{html:{class: "navbar-form", classList:["navbar-form","navbar-right","gondul-is-private"]}})
-		var systemParent = new nmsBox("div",{html:{class:"form-group",classList:["form-group"]}});
-		this._systems = new nmsBox("input", {html:{class:"form-control",classList:["form-control"],type:"text",size:"8",placeholder:"System(s)"}});
+		super("div",{html:{className: "navbar-form", classList:["navbar-form","navbar-right","gondul-is-private"]}})
+		var systemParent = new nmsBox("div",{html:{className:"form-group",classList:["form-group"]}});
+		this._systems = new nmsBox("input", {html:{className:"form-control",classList:["form-control"],type:"text",size:"8",placeholder:"System(s)"}});
 		this._systems.searchbox = document.getElementById("searchbox")
  		this._systems.html.oninput = function(e) {
 			this.nmsBox.searchbox.value = this.value;
@@ -57,8 +57,8 @@ class nmsOplogInput extends nmsBox {
 		}
 		systemParent.add(this._systems)
 		this.add(systemParent)
-		var entryParent = new nmsBox("div",{html:{class:"form-group",classList:["form-group"]}});
-		this._entry = new nmsBox("input", {html:{class:"form-control",classList:["form-control"],type:"text",size:"30",placeholder:"Log entry"}});
+		var entryParent = new nmsBox("div",{html:{className:"form-group",classList:["form-group"]}});
+		this._entry = new nmsBox("input", {html:{className:"form-control",classList:["form-control"],type:"text",size:"30",placeholder:"Log entry"}});
 		entryParent.add(this._entry)
 		this.add(entryParent)
 		var button = new nmsBox("button",{html:{classList:["btn","btn-default"],type:"button"}});

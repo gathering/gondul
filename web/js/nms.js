@@ -451,7 +451,7 @@ function setMenu()
 
 function setOplog()
 {
-	//nmsOplog.table["x-mini"].show(nms.oplogShowing)
+	nms.oplog.mini.show(nms.oplogShowing)
 }
 
 function toggleMenu()

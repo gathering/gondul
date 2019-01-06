@@ -61,15 +61,92 @@ class nmsBox {
 	}
 	add(box) {
 		this._boxes.push(box);
-		this.html.appendChild(box.html);
+		box.attach(this.html)
+		box.show()
 	}
-	close() {
-		for (var x in this._boxes) {
-			this._boxes[x].close();
+	insert(box) {
+		this._boxes.unshift(box)
+		box.attach(this.html)
+		box.show(true,-1)
+	}
+
+	/* This is provided so as to allow attaching to non-nmsBox-objects.
+	 * E.g.: attach the root to a HTML element directly.
+	 * If you just use foo = document.getElement...,
+	 * foo.appendChild(box.html), then .hide() will work fine,
+	 * but there's no way to do .show() afterwards.
+	 *
+	 * Be aware:
+	 * - we want to AVOID the child knowing too much about the parent
+	 * - HTML elements can only ever be part of a single parent
+	 *   element. This means that it is safe to attach(root1), .show(),
+	 *   atach(root2), show() ... The DOM object wil be removed from root1.
+	 * - Due to the above, we should probably actually adress that, since
+	 *   there are valid reasons for showing the same nmsBox twice (e.g.:
+	 *   showing a list of tons of stuff, and also a "top 5")
+	 */
+	attach(root) {
+		if (!(root instanceof HTMLElement)) {
+			root = document.getElementById(root)
 		}
-		if (this.html.parentElement != null) {
+		console.assert(root instanceof HTMLElement)
+		this._root = root;
+	}
+	show(show = true,where=1) {
+		if (!show) {
+			this.hide()
+			return
+		}
+		if (this._root instanceof HTMLElement) {
+			if (where>0) {
+				this._root.appendChild(this.html);
+			} else {
+				this._root.insertBefore(this.html,this._root.firstElementChild)
+			}
+		} 
+	}
+	_remove(source,box) {
+		source.html.removeChild(box.html)
+		if (box._root == source) {
+			box._root = undefined;
+		}
+		var x = source._boxes.indexOf(box)
+		delete source._boxes[x]
+	}
+	_includes(source,box) {
+		if (source._boxes.indexOf(box) >= 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	/*
+	 * This redirect is to make it easier for subclasses that
+	 * override add() to make it eaiser to add logical
+	 * childs, e.g. adding to a table really adds to ._tbody,
+	 * not the true top-element of the table.
+	 */
+	remove(box) {
+		this._remove(this,box)
+	}
+	includes(box) {
+		return this._includes(this,box);
+	}
+	hide() {
+		if (this.html.parentElement instanceof HTMLElement) {
 			this.html.parentElement.removeChild(this.html);
 		}
+	}
+	destroy() {
+		this.hide()
+		for (var i in this._boxes) {
+			var x = this._boxes[i];
+			x.hide()
+			x.destroy()
+			delete this._boxes[i]
+		}
+		delete this.html;
+		delete this;
 	}
 	update() {
 		for (var x in this._boxes) {
@@ -112,13 +189,15 @@ class nmsTable extends nmsBox {
 			this.add(content[v]);
 		}
 	}
-	/* Can take either a single nmsBox-object that will be added as-is,
-	 * or an array of items that will be added as individual cells
-	 */ 
-	add(content) {
+	remove(box) {
+		this._remove(this._tbody,box)
+	}
+	includes(box) {
+		return this._tbody.includes(box)
+	}
+	_makeBox(content) {
 		if (content instanceof nmsBox) {
-			this._tbody.add(content)
-			return;
+			return content;
 		}
 		var tr;
 		var td1;
@@ -138,7 +217,16 @@ class nmsTable extends nmsBox {
 			}
 			tr.add(td);
 		}
-		this._tbody.add(tr);
+		return tr;
+	}
+	/* Can take either a single nmsBox-object that will be added as-is,
+	 * or an array of items that will be added as individual cells
+	 */ 
+	add(content) {
+		this._tbody.add(this._makeBox(content));
+	}
+	insert(box) {
+		this._tbody.insert(this._makeBox(box));	
 	}
 }
 
@@ -160,8 +248,15 @@ class nmsPanel extends nmsBox{
 		this._topBox.add(this.nav);
 		this._topBox.add(this._body);
 		super.add(this._topBox);
-		this._root = document.getElementById("metaContainer");
-		this._root.appendChild(this.html);
+	}
+	attach(root = document.getElementById("metaContainer")) {
+		super.attach(root)
+	}
+	show() {
+		if (!this._root) {
+			this.attach()
+		}
+		super.show()
 	}
 	/* Mainly just to make the constructor more readable. */
 	makeHeading(title) {

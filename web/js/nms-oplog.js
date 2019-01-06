@@ -1,68 +1,16 @@
 "use strict";
 
+/* 
+ * Please note: I've started moving this to a new and better way of doing
+ * things and it is by no means a finished move. This means that this file is a
+ * mess of two different styles at the time of this writing. Fix incomming.
+ */
 var nmsOplog = nmsOplog || {
 	table: {}
 }
-
-nmsOplog.init = function() {
-	nmsData.addHandler("oplog", "nmsOplogHandler", nmsOplog.updateComments);
+nmsOplog.init = function() { 
+	nms.oplog = new nmsOplog2()
 }
-
-nmsOplog._reset = function() {
-	document.getElementById('logbox-id').value = "";
-	document.getElementById('logbox').value = "";
-	document.getElementById('searchbox').value = "";
-	document.getElementById('searchbox').oninput();
-}
-
-nmsOplog.getUser = function(force) {
-	if (force == undefined)
-		force = false;
-	var user = nms.user;
-	if (user == undefined || force) {
-		user = prompt("Who are you? Short nick for the record.");
-		if (user == null || user == undefined || user == "") {
-			console.log("empty prompt");
-			alert("No cake for you.");
-			return false;
-		}
-		nms.user = user;
-		saveSettings();
-	}
-	return nms.user;
-}
-
-nmsOplog.commit = function() {
-	var s = document.getElementById('logbox-id').value;
-	var d = document.getElementById('logbox').value;
-	var user = nmsOplog.getUser();
-	if (user == undefined) {
-		nmsOplog._reset();
-		return;
-	}
-	if (d == undefined || d == null || d == "") {
-		return;
-	}
-
-	var myData = {"user": user, "systems": s, "log": d};
-	myData = JSON.stringify(myData);
-	$.ajax({
-		type: "POST",
-		url: "/api/write/oplog",
-		dataType: "text",
-		data:myData,
-		success: function (data, textStatus, jqXHR) {
-			nmsData.invalidate("oplog");
-		}
-	});
-	nmsOplog._reset();
-}
-
-nmsOplog.updateComments = function() {
-	nmsOplog._updateComments(10,"-mini","time",100);
-	nmsOplog._updateComments(0,"","timestamp");
-}
-
 nmsOplog.getSwitchLogs = function(sw) {
 	var logs = [];
 	if (nmsData.oplog == undefined || nmsData['oplog']['oplog'] == undefined)
@@ -78,53 +26,226 @@ nmsOplog.getSwitchLogs = function(sw) {
 	return logs;
 }
 
+// New-style-work-in-progress follows
+class nmsOplog2 {
+	constructor() {
+		this.logger = new nmsOplogInput()
+		this.logger.attach("navbar")
+		this.logger.show()
+		this.mini = new nmsLogTable()
+		this.full = new nmsLogTable("full", "large",0,0);
+		this.mini.attach("oplog-parent-mini")
+		this.full.attach("oplog-parent")
+		this.mini.show()
+		this.full.show()
+		nmsData.addHandler("oplog", "nmsOplogHandler", this.updateComments,this);
+	}
+	updateComments(x) {
+		x.mini.update()
+		x.full.update()
+	}
+}
+class nmsOplogInput extends nmsBox {
+	constructor() {
+		super("div",{html:{class: "navbar-form", classList:["navbar-form","navbar-right","gondul-is-private"]}})
+		var systemParent = new nmsBox("div",{html:{class:"form-group",classList:["form-group"]}});
+		this._systems = new nmsBox("input", {html:{class:"form-control",classList:["form-control"],type:"text",size:"8",placeholder:"System(s)"}});
+		this._systems.searchbox = document.getElementById("searchbox")
+ 		this._systems.html.oninput = function(e) {
+			this.nmsBox.searchbox.value = this.value;
+			this.nmsBox.searchbox.oninput();
+		}
+		systemParent.add(this._systems)
+		this.add(systemParent)
+		var entryParent = new nmsBox("div",{html:{class:"form-group",classList:["form-group"]}});
+		this._entry = new nmsBox("input", {html:{class:"form-control",classList:["form-control"],type:"text",size:"30",placeholder:"Log entry"}});
+		entryParent.add(this._entry)
+		this.add(entryParent)
+		var button = new nmsBox("button",{html:{classList:["btn","btn-default"],type:"button"}});
+		button.html.textContent = "Log";
+		button.container = this;
+		button.html.onclick = function(element) {
+			this.nmsBox.container.commit(element)
+		}
+		this.add(button);
+	}
+	/* Should be moved to nms.user probably */
+	get user() {
+		if (nms.user) {
+			return nms.user;
+		}
+		var user = prompt("Who are you? Short nick for the record.");
+		if (user == null || user == undefined || user == "") {
+			console.log("empty prompt");
+			alert("No cake for you.");
+			return false;
+		}
+		nms.user = user;
+		saveSettings();
+		return nms.user;
+	}
+	_empty(input) {
+		if (input == undefined || input == null || input == "") {
+			return "";
+		}
+		return input;
+	}
+	get entry() {
+		return this._empty(this._entry.html.value)
+	}
+	get systems() {
+		return this._empty(this._systems.html.value)
+	}
+	commit(element) {
+		if (!this.user) {
+			console.log("need a user...")
+			return false;
+		}
+		if (this.entry == "") {
+			return false;
+		}
+		var myData = {"user": this.user, "systems": this.systems, "log": this.entry};
+		myData = JSON.stringify(myData);
+		$.ajax({
+			type: "POST",
+			url: "/api/write/oplog",
+			dataType: "text",
+			data:myData,
+			success: function (data, textStatus, jqXHR) {
+				nmsData.invalidate("oplog");
+			}
+		});
+		this.blank()
+	}
+	blank() {
+		this._entry.html.value = "";
+		this._systems.html.value = "";
+		this._systems.searchbox.value = "";
+		this._systems.searchbox.oninput()
+	}
+}
+
+
 /*
  * This can be re-written now that it uses nmsBox... That rewrite was just a short
  * test of nmsBox...
  */
-nmsOplog._updateComments = function(limit,prefix,timefield,cutoff) {
-	var table = new nmsTable([]);
-	var i = 0;
-	for (var v in nmsData['oplog']['oplog']) {
-		if (cutoff && nmsData.oplog.oplog[v]['username'] == "system") {
-			continue;
+class nmsLogTable extends nmsTable {
+	constructor(mode = "small", timestyle = "small", cutoff = 100, limit = 10) {
+		super([]);
+		this.mode = mode;
+		this.timestyle = timestyle;
+		this.cutoff = cutoff;
+		this.limit = limit;
+		this.entries = {}
+		this.first = true;
+	}
+	/* This is a horrible implementation. BUT THAT'S WHAT YOU GET
+	 */
+	syncToTable() {
+		var i = 1;
+		var pastCut = false;
+		var indexes = [];
+		for (var idx in this.entries) {
+			indexes.push(parseInt(idx))
 		}
-		var col1;
-		var date = new Date(nmsData.oplog.oplog[v]['timestamp'].replace(" ","T").replace("+00",""));
-		if (timefield == "time") {
-			col1 = date.toTimeString().replace(/:\d\d .*$/,"");
+		// Testint to see what browsers I can break with exciting new
+		// syntax
+		indexes.sort((x,y) => y-x)
+		for (var idx in indexes) {
+			var entry = this.entries[indexes[idx]];
+			if (!pastCut) {
+				if (entry == undefined) {
+					console.log("wtf, empty?")
+					console.log(entry)
+				} else {
+					entry.build(this.cutoff,this.timestyle)
+					if(!this.includes(entry)) {
+						// FIXME: This is dumb. It assumes we only get one update.
+						if (this.first) {
+							this.add(entry)
+						} else {
+							this.insert(entry)
+						}
+					}
+				}
+			} else {
+				if(this.includes(entry)) {
+					this.remove(entry)
+				}
+			}
+			if(this.limit > 0 && ++i > this.limit) {
+				pastCut = true;
+			}
+		}
+		this.first=false;
+	}
+	update() {
+		var candidates = nmsData['oplog']['oplog'];
+		for (var i in candidates) {
+			var candidate = candidates[i];
+			if (this.entries[candidate.id] != undefined) {
+				continue;
+			} else {
+				this.entries[candidate.id] = new nmsOplogEntry(candidate);
+			}
+		}
+		this.syncToTable();
+	}
+}
+
+class nmsOplogEntry extends nmsBox { 
+	build(cutoff,timestyle) {
+		if (this.built) {
+			return true;
+		}
+		var td1 = new nmsBox("td")
+		var td2 = new nmsBox("td")
+		if(timestyle == "small") {
+			td1.add(new nmsString(this.shortTime()))
 		} else {
-			var month = date.getMonth() + 1;
-			var day = date.getDate();
-			var tmp = (date.getYear() + 1900) + "-" + (month < 10 ? "0": "") + month + "-" + (day < 10 ? "0" : "") + day + " " + date.toTimeString().replace(/:\d\d .*$/,"");
-			col1 = tmp;
+			td1.add(new nmsString(this.longTime()))
 		}
-		var data = nmsData['oplog']['oplog'][v]['log'];
-		var col2 = new nmsBox("p");
-		if (cutoff && data.length > cutoff) {
-			col2.html.title = data;
-			data = data.slice(0,cutoff);
-			data = data + "(...)";
+		var col2 = new nmsString(this.systems + " [" + this.username + "] " + this.getData(cutoff));
+		if (this.title != null) {
+			col2.html.title = this.title;
 		}
-		col2.html.textContent = nmsData['oplog']['oplog'][v]['systems'] + " [" + nmsData['oplog']['oplog'][v]['username'] + "] " + data;
-		col2.html.hiddenthing = v;
+		col2.searchbox = document.getElementById("searchbox")
+		col2.entry = this;
 		col2.html.onclick = function(e) { 
 			var x = document.getElementById("searchbox");
 			var v = e.path[0].hiddenthing;
-			x.value = nmsData['oplog']['oplog'][v]['systems'];
-			x.oninput();
+			this.nmsBox.searchbox.value = this.nmsBox.entry.systems;
+			this.nmsBox.searchbox.oninput()
 		}
-		table.add([col1,col2]);
-		if (++i == limit)
-			break;
+		this.add(td1)
+		td2.add(col2)
+		this.add(td2)
+		this.built = true;
 	}
-	try {
-		var old = document.getElementById("oplog-table" + prefix);
-		old.parentElement.removeChild(old);
-	} catch(e) {}
-	var par = document.getElementById("oplog-parent" + prefix);
-	table.html.id = "oplog-table" + prefix;
-	par.appendChild(table.html);
-	nmsOplog.table["x" + prefix] = table;
-};
 
+	constructor(entry) {
+		super("tr")
+		this.td1 = null;
+		this.td2 = null;
+		this.time = new Date(entry.timestamp.replace(" ","T"))
+		this.id = entry.id;
+		this.data = entry.log;
+		this.title = null;
+		this.systems = entry.systems;
+		this.username = entry.username;
+	}
+	longTime() {
+		return this.time.toISOString();
+	}
+	shortTime() {
+		return this.time.toTimeString().replace(/:\d\d .*$/,"");
+	}
+	getData(cutoff = 0) {
+		if (cutoff && this.data.length > cutoff) {
+			this.title = this.data;
+			return this.data.slice(0,cutoff) + "(...)";
+		}
+		return this.data;
+	}
+}

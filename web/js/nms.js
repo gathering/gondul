@@ -49,7 +49,6 @@ var nms = {
 	get user() { return this._user; },
 	set user(u) {
 		this._user = u;
-		document.getElementById('logbook-name').textContent = u;
 		saveSettings();
 	},
 	/*
@@ -403,8 +402,6 @@ function initNMS() {
 		nmsData.registerSource("smanagement","/api/read/switches-management");
 		nmsData.registerSource("oplog", "/api/read/oplog");
 		nmsData.registerSource("networks","/api/read/networks");
-	//	setInterval(nmsUpdateNavbarGraph, 30000);
-	//	nmsUpdateNavbarGraph();
 		nmsOplog.init();
 	}
 
@@ -454,8 +451,7 @@ function setMenu()
 
 function setOplog()
 {
-	var nav = document.getElementById("oplog-parent-mini");
-	nav.style.display = nms.oplogShowing ? '' : 'none';
+	//nmsOplog.table["x-mini"].show(nms.oplogShowing)
 }
 
 function toggleMenu()

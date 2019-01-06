@@ -35,6 +35,13 @@ class nmsType {
 	validate(input) {
 		return true;
 	}
+	toString() {
+		if (this._value == null || this._value == undefined) {
+			return ""
+		} else {
+			return this._value.toString();
+		}
+	}
 	get value() {
 		return this._value;
 	}

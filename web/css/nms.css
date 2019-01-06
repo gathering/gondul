@@ -63,6 +63,9 @@ h1.map-mode-title {
 	background-color: rgba(255,255,255,0.1);
 	text-shadow: -4px -4px 5px white,-4px 0px 5px white,0px -4px 5px white,0px 0px 5px white,4px 4px 5px white,4px 0px 5px white,0px 4px 5px white;
 }
+.logbook-mini p {
+	margin: 0
+}
 .nightmode .logbook-mini  {
 	background-color: rgba(0,0,0,0.1);
 	text-shadow: -4px -4px 5px black,-4px 0px 5px black,0px -4px 5px black,0px 0px 5px black,4px 4px 5px black,4px 0px 5px black,0px 4px 5px black;

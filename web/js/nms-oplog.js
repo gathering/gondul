@@ -212,11 +212,30 @@ class nmsOplogEntry extends nmsBox {
 		}
 		col2.searchbox = document.getElementById("searchbox")
 		col2.entry = this;
-		col2.html.onclick = function(e) { 
-			var x = document.getElementById("searchbox");
-			var v = e.path[0].hiddenthing;
-			this.nmsBox.searchbox.value = this.nmsBox.entry.systems;
-			this.nmsBox.searchbox.oninput()
+		if (this.systems != undefined && this.systems != null && this.systems != "") {
+			col2.html.onclick = function(e) { 
+				this.nmsBox.searchbox.value = this.nmsBox.entry.systems;
+				this.nmsBox.searchbox.oninput()
+				this.nmsBox.clicked = true;
+				setTimeout(function(e){e.clicked = false;},3000,this.nmsBox)
+			}
+			col2.html.onmouseover = function(e) {
+				this.nmsBox.searchbox.value = this.nmsBox.entry.systems;
+				this.nmsBox.searchbox.oninput()
+			}
+			col2.html.onmouseleave = function(e) {
+				if (this.nmsBox.clicked) { return; }
+				if (this.nmsBox.timer) {
+					clearTimeout(this.nmsBox.timer)
+				}
+				this.nmsBox.timer = setTimeout(function(e){
+						if (e.entry.systems == e.searchbox.value) {
+							console.log(e)
+							e.searchbox.value = "";
+							e.searchbox.oninput()
+						}
+					},2000,this.nmsBox)
+			}
 		}
 		this.add(td1)
 		td2.add(col2)

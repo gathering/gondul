@@ -220,17 +220,22 @@ class nmsOplogEntry extends nmsBox {
 				setTimeout(function(e){e.clicked = false;},3000,this.nmsBox)
 			}
 			col2.html.onmouseover = function(e) {
+				this.nmsBox.over = true;
+				if (this.nmsBox.timer) {
+					clearTimeout(this.nmsBox.timer)
+				}
 				this.nmsBox.searchbox.value = this.nmsBox.entry.systems;
+				this.nmsBox.searchbox.hoverSource = this.nmsBox;
 				this.nmsBox.searchbox.oninput()
 			}
 			col2.html.onmouseleave = function(e) {
+				this.nmsBox.over = false;
 				if (this.nmsBox.clicked) { return; }
 				if (this.nmsBox.timer) {
 					clearTimeout(this.nmsBox.timer)
 				}
 				this.nmsBox.timer = setTimeout(function(e){
-						if (e.entry.systems == e.searchbox.value) {
-							console.log(e)
+						if (e.over == false && e.entry.systems == e.searchbox.value && e.searchbox.hoverSource == e) {
 							e.searchbox.value = "";
 							e.searchbox.oninput()
 						}

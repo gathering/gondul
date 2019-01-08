@@ -20,7 +20,7 @@
  */
 
 class nmsBox {
-	constructor(type,settings) {
+	constructor(type,settings = null) {
 		this.type = type;
 		this._boxes = []
 		this.html = document.createElement(type);
@@ -182,10 +182,7 @@ class nmsString extends nmsBox {
  */
 class nmsTable extends nmsBox {
 	constructor(content, caption) {
-		super("table");
-		this.html.className = "table";
-		this.html.classList.add("table");
-		this.html.classList.add("table-condensed");
+		super("table",{html:{className:"table table-condensed"}});
 		if (caption != undefined) {
 			var cap = new nmsBox("caption");
 			cap.html.textContent = caption;
@@ -248,10 +245,10 @@ class nmsTable extends nmsBox {
  */
 class nmsPanel extends nmsBox{
 	constructor(title){ 
-		super("div",{html: { classList: ["col-sm-8","col-md-6","col-lg-5","genericBox"]}});
-		this._topBox = new nmsBox("div",{ html: { classList: ["panel","panel-default"]}});
-		this._body = new nmsBox("div",{html:{classList: ["panel-body"]}});
-		this.nav = new nmsBox("div",{html:{classList: ["panel-body"]}});
+		super("div",{html: { className: "col-sm-8 col-md-6 col-lg-5 genericBox"}});
+		this._topBox = new nmsBox("div",{ html: { className: "panel panel-default"}});
+		this._body = new nmsBox("div",{html:{className: "panel-body"}});
+		this.nav = new nmsBox("div",{html:{className: "panel-body"}});
 		this._topBox.add(this.makeHeading(title));
 		this._topBox.add(this.nav);
 		this._topBox.add(this._body);
@@ -268,13 +265,13 @@ class nmsPanel extends nmsBox{
 	}
 	/* Mainly just to make the constructor more readable. */
 	makeHeading(title) {
-		var titleObject = new nmsBox("div",{html:{classList: ["panel-heading"]}});
+		var titleObject = new nmsBox("div",{html:{className: "panel-heading"}});
 		this._titleText = new nmsBox("h4",{html:{textContent: title}});
 		var closeButton = new nmsBox("button");
 		closeButton.html.className = "close";
 		closeButton.panel = this;
 		closeButton.html.onclick = function() {
-			this.nmsBox.panel.close();
+			this.nmsBox.panel.destroy();
 		}
 		closeButton.html.style = "float: right;";
 		closeButton.add(new nmsString("X","span"));

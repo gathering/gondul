@@ -38,30 +38,40 @@ class nmsOplog2 {
 		this.full.attach("oplog-parent")
 		this.mini.show()
 		this.full.show()
+		this._username = new nmsBox("p", {html:{className: "navbar-text navbar-right"}});
+		if (nms.user) {
+			this._username.html.textContent = nms.user
+		}
+		this._username.attach("navbar");
+		this._username.show()
 		nmsData.addHandler("oplog", "nmsOplogHandler", this.updateComments,this);
 	}
 	updateComments(x) {
+		if (nms.user && x._username.user != nms.user) {
+			x._username.user = nms.user;
+			x._username.html.textContent = nms.user
+		}
 		x.mini.update()
 		x.full.update()
 	}
 }
 class nmsOplogInput extends nmsBox {
 	constructor() {
-		super("div",{html:{className: "navbar-form", classList:["navbar-form","navbar-right","gondul-is-private"]}})
-		var systemParent = new nmsBox("div",{html:{className:"form-group",classList:["form-group"]}});
-		this._systems = new nmsBox("input", {html:{className:"form-control",classList:["form-control"],type:"text",size:"8",placeholder:"System(s)"}});
+		super("div",{html:{className:"navbar-form form-inline navbar-right gondul-is-private"}})
+		this._systems = new nmsBox("input", {html:{className:"form-control",type:"text",size:"8",placeholder:"System(s)"}});
 		this._systems.searchbox = document.getElementById("searchbox")
  		this._systems.html.oninput = function(e) {
 			this.nmsBox.searchbox.value = this.value;
 			this.nmsBox.searchbox.oninput();
 		}
-		systemParent.add(this._systems)
-		this.add(systemParent)
-		var entryParent = new nmsBox("div",{html:{className:"form-group",classList:["form-group"]}});
-		this._entry = new nmsBox("input", {html:{className:"form-control",classList:["form-control"],type:"text",size:"30",placeholder:"Log entry"}});
-		entryParent.add(this._entry)
-		this.add(entryParent)
-		var button = new nmsBox("button",{html:{classList:["btn","btn-default"],type:"button"}});
+		this.add(this._systems)
+		// This is to provide spacing.... should probably be solved in CSS.
+		// If this annoys you, then fix it.
+		this.add(new nmsBox("p",{html:{textContent:" ",style:{display: "inline"}}}))
+		this._entry = new nmsBox("input", {html:{className:"form-control",type:"text",size:"30",placeholder:"Log entry"}});
+		this.add(this._entry)
+		this.add(new nmsBox("p",{html:{textContent:" ",style:{display: "inline"}}}))
+		var button = new nmsBox("button",{html:{className:"btn btn-default",type:"button"}});
 		button.html.textContent = "Log";
 		button.container = this;
 		button.html.onclick = function(element) {

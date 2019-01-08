@@ -41,24 +41,32 @@ class nmsBox {
 	}
 
 	applySettings(settings) {
+		/* 
+		 * This really should go deeper, but the problem is that
+		 * I'm lazy. You can't just use Object.assign() either because
+		 * stuff like html.style isn't just any element and we want
+		 * to be able to do html:{style:{display:"none"}} instead
+		 * of html:{style:new (style object thing with display:none)}
+		 *
+		 * So far this works.
+		 *
+		 * Note that this breaks forr classList: This is because 
+		 * classList is just an accessor for className, so you 
+		 * should set className instead initially.
+		 */
 		if (settings.html) {
 			for (var x in settings.html) {
-				if (settings.html[x] instanceof Array) {
-					/* If you just sett classList = array it will end up being
-					 * classList = "panel,panel-default,foo", instead of
-					 * classList = ["panel","panel-default","foo"] ...
-					 * Not sure if this applies to all arrays in a html
-					 * object, but we'll see.
-					 */
-					for (var y in settings.html[x]) {
-						this.html[x].add(settings.html[x][y]);
-					}
+				if(settings.html[x] instanceof Object) {
+					Object.assign(this.html[x],settings.html[x])
 				} else {
 					this.html[x] = settings.html[x];
 				}
 			}
 		}
 	}
+	/* Should rename these to push() and unshift(), really, to be
+	 * more consistent.
+	 */
 	add(box) {
 		this._boxes.push(box);
 		box.attach(this.html)

@@ -404,7 +404,6 @@ function initNMS() {
 		nmsData.registerSource("networks","/api/read/networks");
 		nmsOplog.init();
 	}
-
 	restoreSettings();
 	nmsMap.init();
 	detectHandler();

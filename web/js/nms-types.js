@@ -26,6 +26,7 @@ class nmsType {
 		this._value = null;
 		this.description = description;
 		this.validationReason = "";
+		this.ro = false;
 		if (priority == undefined) {
 			priority = this._defaultPriority;
 		}
@@ -40,6 +41,12 @@ class nmsType {
 			return ""
 		} else {
 			return this._value.toString();
+		}
+	}
+	initial(v) {
+		this.value = v;
+		if(this.priority == nmsPriority.newOnly) {
+			this.ro = true;
 		}
 	}
 	get value() {

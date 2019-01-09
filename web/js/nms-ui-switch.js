@@ -88,7 +88,7 @@ class nmsModSwitch extends nmsBox {
 	 */
 	generateBaseTemplate() {
 		this._template = {
-			sysname: new nmsTypeSysname("Unique systemname/switch name. Only required field." ),
+			sysname: new nmsTypeSysname("Unique systemname/switch name. Only required field.  Read/only on existing equipment." ),
 			mgmt_v4_addr: new nmsTypeIP("Management address IPv4"),
 			mgmt_v6_addr: new nmsTypeIP("Management address IPv6"),
 			mgmt_vlan: new nmsTypeNetwork("Management VLAN"),
@@ -115,7 +115,7 @@ class nmsModSwitch extends nmsBox {
 		for (var v in swi) {
 			console.assert(this._template[v] instanceof nmsType)
 			if (swi[v] != null) {
-				this._template[v].value = swi[v];
+				this._template[v].initial(swi[v]);
 			}
 		}
 		for (var v in swm) {
@@ -124,7 +124,7 @@ class nmsModSwitch extends nmsBox {
 			}
 			console.assert(this._template[v] instanceof nmsType)
 			if (swm[v] != null) {
-				this._template[v].value = swm[v];
+				this._template[v].initial(swm[v]);
 			}
 		}
 	}
@@ -177,17 +177,32 @@ class nmsEditRow extends nmsBox {
 		this._value = value;
 		this.original = value.value;
 		var td1 = new nmsBox("td")
-		var name = new nmsString(text);
+		var name = new nmsString(text+" ");
 		name.html.title = value.description;
 		td1.add(name)
 		this.add(td1);
-
-		var td2 = new nmsBox("td")
+		td1.html.width="50%"
+		this._state = new nmsBox("span",{html:{className:"label label-default",textContent:"Original"}})
+		this._valid = new nmsBox("span",{html:{className:"label label-default",textContent:"Not verified"}})
+		name.add(this._state)
+		name.add(this._valid)
+		this._valid.hide()
+		this.changed(false)
+		var content = new nmsBox("td")
 		var input = new nmsBox("input")
 		input.html.value = value.value;
 		input.html.className = "form-control";
 		input.html.type = "text";
 		input.row = this;
+		if (value.ro) {
+			input.html.disabled = true;
+		}
+		if (value instanceof nmsTypeSecret) {
+			input.html.type = "password"
+			input.html.autocomplete = "off"
+			input.html.onfocus = function f() { this.type = "text" }
+			input.html.oninput = function f() { this.type = "text" }
+		}
 		input.html.onchange = function() {
 			this.nmsBox.row.value = this.value
 		}
@@ -195,29 +210,58 @@ class nmsEditRow extends nmsBox {
 			this.nmsBox.row.value = this.value
 		}
 		this._input = input;
-		this._td2 = td2;
-		td2.add(input)
-		this.add(td2)
+		this._content = content;
+		content.add(input)
+		this.add(content)
 	}
 	get value() {
 		return this._value.value;
 	}
+	changed(val) {
+		if (val) {
+			this._state.show()
+			this._state.html.textContent = "Changed"
+			this._state.html.classList.remove("label-default")
+			this._state.html.classList.add("label-warning")
+		} else {
+			this._state.hide()
+		}
+	}
+	valid(val) {
+		this._valid.html.classList.remove("label-default")
+		this._valid.show()
+		if (val) {
+			this._valid.html.textContent = "Valid"
+			this._valid.html.classList.remove("label-danger")
+			this._valid.html.classList.add("label-success")
+		} else {
+			this._valid.html.textContent = "Invalid"
+			this._valid.html.classList.add("label-danger")
+			this._valid.html.classList.remove("label-success")
+		}
+	}
+
+
 	/* THIS IS A MESS */
 	set value(value) {
 		if (!this._value.validate(value)) {
-			this._td2.html.classList.add("has-error");
+			this.valid(false)
+			this._content.html.classList.add("has-error");
 			return;
 		} else {
-			this._td2.html.classList.remove("has-error");
+			this.valid(true)
+			this._content.html.classList.remove("has-error");
 			this._value.value = value;
 		}
 		if (this._input.html.value != this._value.value) {
 			this._input.html.value = this._value.value
 		}
 		if (this._value.value != this.original) {
-			this._td2.html.classList.add("has-success");
+			this.changed(true)
+			this._content.html.classList.add("has-success");
 		} else {
-			this._td2.html.classList.remove("has-success");
+			this.changed(false)
+			this._content.html.classList.remove("has-success");
 		}
 		this.parent.changed(this) 
 	}

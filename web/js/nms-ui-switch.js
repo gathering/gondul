@@ -52,8 +52,8 @@ class nmsModSwitch extends nmsBox {
 	}
 
 	del(e) {
-		if(confirm("This will delete the switch: " + this.nmsBox._sw)) {
-			this.nmsBox.panel.commit([{'sysname': this.nmsBox.panel.sw, 'deleted': true}]); 
+		if(confirm("This will delete the switch: " + this.nmsBox.panel._sw)) {
+			this.nmsBox.panel.commit([{'sysname': this.nmsBox.panel._sw, 'deleted': true}]); 
 		};
 	}
 	save(e) { 

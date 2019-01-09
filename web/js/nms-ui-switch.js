@@ -10,7 +10,7 @@
  * it to avoid complicating things. 
  * 
  */
-class nmsModSwitch extends nmsPanel {
+class nmsModSwitch extends nmsBox {
 	constructor(sw) {
 		var title;
 		if (sw == undefined) {
@@ -18,9 +18,9 @@ class nmsModSwitch extends nmsPanel {
 		} else {
 			title = "Edit " + sw;
 		}
-		super(title)
+		super("div",{html:{className: "panel-body"}});
 		this._sw = sw;
-		this.nav.add(new nmsString("Adding and editing stuff has immediate effects and blah blah blah, insert sensible help-text here."));
+		//this.nav.add(new nmsString("Adding and editing stuff has immediate effects and blah blah blah, insert sensible help-text here."));
 		this.generateBaseTemplate()
 		this.populate()
 	}
@@ -76,14 +76,18 @@ class nmsModSwitch extends nmsPanel {
 		var template = {}
 		for (var v in swi) {
 			console.assert(this._template[v] instanceof nmsType)
-			this._template[v].value = swi[v];
+			if (swi[v] != null) {
+				this._template[v].value = swi[v];
+			}
 		}
 		for (var v in swm) {
 			if (v == "last_updated") {
 				continue;
 			}
 			console.assert(this._template[v] instanceof nmsType)
-			this._template[v].value = swm[v];
+			if (swm[v] != null) {
+				this._template[v].value = swm[v];
+			}
 		}
 	}
 	populate() {
@@ -103,7 +107,26 @@ class nmsModSwitch extends nmsPanel {
 		this.title = "saw row change on " + row.name + " to " + row.value;
 	}
 	get value() {
-		return this.table.value;
+		var ret = {};
+		for (var idx in this.rows) {
+			ret[idx] = this.rows[idx].value;
+		}
+		return ret;
+	}
+	diff() {
+		var ret = {};
+		var changed = 0;
+		for (var idx in this.rows) {
+			if (this.rows[idx].value != this.rows[idx].original) {
+				ret[idx] = this.rows[idx].value;
+				changed++;
+			}
+		}
+		if (!changed) {
+			return undefined;
+		}
+		ret["sysname"] = this.rows["sysname"].value;
+		return ret;
 	}
 }
 

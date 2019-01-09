@@ -978,151 +978,54 @@ nmsInfoBox.addPanelType("inventoryListing",inventoryListingPanel);
 var switchEditPanel = function () {
 	nmsInfoPanel.call(this,"switchEdit");
 	this.refresh = function (reason) {
-		var swi = [];
-		var swm = [];
-		try {
-			swi = nmsData.switches["switches"][this.sw];
-		} catch(e) {}
-		try {
-			swm = nmsData.smanagement.switches[this.sw];
-		} catch(e) {}
-
-		var domObj = document.createElement("div");
-		var template = {};
-
-		nmsInfoBox._editValues = {};
-		var place;
-		var tags;
-		for (var v in swi) {
-			/*
-			 * Placement and tags needs to be sent and edited
-			 * as plain JSON...
-			 */
-			if (v == "placement") {
-				place = JSON.stringify(swi[v]);
-				template[v] = place;
-				continue;
-			}
-			if (v == "tags") {
-				tags = JSON.stringify(swi[v]);
-				template[v] = tags;
-				continue;
-			}
-			template[v] = nmsInfoBox._nullBlank(swi[v]);
-		}
-		for (var v in swm) {
-			template[v] = nmsInfoBox._nullBlank(swm[v]);
-		}
-		var content = [];
-		for (v in template) {
-			var tmpsw = '\'' + this.sw + '\'';
-			var tmpv = '\'' + v + '\'';
-			var tmphandler = '"nmsInfoBox._editChange(' + tmpsw + ',' + tmpv + ');"';
-			if(v == 'community') {
-				var html = '<input type="password" autocomplete="off" onfocus="this.type = \'text\'" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + '>';
-			}
-			else {
-			var html = '<input type="text" class="form-control" value="' + template[v] + '" id="edit-' + this.sw + '-' + v + '" onchange=' + tmphandler + ' oninput=' + tmphandler + ' ' + (v == 'sysname' || v == 'subnet4' || v == 'subnet6' || v == 'mgmt_v4_gw' || v == 'mgmt_v6_gw' ? "readonly" : "") + '>';
-			}
-			if (v == "placement") {
-				v = "placement <a onclick='var _x = document.getElementById(\"edit-" + this.sw + "-placement\"); _x.value = \"\\\"reset\\\"\"; _x.oninput();' class='pull-right'>Reset</a>";
-			}
-			content.push([v, html]);
-		}
-
-		content.sort();
-
-		var table = nmsInfoBox._makeTable(content);
-		domObj.appendChild(table);
-
-		var outputCont = document.createElement("div");
-		outputCont.id = "edit-output-cont";
-		outputCont.classList.add("collapse");
-		outputCont.innerHTML = "<h5>Request preview</h5>";
-		var output = document.createElement("output");
-		output.id = "edit-output";
-		outputCont.appendChild(output);
-		domObj.appendChild(outputCont);
-
-		var nav = document.createElement("nav");
-		nav.classList.add("nav","nav-pills");
-
-		var submit = document.createElement("button");
-		submit.innerHTML = "Save changes";
-		submit.classList.add("btn", "btn-primary");
-		submit.id = "edit-submit-" + this.sw;
-		submit.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','save');");
-		submit.style = "margin-right: 5px";
-		nav.appendChild(submit);
-
-                var deleteButton = document.createElement("button");
-                deleteButton.innerHTML = "Delete switch";
-                deleteButton.classList.add("btn", "btn-danger");
-                deleteButton.id = "delete-submit-" + this.sw;
-                deleteButton.setAttribute("onclick","nmsInfoBox._windowHandler.doInPanel('" + this.id + "','deleteSwitch');");
-                nav.appendChild(deleteButton);
-
-		var toggleDetails = document.createElement("button");
-		toggleDetails.innerHTML = '<span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>';
-		toggleDetails.classList.add("btn", "btn-default", "pull-right");
-		toggleDetails.dataset.toggle = "collapse";
-		toggleDetails.dataset.target = "#edit-output-cont";
-		toggleDetails.title = "Show request preview";
-		toggleDetails.id = "edit-toggle-details-" + this.sw;
-		nav.appendChild(toggleDetails);
-
-		domObj.appendChild(nav);
-
-		this._render(domObj);
-		if (place) {
-			var pval = document.getElementById("edit-" + this.sw + "-placement");
-			if (pval) {
-				pval.value = place;
+		if (this.box) { return; }
+		this.box = new nmsModSwitch(this.sw);
+		var save = new nmsButton("Save","btn-primary");
+		save.panel = this;
+		save.html.onclick = function(e) { 
+			var diff = this.nmsBox.panel.box.diff()
+			console.log(diff)
+			
+			if (diff != undefined) {
+				$.ajax({
+					type: "POST",
+					url: "/api/write/switches",
+					dataType: "text",
+					data:JSON.stringify([diff]),
+					success: function (data, textStatus, jqXHR) {
+						var result = JSON.parse(data);
+						console.log("hei...")
+						nmsData.invalidate("switches");
+						nmsData.invalidate("smanagement");
+					}
+				});
 			}
 		}
-		if (tags) {
-			var ptags = document.getElementById("edit-" + this.sw + "-tags");
-			if (ptags) {
-				ptags.value = tags;
-			}
+		this.box.add(save)
+		var del = new nmsButton("Delete","btn btn-danger");
+		del.panel = this
+		del.html.onclick = function(e) {
+			if(confirm("This will delete the switch: " + this.nmsBox.panel.sw)) {
+				var myData = [{'sysname': this.nmsBox.panel.sw, 'deleted': true}]; 
+				myData = JSON.stringify(myData);
+				$.ajax({
+					type: "POST", 
+					url: "/api/write/switches",
+					dataType: "text", 
+					data:myData,
+					success: function (data, textStatus, jqXHR) {
+						nmsInfoBox.hide();
+						nmsData.invalidate("switches");
+						nmsData.invalidate("smanagement");
+					}
+				});
+			};
 		}
-
-	};
-	this.save = function () {
-		var myData = nmsInfoBox._editStringify(this.sw);
-		$.ajax({
-			type: "POST",
-			url: "/api/write/switches",
-			dataType: "text",
-			data:myData,
-			success: function (data, textStatus, jqXHR) {
-				var result = JSON.parse(data);
-				if(result.switches_updated.length > 0) { // FIXME unresolved variable switches_addded
-					nmsInfoBox.hide();
-				}
-				nmsData.invalidate("switches");
-				nmsData.invalidate("smanagement");
-			}
-		});
+		this.box.add(del)
+		this.box.attach(this.me)
+		this.box.show()
 	};
 
-        this.deleteSwitch = function () {
-	if(confirm("This will delete the switch: " + this.sw)) {
-                var myData = [{'sysname': this.sw, 'deleted': true}]; 
-                myData = JSON.stringify(myData);
-                $.ajax({
-                        type: "POST", 
-                        url: "/api/write/switches",
-                        dataType: "text", 
-                        data:myData,
-                        success: function (data, textStatus, jqXHR) {
-                                nmsInfoBox.hide();
-                                nmsData.invalidate("switches");
-                                nmsData.invalidate("smanagement");
-                        }
-                });
-        };
-	};
 };
 nmsInfoBox.addPanelType("switchEdit",switchEditPanel);
 

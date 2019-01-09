@@ -63,28 +63,22 @@ foreach my $tmp2 (@tmp) {
 		} else {
 			%placement = %{convertplace($switch{'placement'})};
 		}
-		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
-			$switch{'ip'} = $switch{'mgtmt4'};
-		}
-		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
-			$switch{'secondary_ip'} = $switch{'mgtmt6'};
-		}
 		my ($x1,$x2,$y1,$y2);
 		$x1 = $placement{'x1'};
 		$y1 = $placement{'y1'};
 		$x2 = $placement{'xx'};
 		$y2 = $placement{'yy'};
 		$switch{'placement'} = "(($x1,$y1),($x2,$y2))";
-		
+		my @names;
+		my @values;	
 		map {
 			if (defined ($template{$_})) {
-					$template{$_} = $dbh->quote($switch{$_});
+				push @names,$_;
+				push @values,$dbh->quote($switch{$_});
 			}
 		} keys %switch;
-		
-
-		$nms::web::dbh->do("INSERT INTO SWITCHES (ip, sysname, last_updated, locked, poll_frequency, tags, community, secondary_ip, placement,subnet4,subnet6,distro)  VALUES ($template{'ip'}, $template{'sysname'}, $template{'last_updated'}, $template{'locked'}, $template{'poll_frequency'}, $template{'tags'}, $template{'community'}, $template{'secondary_ip'}, $template{'placement'},$template{'subnet4'},$template{'subnet6'},$template{'distro'});");
-		push @added, $switch{'sysname'};
+		$nms::web::dbh->do("INSERT INTO SWITCHES (" .  join(",",@names) . ")  VALUES (". join(",",@values).");");
+		push @added, $switch{'sysname'}; 
 		oplog("\"" . $switch{'sysname'} . "\"", "Switch added: " . $switch{'sysname'});
 	} else {
 		if (defined($switch{'placement'})) {
@@ -104,12 +98,6 @@ foreach my $tmp2 (@tmp) {
 		}
 		if (defined($switch{'tags'})) {
 			$switch{'tags'} =~ s/'/"/g;
-		}
-		if (not defined($switch{'ip'}) and defined($switch{'mgtmt4'})) {
-			$switch{'ip'} = $switch{'mgtmt4'};
-		}
-		if (not defined($switch{'secondary_ip'}) and defined($switch{'mgtmt6'})) {
-			$switch{'secondary_ip'} = $switch{'mgtmt6'};
 		}
 		my @set;
 		map {

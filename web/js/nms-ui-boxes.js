@@ -176,6 +176,12 @@ class nmsString extends nmsBox {
 		return this.html.textContent;
 	}
 }
+
+class nmsButton extends nmsBox {
+	constructor(text,type = "btn-default") {
+		super("button",{html:{textContent:text,className:"btn "+type,type:"button"}})
+	}
+}
 /*
  * A general-purpose table. It can be created in one go, or
  * as-you-go. 

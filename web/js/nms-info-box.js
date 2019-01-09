@@ -980,48 +980,6 @@ var switchEditPanel = function () {
 	this.refresh = function (reason) {
 		if (this.box) { return; }
 		this.box = new nmsModSwitch(this.sw);
-		var save = new nmsButton("Save","btn-primary");
-		save.panel = this;
-		save.html.onclick = function(e) { 
-			var diff = this.nmsBox.panel.box.diff()
-			console.log(diff)
-			
-			if (diff != undefined) {
-				$.ajax({
-					type: "POST",
-					url: "/api/write/switches",
-					dataType: "text",
-					data:JSON.stringify([diff]),
-					success: function (data, textStatus, jqXHR) {
-						var result = JSON.parse(data);
-						console.log("hei...")
-						nmsData.invalidate("switches");
-						nmsData.invalidate("smanagement");
-					}
-				});
-			}
-		}
-		this.box.add(save)
-		var del = new nmsButton("Delete","btn btn-danger");
-		del.panel = this
-		del.html.onclick = function(e) {
-			if(confirm("This will delete the switch: " + this.nmsBox.panel.sw)) {
-				var myData = [{'sysname': this.nmsBox.panel.sw, 'deleted': true}]; 
-				myData = JSON.stringify(myData);
-				$.ajax({
-					type: "POST", 
-					url: "/api/write/switches",
-					dataType: "text", 
-					data:myData,
-					success: function (data, textStatus, jqXHR) {
-						nmsInfoBox.hide();
-						nmsData.invalidate("switches");
-						nmsData.invalidate("smanagement");
-					}
-				});
-			};
-		}
-		this.box.add(del)
 		this.box.attach(this.me)
 		this.box.show()
 	};

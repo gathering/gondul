@@ -23,6 +23,44 @@ class nmsModSwitch extends nmsBox {
 		//this.nav.add(new nmsString("Adding and editing stuff has immediate effects and blah blah blah, insert sensible help-text here."));
 		this.generateBaseTemplate()
 		this.populate()
+		var save = new nmsButton("Save","btn-primary");
+		save.panel = this;
+		save.html.onclick = this.save;
+		this.add(save)
+		var del = new nmsButton("Delete","btn btn-danger");
+		del.panel = this
+		del.html.onclick = this.del;
+		this.add(del)
+	}
+	commit(data) {
+		$.ajax({
+			type: "POST", 
+			url: "/api/write/switches",
+			dataType: "text",
+			nmsBox:this,
+			data:JSON.stringify(data),
+			success: function (data, textStatus, jqXHR) {
+				var msg = new nmsString("Changed...");
+				msg.attach(this.nmsBox._root);
+				msg.show()
+				this.nmsBox.destroy()
+				//nmsInfoBox.hide();
+				nmsData.invalidate("switches");
+				nmsData.invalidate("smanagement");
+			}
+		});
+	}
+
+	del(e) {
+		if(confirm("This will delete the switch: " + this.nmsBox._sw)) {
+			this.nmsBox.panel.commit([{'sysname': this.nmsBox.panel.sw, 'deleted': true}]); 
+		};
+	}
+	save(e) { 
+		var diff = this.nmsBox.panel.diff()
+		if (diff != undefined) {
+			this.nmsBox.panel.commit([diff])
+		}
 	}
 	/* Pretty sure that the type-thing is OK, but what I want is to
 	 * generate a nmsTemplate or something that can be used to get/set

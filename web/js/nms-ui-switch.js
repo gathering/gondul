@@ -196,12 +196,14 @@ class nmsEditRow extends nmsBox {
 		input.row = this;
 		if (value.ro) {
 			input.html.disabled = true;
+			input.html.title = "Read/only attribute";
 		}
 		if (value instanceof nmsTypeSecret) {
 			input.html.type = "password"
 			input.html.autocomplete = "off"
 			input.html.onfocus = function f() { this.type = "text" }
 			input.html.oninput = function f() { this.type = "text" }
+			input.html.onblur = function f() { this.type = "password" }
 		}
 		input.html.onchange = function() {
 			this.nmsBox.row.value = this.value

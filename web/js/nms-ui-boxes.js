@@ -214,13 +214,9 @@ class nmsTable extends nmsBox {
 		var td1;
 		var td2;
 		tr = new nmsBox("tr");
-		tr.html.className = content[0].toLowerCase().replace(/[^a-z0-9_]/g,"");
 		for (var x in content) {
 			var td = new nmsBox("td");
 			var child = content[x];
-			if (x == 0) {
-				td.html.classList.add("left");
-			}
 			if (child instanceof nmsBox) {
 				td.add(child);
 			} else {

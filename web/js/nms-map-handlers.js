@@ -387,11 +387,11 @@ function tempInfo(sw)
 	var ret = new handlerInfo("temp","Temperature");
 	ret.why = "Temp";
 	ret.score = 0;
-	ret.data[0].value = "N/A";
+	ret.data[0].value = undefined;
 	if (testTree(nmsData,['switchstate','switches',sw,'temp'])) {
 		var temp = nmsData.switchstate.switches[sw].temp;
 		if (temp == undefined) {
-			ret.data[0].value = "N/A";
+			ret.data[0].value = undefined;
 		} else {
 			temp = parseInt(temp);
 			ret.data[0].value = temp + "°C";
@@ -475,7 +475,7 @@ function pingInfo(sw)
 			ret.score = 900;
 		}
 	} else {
-		ret.data[0].value = "N/A - no ping replies";
+		ret.data[0].value = "No ping replies";
 		ret.why = "No ping replies";
 		ret.score = 999;
 	}

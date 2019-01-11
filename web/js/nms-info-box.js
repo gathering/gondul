@@ -937,34 +937,13 @@ var switchSummaryPanel = function() {
 		this.refresh();
 	};
 	this.refresh = function(reason) {
-		var content = [];
-		if (this.sw == false) {
-			console.log("ugh, cleanup failed?");
+		if (this.box) {
+			this.box.refresh(); 
 			return;
 		}
-		var topper = document.createElement("div");
-		for ( var h in handlers ) {
-			if (handlers[h].getInfo != undefined) {
-				var tmp = handlers[h].getInfo(this.sw);
-				for (var x in tmp.data) {
-					if (tmp.data[x].value != undefined) {
-						var d = "<div class=\"clickable\" onclick='nmsInfoBox.setLegendPick(\""+ handlers[h].tag + "\", " + x + ");'>" + tmp.data[x].value + '</div>';
-						content.push([tmp.data[x].description, d]);
-					}
-				}
-			}
-		}
-
-		var contentCleaned = [];
-		for(var i in content) {
-			if(content[i][1] == '' || content[i][1] == null)
-				continue;
-			contentCleaned.push(content[i]);
-		}
-		var table = nmsInfoBox._makeTable(contentCleaned);
-		topper.appendChild(table);
-
-		this._render(topper);
+		this.box = new nmsSwitchSummary(this.sw);
+		this.box.attach(this.me)
+		this.box.show()
 	};
 };
 nmsInfoBox.setLegendPick = function(tag,id) {

@@ -65,12 +65,8 @@ class nmsOplogInput extends nmsBox {
 			this.nmsBox.searchbox.oninput();
 		}
 		this.add(this._systems)
-		// This is to provide spacing.... should probably be solved in CSS.
-		// If this annoys you, then fix it.
-		this.add(new nmsBox("p",{html:{textContent:" ",style:{display: "inline"}}}))
 		this._entry = new nmsBox("input", {html:{className:"form-control",type:"text",size:"30",placeholder:"Log entry"}});
 		this.add(this._entry)
-		this.add(new nmsBox("p",{html:{textContent:" ",style:{display: "inline"}}}))
 		var button = new nmsBox("button",{html:{className:"btn btn-default",type:"button"}});
 		button.html.textContent = "Log";
 		button.container = this;

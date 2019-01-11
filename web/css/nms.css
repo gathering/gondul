@@ -66,6 +66,9 @@ h1.map-mode-title {
 .logbook-mini p {
 	margin: 0
 }
+.table p {
+	margin: 0
+}
 .nightmode .logbook-mini  {
 	background-color: rgba(0,0,0,0.1);
 	text-shadow: -4px -4px 5px black,-4px 0px 5px black,0px -4px 5px black,0px 0px 5px black,4px 4px 5px black,4px 0px 5px black,0px 4px 5px black;
@@ -137,3 +140,10 @@ div.map-mode-legend button {
 	z-index: 120;
 }
 
+button,input {
+	margin-left: 1px;
+	margin-left: 2px;
+}
+.form-control[disabled] {
+	background-color: darkkhaki;
+}

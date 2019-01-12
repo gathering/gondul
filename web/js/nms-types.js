@@ -44,7 +44,7 @@ class nmsType {
 		}
 	}
 	initial(v) {
-		this.value = v;
+		this._value = this._valueParse(v);
 		if(this.priority == nmsPriority.newOnly) {
 			this.ro = true;
 		}
@@ -160,6 +160,18 @@ class nmsTypePort extends nmsType { }
 class nmsTypeSysname extends nmsType {
 	get _defaultPriority() {
 		return nmsPriority.newOnly;
+	}
+	validate(input) {
+		if (this.ro) {
+			throw "Trying to validate a r/o field"
+		}
+		var x = testTree(nmsData,["switches","switches",input])
+		if (x) {
+			this.validationReason = "Switch already exists"
+		} else {
+			this.validationReason = "OK: " + input
+		}
+		return !x;
 	}
 }
 class nmsTypeSysnameReference extends nmsType {

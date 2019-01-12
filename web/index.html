@@ -47,13 +47,12 @@
 	      </a>
 	      <ul class="dropdown-menu" role="menu">
 		<li class="gondul-is-private dropdown-header">Switches</li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addSwitch')">Add switch</a></li>
-      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('addNetwork')">Add network</a></li>
-      <li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('listNetwork')">List networks</a></li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
-	  	<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
-      <li class="gondul-is-private divider"> </li>
-		<li class="divider"> </li>
+		<li class="gondul-is-private"><a href="#" onclick="new nmsNewSwitch().show();">Add switch</a></li>
+		<li class="gondul-is-private"><a href="#" onclick="new nmsNewNet().show();">Add network</a></li>
+		<li class="gondul-is-private"><a href="#" onclick="nmsInfoBox.showWindow('listNetwork')">List networks</a></li>
+		<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(true);">Enable switch moving</a></li>
+		<li class="gondul-is-private"><a href="#" onclick="nmsMap.moveSet(false);">Disable switch moving</a></li>
+		<li class="gondul-is-private divider"> </li>
 		<li class="dropdown-header">Time</li>
 		<li><a href="#" onclick="toggleLayer('nowPickerBox');nmsTime.startNowPicker();">Travel in time</a></li>
 		<li><a href="#" onclick="nmsTime.replayEvent();" title="Replay from opening 120 minutes per second">Replay event</a></li>
@@ -276,7 +275,8 @@
 	      </div>
 	    </div>
 	  </div>
-	  <div id="info-box-container" class="col-sm-8 col-md-6 col-lg-5 hidden" style="position: absolute; z-index: 120;">
+	  <div id="genericPanelContainer" style="ma-width: 60%; position: absolute; display: grid; grid-template-coumns: repeat(auto-fit,minmax(30%,100%));grid-gap: 10px; z-index: 120;">
+		  <div id="info-box-container" class="hidden" style="grid-column: 1 / auto; max-width: 700px; min-width: 500px;"> </div>
 	  </div>
 	</div>
 

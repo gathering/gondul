@@ -10,17 +10,27 @@
  * it to avoid complicating things. 
  * 
  */
-class nmsModSwitch extends nmsBox {
-	constructor(sw) {
-		var title;
-		if (sw == undefined) {
-			title = "Add new switch"
-		} else {
-			title = "Edit " + sw;
-		}
+
+class nmsNewSwitch extends nmsPanel {
+	constructor() {
+		super("Add new switch")
+		this.add(new nmsModSwitch(undefined))
+	}
+}
+class nmsNewNet extends nmsPanel {
+	constructor() {
+		super("Add new network")
+		this.add(new nmsModNet(undefined))
+	}
+}
+
+class nmsModThing extends nmsBox {
+	constructor(data) {
 		super("div",{html:{className: "panel-body"}});
-		this._sw = sw;
-		//this.nav.add(new nmsString("Adding and editing stuff has immediate effects and blah blah blah, insert sensible help-text here."));
+		this.identifier = data.identifier;
+		this.invalidate = data.invalidate;
+		this.api = data.api;
+		this.item = data.item;
 		this.generateBaseTemplate()
 		this.populate()
 		var save = new nmsButton("Save","btn-primary");
@@ -35,7 +45,7 @@ class nmsModSwitch extends nmsBox {
 	commit(data) {
 		$.ajax({
 			type: "POST", 
-			url: "/api/write/switches",
+			url: this.api,
 			dataType: "text",
 			nmsBox:this,
 			data:JSON.stringify(data),
@@ -45,15 +55,16 @@ class nmsModSwitch extends nmsBox {
 				msg.show()
 				this.nmsBox.destroy()
 				//nmsInfoBox.hide();
-				nmsData.invalidate("switches");
-				nmsData.invalidate("smanagement");
+				for (var x of this.nmsBox.invalidate) {
+					nmsData.invalidate(x);
+				}
 			}
 		});
 	}
 
 	del(e) {
-		if(confirm("This will delete the switch: " + this.nmsBox.panel._sw)) {
-			this.nmsBox.panel.commit([{'sysname': this.nmsBox.panel._sw, 'deleted': true}]); 
+		if(confirm("This will delete the " + this.typeName + ":" + this.nmsBox.panel.item)) {
+			this.nmsBox.panel.commit([{'sysname': this.nmsBox.panel.item, 'deleted': true}]); 
 		};
 	}
 	save(e) { 
@@ -86,51 +97,9 @@ class nmsModSwitch extends nmsBox {
 	 * 
 	 * Which means bugs.
 	 */
-	generateBaseTemplate() {
-		this._template = {
-			sysname: new nmsTypeSysname("Unique systemname/switch name. Only required field.  Read/only on existing equipment." ),
-			mgmt_v4_addr: new nmsTypeIP("Management address IPv4"),
-			mgmt_v6_addr: new nmsTypeIP("Management address IPv6"),
-			mgmt_vlan: new nmsTypeNetwork("Management VLAN"),
-			traffic_vlan: new nmsTypeNetwork("Traffic VLAN"),
-			distro_name: new nmsTypeSysnameReference("Distro switch upstream of this system. Required for provisioning."),
-			distro_phy_port: new nmsTypePort("Name of port we connect to at the distro switch. Used for provisioning, among other things."),
-			poll_frequency: new nmsTypeInterval("Poll frequency for SNMP (will use default from backend)"),
-			community: new nmsTypeSecret("SNMP community (will use default from backend)"),
-			placement: new nmsTypePlace("Map placement (If following a regular naming scheme, the backend will place it poperly, otherwise a random place will be chose)"),
-			tags: new nmsTypeTags("Additional tags in JSON text array format. Can be anything. Used to provide a simple escape hatch mechanism to tag systems.")
-	      }
-	}
-	_populateTemplate(sw) {
-		var swi = [];
-		var swm = [];
-		try {
-			swi = nmsData.switches["switches"][this._sw];
-		} catch(e) {}
-		try {
-			swm = nmsData.smanagement.switches[this._sw];
-		} catch(e) {}
-
-		var template = {}
-		for (var v in swi) {
-			console.assert(this._template[v] instanceof nmsType)
-			if (swi[v] != null) {
-				this._template[v].initial(swi[v]);
-			}
-		}
-		for (var v in swm) {
-			if (v == "last_updated") {
-				continue;
-			}
-			console.assert(this._template[v] instanceof nmsType)
-			if (swm[v] != null) {
-				this._template[v].initial(swm[v]);
-			}
-		}
-	}
 	populate() {
-		if (this._sw != undefined) {
-			this._populateTemplate(this._sw);
+		if (this.item != undefined) {
+			this._populateTemplate(this.item);
 		}
 		this.table = new nmsTable();
 		this.rows = {}
@@ -163,7 +132,7 @@ class nmsModSwitch extends nmsBox {
 		if (!changed) {
 			return undefined;
 		}
-		ret["sysname"] = this.rows["sysname"].value;
+		ret[this.identifier] = this.rows[this.identifier].value;
 		return ret;
 	}
 }
@@ -268,3 +237,81 @@ class nmsEditRow extends nmsBox {
 		this.parent.changed(this) 
 	}
 }
+class nmsModSwitch extends nmsModThing {
+	constructor(sw) {
+		super({item: sw, identifier: "sysname", invalidate: ["switches","smanagement"], api: "/api/write/switches"})	
+	}
+	generateBaseTemplate() {
+		this._template = {
+			sysname: new nmsTypeSysname("Unique systemname/switch name. Only required field.  Read/only on existing equipment." ),
+			mgmt_v4_addr: new nmsTypeIP("Management address IPv4"),
+			mgmt_v6_addr: new nmsTypeIP("Management address IPv6"),
+			mgmt_vlan: new nmsTypeNetwork("Management VLAN"),
+			traffic_vlan: new nmsTypeNetwork("Traffic VLAN"),
+			distro_name: new nmsTypeSysnameReference("Distro switch upstream of this system. Required for provisioning."),
+			distro_phy_port: new nmsTypePort("Name of port we connect to at the distro switch. Used for provisioning, among other things."),
+			poll_frequency: new nmsTypeInterval("Poll frequency for SNMP (will use default from backend)"),
+			community: new nmsTypeSecret("SNMP community (will use default from backend)"),
+			placement: new nmsTypePlace("Map placement (If following a regular naming scheme, the backend will place it poperly, otherwise a random place will be chose)"),
+			tags: new nmsTypeTags("Additional tags in JSON text array format. Can be anything. Used to provide a simple escape hatch mechanism to tag systems.")
+	      }
+	}
+	_populateTemplate(sw) {
+		var swi = [];
+		var swm = [];
+		try {
+			swi = nmsData.switches["switches"][sw];
+			swm = nmsData.smanagement.switches[sw];
+		} catch(e) {}
+
+		var template = {}
+		for (var v in swi) {
+			console.assert(this._template[v] instanceof nmsType)
+			if (swi[v] != null) {
+				this._template[v].initial(swi[v]);
+			}
+		}
+		for (var v in swm) {
+			if (v == "last_updated") {
+				continue;
+			}
+			console.assert(this._template[v] instanceof nmsType)
+			if (swm[v] != null) {
+				this._template[v].initial(swm[v]);
+			}
+		}
+	}
+}
+
+class nmsModNet extends nmsModThing {
+	constructor(net) {
+		super({item: net, identifier: "name", invalidate: ["networks","smanagement"], api: "/api/write/networks"})	
+	}
+	generateBaseTemplate() {
+		this._template = {
+			name: new nmsTypeNetwork("Unique networkname. Only required field. Read/only on existing nets."),
+			gw4: new nmsTypeIP("Gateway address, IPv4"),
+			gw6: new nmsTypeIP("Gateway address, IPv6"),
+			subnet4: new nmsTypeIP("Subnet, IPv4"),
+			subnet6: new nmsTypeIP("Subnet, IPv6"),
+			router: new nmsTypeSysnameReference("Router where net is terminated. E.g.: r1.noc for floor traffic nets"),
+			tags: new nmsTypeTags("Additional tags in JSON text array format. Can be anything. Used to provide a simple escape hatch mechanism to tag systems.")
+	      }
+	}
+	_populateTemplate(net) {
+		var nets = [];
+		try {
+			nets = nmsData.networks["networks"][net];
+		} catch(e) {}
+
+		var template = {}
+		for (var v in nets) {
+			console.assert(this._template[v] instanceof nmsType)
+			if (nets[v] != null) {
+				this._template[v].initial(nets[v]);
+			}
+		}
+	}
+}
+
+

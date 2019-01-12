@@ -247,7 +247,7 @@ class nmsTable extends nmsBox {
  */
 class nmsPanel extends nmsBox{
 	constructor(title){ 
-		super("div",{html: { className: "col-sm-8 col-md-6 col-lg-5 genericBox"}});
+		super("div",{html:{style:{gridColumn: 2}}});
 		this._topBox = new nmsBox("div",{ html: { className: "panel panel-default"}});
 		this._body = new nmsBox("div",{html:{className: "panel-body"}});
 		this.nav = new nmsBox("div",{html:{className: "panel-body"}});
@@ -256,7 +256,12 @@ class nmsPanel extends nmsBox{
 		this._topBox.add(this._body);
 		super.add(this._topBox);
 	}
-	attach(root = document.getElementById("metaContainer")) {
+	attach(root = document.getElementById("genericPanelContainer")) {
+		try {
+			var x = parseInt(root.lastElementChild.style.gridColumnStart);
+			this.html.style.gridColumnStart = x+1;
+		} catch(e) {
+		}
 		super.attach(root)
 	}
 	show() {

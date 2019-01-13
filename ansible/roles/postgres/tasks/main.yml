@@ -1,3 +1,6 @@
+# Postgres 
+# https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+#
 - name: Install db-packages
   apt:
       name: "{{ item }}"
@@ -28,12 +31,27 @@
   become_user: postgres
   postgresql_db:
     name: nms
+  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  become: true
+  become_user: postgres
+  vars:
+    ansible_ssh_pipelining: true
 - name: Ensure a valid postgres-user
   become_user: postgres
   postgresql_user:
      db: nms
      name: nms
      password: risbrod
+  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  become: true
+  become_user: postgres
+  vars:
+    ansible_ssh_pipelining: true
 - name: Import SQL
   become_user: postgres
   shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql
+  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  become: true
+  become_user: postgres
+  vars:
+    ansible_ssh_pipelining: true

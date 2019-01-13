@@ -3,12 +3,12 @@
       name: "{{ item }}"
       state: present
   with_items:
-      - postgresql-9.4
+      - postgresql
       - python-psycopg2
       - sudo
 - name: Drop postgresql-config
   copy:
-      dest: /etc/postgresql/9.4/main/postgresql.conf
+      dest: /etc/postgresql/9.6/main/postgresql.conf
       src: postgresql.conf
 - name: Add db to hosts
   lineinfile:

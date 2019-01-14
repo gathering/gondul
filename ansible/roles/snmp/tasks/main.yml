@@ -1,8 +1,10 @@
-- file: 
+- name: Create data directory
+  file:
     path: /opt/gondul/data
     state: directory
     mode: 0755
-- stat:
+- name: register mibdir
+  stat:
     path: /opt/gondul/data/mibs
   register: mibdir
 - name: Get mibs

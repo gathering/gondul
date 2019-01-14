@@ -84,5 +84,6 @@
   ignore_errors: true
   notify: restart apache
 
-- cpanm:
+- name: Install InfluxDB module
+  cpanm:
     name: AnyEvent::InfluxDB

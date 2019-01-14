@@ -1,4 +1,4 @@
-# Postgres 
+# Postgres
 # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
 #
 - name: Install db-packages
@@ -26,7 +26,6 @@
 - name: Make postgres-db
   postgresql_db:
     name: nms
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:
@@ -36,14 +35,12 @@
      db: nms
      name: nms
      password: risbrod
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:
     ansible_ssh_pipelining: true
 - name: Import SQL
   shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:

@@ -1,11 +1,7 @@
 - name: Install db-packages
   apt:
-      name: "{{ item }}"
+      name: ['postgresql', 'python-psycopg2', 'sudo']
       state: present
-  with_items:
-      - postgresql
-      - python-psycopg2
-      - sudo
 - name: Drop postgresql-config
   copy:
       dest: /etc/postgresql/9.6/main/postgresql.conf

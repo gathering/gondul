@@ -6,10 +6,10 @@
   git: repo={{ git_repo }} dest=/opt/gondul update=no accept_hostkey=yes version={{ git_branch }}
 
 - name: Install basic packages
-  action: >
-    {{ ansible_pkg_mgr }} name={{ item }} state=present update_cache=yes
-  with_items:
-    - curl
-    - vim
-    - git
-    - iptables-persistent
+  apt:
+      name: [
+          'curl',
+          'vim',
+          'git',
+          'iptables-persistent']
+      state: present

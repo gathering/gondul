@@ -1,7 +1,16 @@
 ---
 - name: restart apache
-  service: name=apache2 state=restarted
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: apache2
+
 - name: restart varnish
-  service: name=varnish state=restarted
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: varnish
+
 - name: reload systemd
-  command: systemctl daemon-reload
+  systemd:
+    daemon_reload: yes

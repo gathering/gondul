@@ -1,17 +1,13 @@
-# Postgres 
+# Postgres
 # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
 #
 - name: Install db-packages
   apt:
-      name: "{{ item }}"
+      name: ['postgresql', 'python-psycopg2', 'sudo']
       state: present
-  with_items:
-      - postgresql-9.4
-      - python-psycopg2
-      - sudo
 - name: Drop postgresql-config
   copy:
-      dest: /etc/postgresql/9.4/main/postgresql.conf
+      dest: /etc/postgresql/9.6/main/postgresql.conf
       src: postgresql.conf
 - name: Add db to hosts
   lineinfile:
@@ -28,29 +24,23 @@
      state: present
      line: "{{ whoami.stdout }} ALL=(postgres) NOPASSWD: ALL"
 - name: Make postgres-db
-  become_user: postgres
   postgresql_db:
     name: nms
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:
     ansible_ssh_pipelining: true
 - name: Ensure a valid postgres-user
-  become_user: postgres
   postgresql_user:
      db: nms
      name: nms
      password: risbrod
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:
     ansible_ssh_pipelining: true
 - name: Import SQL
-  become_user: postgres
   shell: psql nms < /opt/gondul/ansible/roles/postgres/files/schema.sql
-  # https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   become: true
   become_user: postgres
   vars:

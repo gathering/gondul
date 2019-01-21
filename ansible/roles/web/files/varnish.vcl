@@ -3,12 +3,12 @@
 vcl 4.0;
 
 backend default {
-    .host = "localhost";
+    .host = "::1";
     .port = "8080";
 }
 
 backend influx {
-    .host = "localhost";
+    .host = "::1";
     .port = "8086";
 }
 

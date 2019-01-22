@@ -16,9 +16,9 @@ objects = {}
 
 
 def getEndpoint(endpoint):
-    r = requests.get(f"http://localhost:80/api/{endpoint}")
+    r = requests.get("http://localhost:80/api/{}".format(endpoint))
     if r.status_code != 200:
-        raise Exception(f"Bad status code for endpoint {endpoint}: {r.status_code}")
+        raise Exception("Bad status code for endpoint {}: {}".format(endpoint, r.status_code))
     return r.json()
 
 
@@ -56,9 +56,9 @@ def root_get(path):
         template = env.get_template(path)
         body = template.render(objects=objects, options=request.args)
     except TemplateNotFound:
-        return f'Template "{path}" not found\n', 404
+        return 'Template "{}" not found\n'.format(path), 404
     except Exception as err:
-        return f'Templating of "{path}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{err}\n----\n\n{traceback.format_exe()}\n', 400
+        return 'Templating of "{}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{}\n----\n\n{}\n'.format(path, err, traceback.format_exc()), 400
     return body, 200
 
 
@@ -70,7 +70,7 @@ def root_post(path):
         template = env.from_string(content.decode("utf-8"))
         body = template.render(objects=objects, options=request.args)
     except Exception as err:
-        return f'Templating of "{path}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{err}\n----\n\n{traceback.format_exe()}\n', 400
+        return 'Templating of "{}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{}\n----\n\n{}\n'.format(path, err, traceback.format_exc()), 400
     return body, 200
 
 

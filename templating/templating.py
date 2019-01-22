@@ -62,7 +62,7 @@ def root_get(path):
     return body, 200
 
 
-@app.route("/<path>", methods=["POST", "PUT"])
+@app.route("/<path>", methods=["POST"])
 def root_post(path):
     updateData()
     try:

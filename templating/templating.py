@@ -1,115 +1,89 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
-import requests,traceback
-from jinja2 import Template,Environment,FileSystemLoader,TemplateNotFound
-import json
+import argparse
+import traceback
+import sys
+
 import netaddr
-import http.server
-from enum import Enum
+import requests
+
+from flask import Flask, request
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 endpoints = "read/networks read/oplog read/snmp read/switches-management public/distro-tree public/config public/dhcp public/dhcp-summary public/ping public/switches public/switch-state".split()
-objects = dict()
+
+objects = {}
+
 
 def getEndpoint(endpoint):
-    r = requests.get("http://localhost:80/api/%s" % endpoint)
-    if (r.status_code != 200):
-        raise Exception("Bad status code for endpoint %s: %s" % (endpoint, r.status_code))
+    r = requests.get("http://localhost:80/api/{}".format(endpoint))
+    if r.status_code != 200:
+        raise Exception("Bad status code for endpoint {}: {}".format(endpoint, r.status_code))
     return r.json()
+
 
 def updateData():
     for a in endpoints:
         objects[a] = getEndpoint(a)
 
-def netmask(ip):
-    return netaddr.IPNetwork(ip).netmask
-def cidr(ip):
-    return netaddr.IPNetwork(ip).prefixlen
-def networkId(ip):
-    return netaddr.IPNetwork(ip).ip
-def getFirstDhcpIp(ip):
-    return netaddr.IPNetwork(ip)[3]
-def getLastDhcpIp(ip):
-    return netaddr.IPNetwork(ip)[-1]
-def getDistro(src):
-    return src.split(":")[0]
-def getPort(src):
-    return src.split(":")[1]
-def getFirstFapIp(ip):
-    return netaddr.IPNetwork(ip)[netaddr.IPNetwork(ip).size/2]
 
-env = Environment(loader=FileSystemLoader(['templates/','/opt/gondul/data/templates', '/opt/gondul/web/templates']), trim_blocks=True)
+env = Environment(loader=FileSystemLoader([]), trim_blocks=True)
 
-env.filters["netmask"] = netmask
-env.filters["cidr"] = cidr
-env.filters["networkId"] = networkId
-env.filters["getFirstDhcpIp"] = getFirstDhcpIp
-env.filters["getLastDhcpIp"] = getLastDhcpIp
-env.filters["agentDistro"] = getDistro
-env.filters["agentPort"] = getPort
-env.filters["getFirstFapIP"] = getFirstFapIp
+env.filters["netmask"] = lambda ip: netaddr.IPNetwork(ip).netmask
+env.filters["cidr"] = lambda ip: netaddr.IPNetwork(ip).prefixlen
+env.filters["networkId"] = lambda ip: netaddr.IPNetwork(ip).ip
+env.filters["getFirstDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[3]
+env.filters["getLastDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[-1]
+env.filters["agentDistro"] = lambda src: src.split(":")[0]
+env.filters["agentPort"] = lambda src: src.split(":")[1]
+env.filters["getFirstFapIP"] = lambda ip: netaddr.IPNetwork(ip)[netaddr.IPNetwork(ip).size / 2]
 
-class Mode(Enum):
-    Get = 1
-    Post = 2
+app = Flask(__name__)
 
-class MyHandler(http.server.BaseHTTPRequestHandler):
 
-    options = dict()
+@app.after_request
+def add_header(response):
+    if response.status_code == 200:
+        response.cache_control.max_age = 5
+        response.cache_control.s_maxage = 1
+    return response
 
-    def parse_options(self):
-        self.url = self.path[1:]
-        self.options = dict()
-        if self.url.find("?") != -1:
-            (self.url, tmpoptions) = self.url.split("?")
-            tmptuples = tmpoptions.split("&")
-            for a in tmptuples:
-                (x,y) = a.split("=")
-                self.options[x] = y
 
-    def generic(self, mode):
-        updateData()
-        self.parse_options()
-        body = ""
-        try:
-            if mode == Mode.Get:
-                template = env.get_template(self.url)
-            elif mode == Mode.Post:
-                length = self.headers.get('content-length')
-                if not length:
-                    length = 0
-                content = self.rfile.read(int(length)).decode('UTF-8')
-                template = env.from_string(content)
-            else:
-                raise Exception("Invalid mode")
+@app.route("/<path>", methods=["GET"])
+def root_get(path):
+    updateData()
+    try:
+        template = env.get_template(path)
+        body = template.render(objects=objects, options=request.args)
+    except TemplateNotFound:
+        return 'Template "{}" not found\n'.format(path), 404
+    except Exception as err:
+        return 'Templating of "{}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{}\n----\n\n{}\n'.format(path, err, traceback.format_exc()), 400
+    return body, 200
 
-            body = template.render(objects=objects, options=self.options)
-            self.send_response(200)
-        except TemplateNotFound as err:
-           body = "Template \"%s\" not found\n" % self.url
-           self.send_response(404)
-        except Exception as err:
-            body = ("Templating of \"%s\" failed to render. Most likely due to an error in the template. Error transcript:\n\n%s\n----\n\n%s\n" % (self.url, err, traceback.format_exc()))
-            if mode == Mode.Get:
-                self.send_response(400)
-            else:
-                self.send_response(500)
-        finally:
-            self.send_header('Cache-Control','max-age=5, s-maxage=1')
-        body = body.encode('UTF-8')
-        self.send_header('Content-Length', int(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-        self.wfile.flush()
-        
-    def do_GET(self):
-        self.generic(Mode.Get) 
 
-    def do_POST(self):
-        self.generic(Mode.Post) 
+@app.route("/<path>", methods=["POST"])
+def root_post(path):
+    updateData()
+    try:
+        content = request.stream.read(int(request.headers["Content-Length"]))
+        template = env.from_string(content.decode("utf-8"))
+        body = template.render(objects=objects, options=request.args)
+    except Exception as err:
+        return 'Templating of "{}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{}\n----\n\n{}\n'.format(path, err, traceback.format_exc()), 400
+    return body, 200
 
-def run(server_class=http.server.HTTPServer, handler_class=http.server.BaseHTTPRequestHandler):
-    server_address = ('localhost', 8081)
-    httpd = server_class(server_address, handler_class)
-    httpd.serve_forever() 
 
-run(handler_class=MyHandler)
+parser = argparse.ArgumentParser(description="Process templates for gondul.", add_help=False)
+parser.add_argument("-t", "--templates", type=str, nargs="+", help="location of templates")
+parser.add_argument("-h", "--host", type=str, default="127.0.0.1", help="host address")
+parser.add_argument("-p", "--port", type=int, default=8080, help="host port")
+parser.add_argument("-d", "--debug", action="store_true", help="enable debug mode")
+
+args = parser.parse_args()
+env.loader.searchpath = args.templates
+
+if not sys.argv[1:]:
+    parser.print_help()
+
+app.run(host=args.host, port=args.port, debug=args.debug)

@@ -36,9 +36,13 @@ deles yttligere opp om det ønskes, men det blir mye små-repoer.
 Navn:
 
 gondul-templating
+
 gondul-frontend
+
 gondul-api
+
 gondul-collectors
+
 gondul
 
 Repoet som da heter "gondul" blir "master-repo" og et slags

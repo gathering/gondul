@@ -62,17 +62,16 @@ The core API accepts N or more metrics in a single post.
 
 The core of the API will accept 3 fields:
 
-- "source" - a text-string identifying the source of the data, e.g. "dhcp",
+- `source` - a text-string identifying the source of the data, e.g. "dhcp",
   "ping", "snmp". This should be sent either as a json text field, or as
   part of the url. E.g., allow posting to
-  https://user:pass@gondul/api/write/gtimes/dhcp . The benefit of linking
-  this with the URL is that it will simplify authentication in the future,
-  allowing "write-only" accounts.
-- "metadata" - this is a generic JSON object that contain a number of fields
-  that will be indexed upon or used by enrichment. Example: { "server":
-  "dhcpserver1", "time": "2019-01-05T15:00:10Z" }. 
-  "time": "2019-01-05T12:00:10Z", "
-- "data" - an array of json-objects. Each object in the array must either
+  ``https://user:pass@gondul/api/write/gtimes/dhcp`` . The benefit of
+  linking this with the URL is that it will simplify authentication in the
+  future, allowing "write-only" accounts.
+- `metadata` - this is a generic JSON object that contain a number of fields
+  that will be indexed upon or used by enrichment. Example: ``{ "server":
+  "dhcpserver1", "time": "2019-01-05T15:00:10Z" }``. 
+- `data` - an array of json-objects. Each object in the array must either
   have a "time" field or the "metadata"-field must have a time field.
 
 

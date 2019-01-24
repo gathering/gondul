@@ -28,22 +28,17 @@ Nye repo
 - collectors - inkluderer collectors/
 - gondul/ - inkluderer ansible, dokumentasjon, default config.
 
-
 På sikt er målet at API er det eneste som snakker med postgres, men inntill
 videre vil fortsatt collectors snakke direkte. Collectors kan i prinsippet
 deles yttligere opp om det ønskes, men det blir mye små-repoer.
 
 Navn:
 
-gondul-templating
-
-gondul-frontend
-
-gondul-api
-
-gondul-collectors
-
-gondul
+- gondul-templating
+- gondul-frontend
+- gondul-api
+- gondul-collectors
+- gondul
 
 Repoet som da heter "gondul" blir "master-repo" og et slags
 integrasjonsrepo. Det kan potensielt bli delt mer på sikt for å skille
@@ -59,6 +54,9 @@ settes opp for å levere statisk innhold for front og i dag levere CGI for
 API, templating settes opp på egen port - Varnish vil da sørge for faktisk
 ruting. 
 
-Enkelt-repoer vil det være naturlig at leverer sin egen installasjonsrutine.
-På sikt: Debian-pakker. Her er det viktigere for noen komponenter enn andre.
+Alt av "deployment" legges i "gondul"-repoet, men hver enkelt repo kan også
+ønske å levere rutiner for isolert installasjon av typen som hører hjemme i
+for eksempel en python-pakke eller debian-pakke.
+
+
 

@@ -147,6 +147,9 @@ The first implementation would be a "hard-coded" perl API since that is what
 we already have. There is no current  plan to migrate other producers to the
 new API at this time.
 
+The first implementation would not offer much in the way of generic storage
+for other users than the dhcp collector.
+
 Since particularly the ping collector can produce quite a lot of data, some
 care might be needed to support it. This will most likely require a
 different apporach than the old CGI-based perl way of doing things. 

@@ -1,9 +1,7 @@
 - name: Install apt-packages
   apt:
-      name: "{{ item }}"
+      name: 'apt-transport-https'
       state: present
-  with_items:
-    apt-transport-https
 
 - name: Import InfluxDB GPG signing key
   apt_key: url=https://repos.influxdata.com/influxdb.key state=present

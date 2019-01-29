@@ -1,39 +1,38 @@
 - name: Install front-packages
   apt:
-      name: "{{ item }}"
+      name: [
+          'libcapture-tiny-perl',
+          'libcommon-sense-perl',
+          'libdata-dumper-simple-perl',
+          'libdbd-pg-perl',
+          'libdbi-perl',
+          'libdigest-perl',
+          'libgd-perl',
+          'libgeo-ip-perl',
+          'libhtml-parser-perl',
+          'libhtml-template-perl',
+          'libjson-perl',
+          'libjson-xs-perl',
+          'libnetaddr-ip-perl',
+          'libnet-cidr-perl',
+          'libnet-ip-perl',
+          'libnet-oping-perl',
+          'libnet-rawip-perl',
+          'libsnmp-perl',
+          'libsocket6-perl',
+          'libsocket-perl',
+          'libswitch-perl',
+          'libtimedate-perl',
+          'perl',
+          'perl-base',
+          'perl-modules',
+          'libfreezethaw-perl',
+          'apache2',
+          'libxml2-dev',
+          'build-essential',
+          'cpanminus',
+          'apt-transport-https']
       state: present
-  with_items:
-        - libcapture-tiny-perl
-        - libcommon-sense-perl
-        - libdata-dumper-simple-perl
-        - libdbd-pg-perl
-        - libdbi-perl
-        - libdigest-perl
-        - libgd-perl
-        - libgeo-ip-perl
-        - libhtml-parser-perl
-        - libhtml-template-perl
-        - libjson-perl
-        - libjson-xs-perl
-        - libnetaddr-ip-perl
-        - libnet-cidr-perl
-        - libnet-ip-perl
-        - libnet-oping-perl
-        - libnet-rawip-perl
-        - libsnmp-perl
-        - libsocket6-perl
-        - libsocket-perl
-        - libswitch-perl
-        - libtimedate-perl
-        - perl
-        - perl-base
-        - perl-modules
-        - libfreezethaw-perl
-        - apache2
-        - libxml2-dev
-        - build-essential
-        - cpanminus
-        - apt-transport-https
 
 - name: Add packagecloud.io Varnish apt key.
   apt_key:
@@ -85,5 +84,6 @@
   ignore_errors: true
   notify: restart apache
 
-- cpanm:
+- name: Install InfluxDB module
+  cpanm:
     name: AnyEvent::InfluxDB

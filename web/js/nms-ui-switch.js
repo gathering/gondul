@@ -15,12 +15,14 @@ class nmsNewSwitch extends nmsPanel {
 	constructor() {
 		super("Add new switch")
 		this.add(new nmsModSwitch(undefined))
+		this.nav.add(new nmsString("The only required field for adding a switch is the sysname, everything else will be filled in by the backend if you do not provide it. However, you should PROBABLY fill in managemnt IP and a few other fields."));
 	}
 }
 class nmsNewNet extends nmsPanel {
 	constructor() {
 		super("Add new network")
 		this.add(new nmsModNet(undefined))
+		this.nav.add(new nmsString("Only the name is required, but you should probably fill in more."));
 	}
 }
 

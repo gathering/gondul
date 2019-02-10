@@ -1,0 +1,15 @@
+[Unit]
+Description=Gondul Templating
+Documentation=http://google.com
+After=network.target
+
+[Service]
+ExecStart=/opt/gondul/templating/templating.py -h ::1 -p 8081
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+

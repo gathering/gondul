@@ -28,7 +28,7 @@ class nmsNewNet extends nmsPanel {
 
 class nmsModThing extends nmsBox {
 	constructor(data) {
-		super("div",{html:{className: "panel-body"}});
+		super("div");
 		this.identifier = data.identifier;
 		this.invalidate = data.invalidate;
 		this.api = data.api;

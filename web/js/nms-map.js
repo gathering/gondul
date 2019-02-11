@@ -565,7 +565,7 @@ nmsMap._moveSubmit = function() {
 	var myData = JSON.stringify([data]);
 	$.ajax({
 		type: "POST",
-		url: "/api/write/switch-update",
+		url: "/api/write/switches",
 		dataType: "text",
 		data:myData,
 		success: function (data, textStatus, jqXHR) {

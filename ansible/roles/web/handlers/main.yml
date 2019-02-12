@@ -11,6 +11,12 @@
     daemon_reload: yes
     name: varnish
 
+- name: restart gondul-template
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: gondul-template
+
 - name: reload systemd
   systemd:
     daemon_reload: yes

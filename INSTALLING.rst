@@ -39,8 +39,27 @@ As ``$YOURUSER``::
 
 Then visit http://ip-your-boxen/
 
+Basic authentication
+--------------------
+We include the following from /etc/varnish/auth.vcl, to keep passwords out of default vcl:
+
+`req.http.Authorization != "Basic AAAA"`
+
+where AAAA is the result of
+        `echo -n user:password | base64`
+
+Example:
+
+```
+kly@jade:~$ echo -n tech:rules | base64
+dGVjaDpydWxlcw==
+cat /etc/varnish/auth.vcl 
+req.http.Authorization != "Basic dGVjaDpydWxlcw=="
+```
+
+
 Securing InfluxDB
-.................
+-----------------
 
 Default InfluxDB is wide open, to limit this a little we need to configure a few users
 
@@ -69,7 +88,7 @@ Set the influxdb write user and password in /includes/config.pm
 
 Generate the base64 string using ``echo -n "gondulRead:funfunfun" | base64``
 
-Setting up your network...
+Setting up your network
 --------------------------
 
 Gondul tries to detect uplinks and clients on equipment automatically.

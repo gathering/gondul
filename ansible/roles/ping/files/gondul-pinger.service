@@ -1,14 +1,12 @@
 [Unit]
 Description=Gondul ping collector
-Documentation=http://google.com
-After=network.target
+Documentation=https://github.com/gathering/gondul
+After=network-online.target
 
 [Service]
 ExecStart=/opt/gondul/collectors/ping.pl
-MountFlags=slave
-LimitNOFILE=1048576
-LimitNPROC=1048576
-LimitCORE=infinity
+ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

@@ -20,4 +20,3 @@
 - name: reload systemd
   systemd:
     daemon_reload: yes
-

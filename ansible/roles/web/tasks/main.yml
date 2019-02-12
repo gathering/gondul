@@ -104,3 +104,4 @@
     dest: /etc/systemd/system/gondul-template.service
     src: template.service
   notify: restart gondul-template
+

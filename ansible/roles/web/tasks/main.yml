@@ -102,6 +102,6 @@
 - name: add systemd service file for gondul-template
   copy:
     dest: /etc/systemd/system/gondul-template.service
-    src: template.service
+    src: gondul-template.service
   notify: restart gondul-template
 

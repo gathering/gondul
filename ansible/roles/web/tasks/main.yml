@@ -32,8 +32,8 @@
           'build-essential',
           'cpanminus',
           'apt-transport-https',
-          'python-setuptools',
-          'python3-pip']
+          'python3-netaddr',
+          'python3-flask']
       state: present
 
 - name: Add packagecloud.io Varnish apt key.
@@ -95,9 +95,6 @@
 - name: Install InfluxDB module
   cpanm:
     name: AnyEvent::InfluxDB
-
-- name: Install python dependencies
-  command: /usr/bin/pip3 install -r /opt/gondul/templating/requirements.txt
 
 - name: add systemd service file for gondul-template
   copy:

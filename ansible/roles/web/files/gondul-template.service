@@ -1,11 +1,12 @@
 [Unit]
 Description=Gondul Templating
-Documentation=http://google.com
+Documentation=https://github.com/gathering/gondul
 After=network-online.target
 
 [Service]
 ExecStart=/opt/gondul/templating/templating.py -h ::1 -p 8081 -t /opt/gondul/web/templates/
-MountFlags=slave
+ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

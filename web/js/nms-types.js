@@ -36,6 +36,8 @@ class nmsType {
 	validate(input) {
 		return true;
 	}
+	// Always return text-representation
+	// Should be matched by fromString()
 	toString() {
 		if (this._value == null || this._value == undefined) {
 			return ""
@@ -43,8 +45,16 @@ class nmsType {
 			return this._value.toString();
 		}
 	}
+	// Set value from string-input
+	fromString(input) {
+		if (this.validate(input)) {
+			this._value = input;
+		} else {
+			throw "Invalid input. Use .validate() before setting stuff please. I am " + this + " and my input is " + input
+		}
+	}
 	initial(v) {
-		this._value = this._valueParse(v);
+		this.value = v;
 		if(this.priority == nmsPriority.newOnly) {
 			this.ro = true;
 		}
@@ -52,15 +62,8 @@ class nmsType {
 	get value() {
 		return this._value;
 	}
-	_valueParse(input) {
-		return input;
-	}
 	set value(input) {
-		if (this.validate(input)) {
-			this._value = this._valueParse(input);
-		} else {
-			throw "Invalid input. Use .validate() before setting stuff please. I am " + this + " and my input is " + input
-		}
+		this._value = input;
 	}
 	get _defaultPriority() {
 		return nmsPriority.optional;
@@ -125,21 +128,9 @@ class nmsTypeNetwork extends nmsType {
 	}
 }
 class nmsTypeJSON extends nmsType {
-	get value() {
-		if (this._value == null || this._value == undefined) {
-			return "";
-		}
-		return JSON.stringify(this._value)
-	}
-	set value(input) {
-		super.value = input;
-	}
-	/* This should probably actually know the basic template
-	 * for a placement-object...
-	 */
 	validate(input) {
 		try {
-			this._valueParse(input);
+			JSON.parse(input);
 			this.validationReason = "OK"
 			return true;
 		} catch(e) {
@@ -147,11 +138,14 @@ class nmsTypeJSON extends nmsType {
 			return false;
 		}
 	}
-	_valueParse(input) { 
-		if (input instanceof Object) {
-			return input;
-		} else {
-			return JSON.parse(input);
+	toString() {
+		return JSON.stringify(this._value);
+	}
+	fromString(input) {
+		try {
+			this.value = JSON.parse(input);
+		} catch(e) {
+			throw "Invalid input. Use .validate() before setting stuff please. I am " + this + " and my input is " + input
 		}
 	}
 }

@@ -126,15 +126,15 @@ class nmsModThing extends nmsBox {
 		var ret = {};
 		var changed = 0;
 		for (var idx in this.rows) {
-			if (this.rows[idx].value != this.rows[idx].original) {
-				ret[idx] = this.rows[idx].value;
+			if (this.rows[idx].value.toString() != this.rows[idx].original) {
+				ret[idx] = this.rows[idx].value.value;
 				changed++;
 			}
 		}
 		if (!changed) {
 			return undefined;
 		}
-		ret[this.identifier] = this.rows[this.identifier].value;
+		ret[this.identifier] = this.rows[this.identifier].value.value;
 		return ret;
 	}
 }
@@ -146,7 +146,7 @@ class nmsEditRow extends nmsBox {
 		console.assert(value instanceof nmsType)
 		this.name = text;
 		this._value = value;
-		this.original = value.value;
+		this.original = value.toString();
 		var td1 = new nmsBox("td")
 		var name = new nmsString(text+" ");
 		name.html.title = value.description;
@@ -161,7 +161,7 @@ class nmsEditRow extends nmsBox {
 		this.changed(false)
 		var content = new nmsBox("td")
 		var input = new nmsBox("input")
-		input.html.value = value.value;
+		input.html.value = value.toString();
 		input.html.className = "form-control";
 		input.html.type = "text";
 		input.row = this;
@@ -188,7 +188,7 @@ class nmsEditRow extends nmsBox {
 		this.add(content)
 	}
 	get value() {
-		return this._value.value;
+		return this._value;
 	}
 	changed(val) {
 		if (val) {
@@ -224,12 +224,12 @@ class nmsEditRow extends nmsBox {
 		} else {
 			this.valid(true)
 			this._content.html.classList.remove("has-error");
-			this._value.value = value;
+			this._value.fromString(value);
 		}
-		if (this._input.html.value != this._value.value) {
-			this._input.html.value = this._value.value
+		if (this._input.html.value != this._value.toString()) {
+			this._input.html.value = this._value.toString()
 		}
-		if (this._value.value != this.original) {
+		if (this._value.toString() != this.original) {
 			this.changed(true)
 			this._content.html.classList.add("has-success");
 		} else {

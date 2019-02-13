@@ -97,7 +97,9 @@ foreach my $tmp2 (@tmp) {
 			push @dups, "not really, but: " . $switch{'placement'};
 		}
 		if (defined($switch{'tags'})) {
-			$switch{'tags'} =~ s/'/"/g;
+			# MY GOD I HATE THIS
+			# But I'm too lazy to improve it more for now.
+			$switch{'tags'} = "[". join(",", map { "\"".$_."\"" } @{$switch{'tags'}})."]";
 		}
 		my @set;
 		map {

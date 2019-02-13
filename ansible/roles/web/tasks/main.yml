@@ -31,7 +31,9 @@
           'libxml2-dev',
           'build-essential',
           'cpanminus',
-          'apt-transport-https']
+          'apt-transport-https',
+          'python3-netaddr',
+          'python3-flask']
       state: present
 
 - name: Add packagecloud.io Varnish apt key.
@@ -58,6 +60,12 @@
       src: varnish.service
   notify:
     - reload systemd
+
+- name: Copy varnish-acl config
+  copy:
+      dest: /etc/varnish/auth.vcl
+      src: auth.vcl
+  notify: restart varnish
 
 - name: Copy varnish config
   copy:
@@ -87,3 +95,10 @@
 - name: Install InfluxDB module
   cpanm:
     name: AnyEvent::InfluxDB
+
+- name: add systemd service file for gondul-template
+  copy:
+    dest: /etc/systemd/system/gondul-template.service
+    src: gondul-template.service
+  notify: restart gondul-template
+

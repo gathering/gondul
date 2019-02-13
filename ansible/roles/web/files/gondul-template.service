@@ -1,12 +1,13 @@
 [Unit]
-Description=Gondul ping collector
+Description=Gondul Templating
 Documentation=https://github.com/gathering/gondul
 After=network-online.target
 
 [Service]
-ExecStart=/opt/gondul/collectors/ping.pl
+ExecStart=/opt/gondul/templating/templating.py -h ::1 -p 8081 -t /opt/gondul/web/templates/
 ExecReload=/usr/bin/kill -HUP $MAINPID
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
+

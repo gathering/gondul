@@ -2,12 +2,18 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.6.10
+-- Dumped by pg_dump version 9.6.10
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
@@ -23,13 +29,11 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
-SET search_path = public, pg_catalog;
-
 --
 -- Name: comment_state; Type: TYPE; Schema: public; Owner: nms
 --
 
-CREATE TYPE comment_state AS ENUM (
+CREATE TYPE public.comment_state AS ENUM (
     'active',
     'inactive',
     'persist',
@@ -37,17 +41,17 @@ CREATE TYPE comment_state AS ENUM (
 );
 
 
-ALTER TYPE comment_state OWNER TO nms;
+ALTER TYPE public.comment_state OWNER TO nms;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: config; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: config; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE config (
+CREATE TABLE public.config (
     id integer NOT NULL,
     publicvhost character varying,
     shortname character varying,
@@ -55,13 +59,13 @@ CREATE TABLE config (
 );
 
 
-ALTER TABLE config OWNER TO nms;
+ALTER TABLE public.config OWNER TO nms;
 
 --
 -- Name: config_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE config_id_seq
+CREATE SEQUENCE public.config_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -69,20 +73,20 @@ CREATE SEQUENCE config_id_seq
     CACHE 1;
 
 
-ALTER TABLE config_id_seq OWNER TO nms;
+ALTER TABLE public.config_id_seq OWNER TO nms;
 
 --
 -- Name: config_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
 --
 
-ALTER SEQUENCE config_id_seq OWNED BY config.id;
+ALTER SEQUENCE public.config_id_seq OWNED BY public.config.id;
 
 
 --
--- Name: dhcp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE dhcp (
+CREATE TABLE public.dhcp (
     network integer,
     "time" timestamp with time zone,
     mac macaddr,
@@ -91,13 +95,13 @@ CREATE TABLE dhcp (
 );
 
 
-ALTER TABLE dhcp OWNER TO nms;
+ALTER TABLE public.dhcp OWNER TO nms;
 
 --
--- Name: linknet_ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: linknet_ping; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE linknet_ping (
+CREATE TABLE public.linknet_ping (
     linknet integer NOT NULL,
     "time" timestamp with time zone DEFAULT now() NOT NULL,
     latency1_ms double precision,
@@ -105,13 +109,13 @@ CREATE TABLE linknet_ping (
 );
 
 
-ALTER TABLE linknet_ping OWNER TO nms;
+ALTER TABLE public.linknet_ping OWNER TO nms;
 
 --
--- Name: linknets; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: linknets; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE linknets (
+CREATE TABLE public.linknets (
     linknet integer NOT NULL,
     switch1 integer NOT NULL,
     addr1 inet,
@@ -122,13 +126,13 @@ CREATE TABLE linknets (
 );
 
 
-ALTER TABLE linknets OWNER TO nms;
+ALTER TABLE public.linknets OWNER TO nms;
 
 --
 -- Name: linknets_linknet_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE linknets_linknet_seq
+CREATE SEQUENCE public.linknets_linknet_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -136,41 +140,53 @@ CREATE SEQUENCE linknets_linknet_seq
     CACHE 1;
 
 
-ALTER TABLE linknets_linknet_seq OWNER TO nms;
+ALTER TABLE public.linknets_linknet_seq OWNER TO nms;
 
 --
 -- Name: linknets_linknet_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
 --
 
-ALTER SEQUENCE linknets_linknet_seq OWNED BY linknets.linknet;
+ALTER SEQUENCE public.linknets_linknet_seq OWNED BY public.linknets.linknet;
 
 
 --
--- Name: networks; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: metrics; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE networks (
-    network integer DEFAULT nextval(('"networks_network_seq"'::text)::regclass) NOT NULL,
+CREATE TABLE public.metrics (
+    ts timestamp with time zone DEFAULT now(),
+    src text,
+    metadata jsonb,
+    data jsonb
+);
+
+
+ALTER TABLE public.metrics OWNER TO nms;
+
+--
+-- Name: networks; Type: TABLE; Schema: public; Owner: nms
+--
+
+CREATE TABLE public.networks (
     name character varying NOT NULL,
-    last_updated timestamp with time zone,
-    placement box,
     subnet4 cidr,
     subnet6 cidr,
     gw4 inet,
     gw6 inet,
-    routing_point character varying,
     vlan integer,
-    tags jsonb DEFAULT '[]'::jsonb
+    tags jsonb DEFAULT '[]'::jsonb,
+    network integer NOT NULL,
+    router integer
 );
 
 
-ALTER TABLE networks OWNER TO nms;
+ALTER TABLE public.networks OWNER TO nms;
 
 --
 -- Name: networks_network_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE networks_network_seq
+CREATE SEQUENCE public.networks_network_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -178,13 +194,34 @@ CREATE SEQUENCE networks_network_seq
     CACHE 1;
 
 
-ALTER TABLE networks_network_seq OWNER TO nms;
+ALTER TABLE public.networks_network_seq OWNER TO nms;
 
 --
--- Name: oplog; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: networks_networks_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE TABLE oplog (
+CREATE SEQUENCE public.networks_networks_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.networks_networks_seq OWNER TO nms;
+
+--
+-- Name: networks_networks_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
+--
+
+ALTER SEQUENCE public.networks_networks_seq OWNED BY public.networks.network;
+
+
+--
+-- Name: oplog; Type: TABLE; Schema: public; Owner: nms
+--
+
+CREATE TABLE public.oplog (
     id integer NOT NULL,
     "time" timestamp with time zone DEFAULT now(),
     systems character varying,
@@ -193,13 +230,13 @@ CREATE TABLE oplog (
 );
 
 
-ALTER TABLE oplog OWNER TO nms;
+ALTER TABLE public.oplog OWNER TO nms;
 
 --
 -- Name: oplog_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE oplog_id_seq
+CREATE SEQUENCE public.oplog_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -207,73 +244,73 @@ CREATE SEQUENCE oplog_id_seq
     CACHE 1;
 
 
-ALTER TABLE oplog_id_seq OWNER TO nms;
+ALTER TABLE public.oplog_id_seq OWNER TO nms;
 
 --
 -- Name: oplog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
 --
 
-ALTER SEQUENCE oplog_id_seq OWNED BY oplog.id;
+ALTER SEQUENCE public.oplog_id_seq OWNED BY public.oplog.id;
 
 
 --
--- Name: ping; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: ping; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE ping (
+CREATE TABLE public.ping (
     switch integer NOT NULL,
     "time" timestamp with time zone DEFAULT now() NOT NULL,
     latency_ms double precision
 );
 
 
-ALTER TABLE ping OWNER TO nms;
+ALTER TABLE public.ping OWNER TO nms;
 
 --
--- Name: ping_secondary_ip; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: ping_secondary_ip; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE ping_secondary_ip (
+CREATE TABLE public.ping_secondary_ip (
     switch integer NOT NULL,
     "time" timestamp with time zone DEFAULT now() NOT NULL,
     latency_ms double precision
 );
 
 
-ALTER TABLE ping_secondary_ip OWNER TO nms;
+ALTER TABLE public.ping_secondary_ip OWNER TO nms;
 
 --
--- Name: seen_mac; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: seen_mac; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE seen_mac (
+CREATE TABLE public.seen_mac (
     mac macaddr NOT NULL,
     address inet NOT NULL,
     seen timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE seen_mac OWNER TO nms;
+ALTER TABLE public.seen_mac OWNER TO nms;
 
 --
--- Name: snmp; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: snmp; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE snmp (
-    "time" timestamp without time zone DEFAULT now() NOT NULL,
+CREATE TABLE public.snmp (
+    "time" timestamp with time zone DEFAULT now() NOT NULL,
     switch integer NOT NULL,
     data jsonb,
     id integer NOT NULL
 );
 
 
-ALTER TABLE snmp OWNER TO nms;
+ALTER TABLE public.snmp OWNER TO nms;
 
 --
 -- Name: snmp_id_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE snmp_id_seq
+CREATE SEQUENCE public.snmp_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -281,27 +318,27 @@ CREATE SEQUENCE snmp_id_seq
     CACHE 1;
 
 
-ALTER TABLE snmp_id_seq OWNER TO nms;
+ALTER TABLE public.snmp_id_seq OWNER TO nms;
 
 --
 -- Name: snmp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nms
 --
 
-ALTER SEQUENCE snmp_id_seq OWNED BY snmp.id;
+ALTER SEQUENCE public.snmp_id_seq OWNED BY public.snmp.id;
 
 
 --
--- Name: switches; Type: TABLE; Schema: public; Owner: nms; Tablespace: 
+-- Name: switches; Type: TABLE; Schema: public; Owner: nms
 --
 
-CREATE TABLE switches (
+CREATE TABLE public.switches (
     switch integer DEFAULT nextval(('"switches_switch_seq"'::text)::regclass) NOT NULL,
     mgmt_v4_addr inet,
     sysname character varying NOT NULL,
     last_updated timestamp with time zone,
     locked boolean DEFAULT false NOT NULL,
     poll_frequency interval DEFAULT '00:01:00'::interval NOT NULL,
-    community character varying DEFAULT 'FullPuppTilNMS'::character varying NOT NULL,
+    community character varying DEFAULT 'IskremTilMiddag'::character varying NOT NULL,
     mgmt_v6_addr inet,
     placement box,
     distro_name character varying,
@@ -309,18 +346,17 @@ CREATE TABLE switches (
     tags jsonb DEFAULT '[]'::jsonb,
     deleted boolean DEFAULT false,
     mgmt_vlan character varying,
-    traffic_vlan character varying,
-    network integer
+    traffic_vlan character varying
 );
 
 
-ALTER TABLE switches OWNER TO nms;
+ALTER TABLE public.switches OWNER TO nms;
 
 --
 -- Name: switches_switch_seq; Type: SEQUENCE; Schema: public; Owner: nms
 --
 
-CREATE SEQUENCE switches_switch_seq
+CREATE SEQUENCE public.switches_switch_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -328,301 +364,374 @@ CREATE SEQUENCE switches_switch_seq
     CACHE 1;
 
 
-ALTER TABLE switches_switch_seq OWNER TO nms;
+ALTER TABLE public.switches_switch_seq OWNER TO nms;
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: nms
+-- Name: config id; Type: DEFAULT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY config ALTER COLUMN id SET DEFAULT nextval('config_id_seq'::regclass);
-
-
---
--- Name: linknet; Type: DEFAULT; Schema: public; Owner: nms
---
-
-ALTER TABLE ONLY linknets ALTER COLUMN linknet SET DEFAULT nextval('linknets_linknet_seq'::regclass);
+ALTER TABLE ONLY public.config ALTER COLUMN id SET DEFAULT nextval('public.config_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: nms
+-- Name: linknets linknet; Type: DEFAULT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY oplog ALTER COLUMN id SET DEFAULT nextval('oplog_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: nms
---
-
-ALTER TABLE ONLY snmp ALTER COLUMN id SET DEFAULT nextval('snmp_id_seq'::regclass);
+ALTER TABLE ONLY public.linknets ALTER COLUMN linknet SET DEFAULT nextval('public.linknets_linknet_seq'::regclass);
 
 
 --
--- Name: seen_mac_pkey; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
+-- Name: networks network; Type: DEFAULT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY seen_mac
+ALTER TABLE ONLY public.networks ALTER COLUMN network SET DEFAULT nextval('public.networks_networks_seq'::regclass);
+
+
+--
+-- Name: oplog id; Type: DEFAULT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.oplog ALTER COLUMN id SET DEFAULT nextval('public.oplog_id_seq'::regclass);
+
+
+--
+-- Name: snmp id; Type: DEFAULT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.snmp ALTER COLUMN id SET DEFAULT nextval('public.snmp_id_seq'::regclass);
+
+
+--
+-- Name: seen_mac seen_mac_pkey; Type: CONSTRAINT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.seen_mac
     ADD CONSTRAINT seen_mac_pkey PRIMARY KEY (mac, address, seen);
 
 
 --
--- Name: switches_pkey; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
+-- Name: switches switches_pkey; Type: CONSTRAINT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY switches
+ALTER TABLE ONLY public.switches
     ADD CONSTRAINT switches_pkey PRIMARY KEY (switch);
 
 
 --
--- Name: switches_sysname_key; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
+-- Name: switches switches_sysname_key; Type: CONSTRAINT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY switches
+ALTER TABLE ONLY public.switches
     ADD CONSTRAINT switches_sysname_key UNIQUE (sysname);
 
 
 --
--- Name: switches_sysname_key1; Type: CONSTRAINT; Schema: public; Owner: nms; Tablespace: 
+-- Name: switches switches_sysname_key1; Type: CONSTRAINT; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY switches
+ALTER TABLE ONLY public.switches
     ADD CONSTRAINT switches_sysname_key1 UNIQUE (sysname);
 
 
 --
--- Name: dhcp_ip; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp_ip; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX dhcp_ip ON dhcp USING btree (ip);
-
-
---
--- Name: dhcp_mac; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX dhcp_mac ON dhcp USING btree (mac);
+CREATE INDEX dhcp_ip ON public.dhcp USING btree (ip);
 
 
 --
--- Name: dhcp_network; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp_mac; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX dhcp_network ON dhcp USING btree (network);
-
-
---
--- Name: dhcp_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX dhcp_time ON dhcp USING btree ("time");
+CREATE INDEX dhcp_mac ON public.dhcp USING btree (mac);
 
 
 --
--- Name: ping_index; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp_network; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX ping_index ON ping USING btree ("time");
-
-
---
--- Name: ping_secondary_index; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX ping_secondary_index ON ping_secondary_ip USING btree ("time");
+CREATE INDEX dhcp_network ON public.dhcp USING btree (network);
 
 
 --
--- Name: seen_mac_addr_family; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: dhcp_time; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX seen_mac_addr_family ON seen_mac USING btree (family(address));
-
-
---
--- Name: seen_mac_seen; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX seen_mac_seen ON seen_mac USING btree (seen);
+CREATE INDEX dhcp_time ON public.dhcp USING btree ("time");
 
 
 --
--- Name: snmp_time; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: ping_brin_time; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX snmp_time ON snmp USING btree ("time");
-
-
---
--- Name: snmp_time15; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX snmp_time15 ON snmp USING btree (id, switch);
+CREATE INDEX ping_brin_time ON public.ping USING brin ("time");
 
 
 --
--- Name: snmp_time6; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: ping_index; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX snmp_time6 ON snmp USING btree ("time" DESC, switch);
-
-
---
--- Name: switches_switch; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX switches_switch ON switches USING hash (switch);
+CREATE INDEX ping_index ON public.ping USING btree ("time");
 
 
 --
--- Name: updated_index2; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
+-- Name: ping_secondary_index; Type: INDEX; Schema: public; Owner: nms
 --
 
-CREATE INDEX updated_index2 ON linknet_ping USING btree ("time");
-
-
---
--- Name: updated_index3; Type: INDEX; Schema: public; Owner: nms; Tablespace: 
---
-
-CREATE INDEX updated_index3 ON ping_secondary_ip USING btree ("time");
+CREATE INDEX ping_secondary_index ON public.ping_secondary_ip USING btree ("time");
 
 
 --
--- Name: snmp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nms
+-- Name: ping_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-ALTER TABLE ONLY snmp
-    ADD CONSTRAINT snmp_switch_fkey FOREIGN KEY (switch) REFERENCES switches(switch);
-
-
---
--- Name: switchname; Type: FK CONSTRAINT; Schema: public; Owner: nms
---
-
-ALTER TABLE ONLY ping
-    ADD CONSTRAINT switchname FOREIGN KEY (switch) REFERENCES switches(switch);
+CREATE INDEX ping_switch_time_btree ON public.ping USING btree (switch, "time");
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: postgres
+-- Name: ping_switch_time_unique_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
+CREATE UNIQUE INDEX ping_switch_time_unique_btree ON public.ping USING btree (switch, "time");
 
 
 --
--- Name: config; Type: ACL; Schema: public; Owner: nms
+-- Name: seen_mac_addr_family; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE config FROM PUBLIC;
-REVOKE ALL ON TABLE config FROM nms;
-GRANT ALL ON TABLE config TO nms;
+CREATE INDEX seen_mac_addr_family ON public.seen_mac USING btree (family(address));
 
 
 --
--- Name: dhcp; Type: ACL; Schema: public; Owner: nms
+-- Name: seen_mac_seen; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE dhcp FROM PUBLIC;
-REVOKE ALL ON TABLE dhcp FROM nms;
-GRANT ALL ON TABLE dhcp TO nms;
+CREATE INDEX seen_mac_seen ON public.seen_mac USING btree (seen);
 
 
 --
--- Name: linknet_ping; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_brin_switch_time; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE linknet_ping FROM PUBLIC;
-REVOKE ALL ON TABLE linknet_ping FROM nms;
-GRANT ALL ON TABLE linknet_ping TO nms;
+CREATE INDEX snmp_brin_switch_time ON public.snmp USING brin (switch, "time");
 
 
 --
--- Name: linknets; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_id_desc_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE linknets FROM PUBLIC;
-REVOKE ALL ON TABLE linknets FROM nms;
-GRANT ALL ON TABLE linknets TO nms;
+CREATE INDEX snmp_id_desc_btree ON public.snmp USING btree (id DESC);
 
 
 --
--- Name: networks; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_id_desc_switch_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE networks FROM PUBLIC;
-REVOKE ALL ON TABLE networks FROM nms;
-GRANT ALL ON TABLE networks TO nms;
+CREATE INDEX snmp_id_desc_switch_btree ON public.snmp USING btree (id DESC, switch);
 
 
 --
--- Name: oplog; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_id_switch_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE oplog FROM PUBLIC;
-REVOKE ALL ON TABLE oplog FROM nms;
-GRANT ALL ON TABLE oplog TO nms;
+CREATE INDEX snmp_id_switch_btree ON public.snmp USING btree (id, switch);
 
 
 --
--- Name: ping; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_switch_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE ping FROM PUBLIC;
-REVOKE ALL ON TABLE ping FROM nms;
-GRANT ALL ON TABLE ping TO nms;
+CREATE INDEX snmp_switch_btree ON public.snmp USING btree (switch);
 
 
 --
--- Name: ping_secondary_ip; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_switch_id_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE ping_secondary_ip FROM PUBLIC;
-REVOKE ALL ON TABLE ping_secondary_ip FROM nms;
-GRANT ALL ON TABLE ping_secondary_ip TO nms;
+CREATE INDEX snmp_switch_id_btree ON public.snmp USING btree (switch, id);
 
 
 --
--- Name: seen_mac; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_switch_id_desc_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE seen_mac FROM PUBLIC;
-REVOKE ALL ON TABLE seen_mac FROM nms;
-GRANT ALL ON TABLE seen_mac TO nms;
+CREATE INDEX snmp_switch_id_desc_btree ON public.snmp USING btree (switch, id DESC);
 
 
 --
--- Name: snmp; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE snmp FROM PUBLIC;
-REVOKE ALL ON TABLE snmp FROM nms;
-GRANT ALL ON TABLE snmp TO nms;
-GRANT ALL ON TABLE snmp TO postgres;
+CREATE INDEX snmp_switch_time_btree ON public.snmp USING btree (switch, "time");
 
 
 --
--- Name: snmp_id_seq; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_time; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON SEQUENCE snmp_id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE snmp_id_seq FROM nms;
-GRANT ALL ON SEQUENCE snmp_id_seq TO nms;
-GRANT ALL ON SEQUENCE snmp_id_seq TO postgres;
+CREATE INDEX snmp_time ON public.snmp USING btree ("time");
 
 
 --
--- Name: switches; Type: ACL; Schema: public; Owner: nms
+-- Name: snmp_time6; Type: INDEX; Schema: public; Owner: nms
 --
 
-REVOKE ALL ON TABLE switches FROM PUBLIC;
-REVOKE ALL ON TABLE switches FROM nms;
-GRANT ALL ON TABLE switches TO nms;
+CREATE INDEX snmp_time6 ON public.snmp USING btree ("time" DESC, switch);
+
+
+--
+-- Name: snmp_time_brin; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_time_brin ON public.snmp USING brin ("time");
+
+
+--
+-- Name: snmp_unique_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE UNIQUE INDEX snmp_unique_switch_time_btree ON public.snmp USING btree (switch, "time");
+
+
+--
+-- Name: switches_switch; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX switches_switch ON public.switches USING hash (switch);
+
+
+--
+-- Name: updated_index2; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX updated_index2 ON public.linknet_ping USING btree ("time");
+
+
+--
+-- Name: updated_index3; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX updated_index3 ON public.ping_secondary_ip USING btree ("time");
+
+
+--
+-- Name: networks networks_router_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.networks
+    ADD CONSTRAINT networks_router_fkey FOREIGN KEY (router) REFERENCES public.switches(switch);
+
+
+--
+-- Name: snmp snmp_switch_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.snmp
+    ADD CONSTRAINT snmp_switch_fkey FOREIGN KEY (switch) REFERENCES public.switches(switch);
+
+
+--
+-- Name: ping switchname; Type: FK CONSTRAINT; Schema: public; Owner: nms
+--
+
+ALTER TABLE ONLY public.ping
+    ADD CONSTRAINT switchname FOREIGN KEY (switch) REFERENCES public.switches(switch);
+
+
+--
+-- Name: TABLE config; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.config TO dhcptail;
+
+
+--
+-- Name: TABLE dhcp; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.dhcp TO dhcptail;
+
+
+--
+-- Name: TABLE linknet_ping; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.linknet_ping TO dhcptail;
+
+
+--
+-- Name: TABLE linknets; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.linknets TO dhcptail;
+
+
+--
+-- Name: TABLE metrics; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.metrics TO nms;
+
+
+--
+-- Name: TABLE networks; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.networks TO dhcptail;
+
+
+--
+-- Name: TABLE oplog; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.oplog TO dhcptail;
+
+
+--
+-- Name: TABLE ping; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.ping TO dhcptail;
+
+
+--
+-- Name: TABLE ping_secondary_ip; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.ping_secondary_ip TO dhcptail;
+
+
+--
+-- Name: TABLE seen_mac; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.seen_mac TO dhcptail;
+
+
+--
+-- Name: TABLE snmp; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.snmp TO postgres;
+GRANT ALL ON TABLE public.snmp TO dhcptail;
+
+
+--
+-- Name: SEQUENCE snmp_id_seq; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON SEQUENCE public.snmp_id_seq TO postgres;
+
+
+--
+-- Name: TABLE switches; Type: ACL; Schema: public; Owner: nms
+--
+
+GRANT ALL ON TABLE public.switches TO dhcptail;
 
 
 --
 -- PostgreSQL database dump complete
+--
+

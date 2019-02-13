@@ -150,6 +150,20 @@ ALTER SEQUENCE public.linknets_linknet_seq OWNED BY public.linknets.linknet;
 
 
 --
+-- Name: metrics; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.metrics (
+    ts timestamp with time zone DEFAULT now(),
+    src text,
+    metadata jsonb,
+    data jsonb
+);
+
+
+ALTER TABLE public.metrics OWNER TO postgres;
+
+--
 -- Name: networks; Type: TABLE; Schema: public; Owner: nms
 --
 
@@ -448,6 +462,13 @@ CREATE INDEX dhcp_time ON public.dhcp USING btree ("time");
 
 
 --
+-- Name: ping_brin_time; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX ping_brin_time ON public.ping USING brin ("time");
+
+
+--
 -- Name: ping_index; Type: INDEX; Schema: public; Owner: nms
 --
 
@@ -459,6 +480,20 @@ CREATE INDEX ping_index ON public.ping USING btree ("time");
 --
 
 CREATE INDEX ping_secondary_index ON public.ping_secondary_ip USING btree ("time");
+
+
+--
+-- Name: ping_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX ping_switch_time_btree ON public.ping USING btree (switch, "time");
+
+
+--
+-- Name: ping_switch_time_unique_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE UNIQUE INDEX ping_switch_time_unique_btree ON public.ping USING btree (switch, "time");
 
 
 --
@@ -476,6 +511,62 @@ CREATE INDEX seen_mac_seen ON public.seen_mac USING btree (seen);
 
 
 --
+-- Name: snmp_brin_switch_time; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_brin_switch_time ON public.snmp USING brin (switch, "time");
+
+
+--
+-- Name: snmp_id_desc_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_id_desc_btree ON public.snmp USING btree (id DESC);
+
+
+--
+-- Name: snmp_id_desc_switch_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_id_desc_switch_btree ON public.snmp USING btree (id DESC, switch);
+
+
+--
+-- Name: snmp_id_switch_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_id_switch_btree ON public.snmp USING btree (id, switch);
+
+
+--
+-- Name: snmp_switch_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_switch_btree ON public.snmp USING btree (switch);
+
+
+--
+-- Name: snmp_switch_id_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_switch_id_btree ON public.snmp USING btree (switch, id);
+
+
+--
+-- Name: snmp_switch_id_desc_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_switch_id_desc_btree ON public.snmp USING btree (switch, id DESC);
+
+
+--
+-- Name: snmp_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_switch_time_btree ON public.snmp USING btree (switch, "time");
+
+
+--
 -- Name: snmp_time; Type: INDEX; Schema: public; Owner: nms
 --
 
@@ -483,17 +574,24 @@ CREATE INDEX snmp_time ON public.snmp USING btree ("time");
 
 
 --
--- Name: snmp_time15; Type: INDEX; Schema: public; Owner: nms
---
-
-CREATE INDEX snmp_time15 ON public.snmp USING btree (id, switch);
-
-
---
 -- Name: snmp_time6; Type: INDEX; Schema: public; Owner: nms
 --
 
 CREATE INDEX snmp_time6 ON public.snmp USING btree ("time" DESC, switch);
+
+
+--
+-- Name: snmp_time_brin; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX snmp_time_brin ON public.snmp USING brin ("time");
+
+
+--
+-- Name: snmp_unique_switch_time_btree; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE UNIQUE INDEX snmp_unique_switch_time_btree ON public.snmp USING btree (switch, "time");
 
 
 --
@@ -567,6 +665,13 @@ GRANT ALL ON TABLE public.linknet_ping TO dhcptail;
 --
 
 GRANT ALL ON TABLE public.linknets TO dhcptail;
+
+
+--
+-- Name: TABLE metrics; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.metrics TO nms;
 
 
 --

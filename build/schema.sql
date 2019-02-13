@@ -161,7 +161,7 @@ CREATE TABLE public.metrics (
 );
 
 
-ALTER TABLE public.metrics OWNER TO postgres;
+ALTER TABLE public.metrics OWNER TO nms;
 
 --
 -- Name: networks; Type: TABLE; Schema: public; Owner: nms

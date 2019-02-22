@@ -873,10 +873,14 @@ function memoryInfo(sw) {
 }
 
 function tagged(sw, tag) {
-	if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
-		if (nmsData.switches.switches[sw].tags.includes(tag)) {
-			return true;
+	try {
+		if (testTree(nmsData,['switches','switches',sw, 'tags'])) {
+			if (nmsData.switches.switches[sw].tags.includes(tag)) {
+				return true;
+			}
 		}
+	} catch(e) {
+		console.log("Tried to find tags for " + sw + "but tags-datastructure is probably not an array?");
 	}
 	return false;
 }

@@ -83,7 +83,12 @@ our @snmp_objects = [
 	['jnxVirtualChassisMemberRole'],
 	['jnxVirtualChassisMemberSerialnumber'],
 	['jnxVirtualChassisMemberSWVersion'],
-	['jnxVirtualChassisMemberUptime']
+	['jnxVirtualChassisMemberUptime'],
+	['jnxDomCurrentRxLaserPower'],
+	['jnxDomCurrentTxLaserOutputPower'],
+	['jnxPMCurRxInputPower'],
+	['jnxPMCurTxOutputPower']
+
 ];
 
 BEGIN {

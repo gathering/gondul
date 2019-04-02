@@ -108,6 +108,11 @@ sub vcl_recv {
         return (pass);
     }
 
+    # exclude listing of template files
+    if (req.url ~ "/api/read/template-list" ) {
+        return (pass);
+    }
+
     # We don't use cookies - so get rid of them so we don't mess up the cache
     # by accident.
     unset req.http.Cookie;

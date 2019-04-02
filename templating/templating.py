@@ -32,8 +32,9 @@ env = Environment(loader=FileSystemLoader([]), trim_blocks=True)
 env.filters["netmask"] = lambda ip: netaddr.IPNetwork(ip).netmask
 env.filters["cidr"] = lambda ip: netaddr.IPNetwork(ip).prefixlen
 env.filters["networkId"] = lambda ip: netaddr.IPNetwork(ip).ip
-env.filters["getFirstDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[3]
-env.filters["getLastDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[-1]
+env.filters["getFirstDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[2]
+env.filters["getLastDhcpIp"] = lambda ip: netaddr.IPNetwork(ip)[-2]
+env.filters["getIp"] = lambda ip,num: netaddr.IPNetwork(ip)[num]
 env.filters["agentDistro"] = lambda src: src.split(":")[0]
 env.filters["agentPort"] = lambda src: src.split(":")[1]
 env.filters["getFirstFapIP"] = lambda ip: netaddr.IPNetwork(ip)[netaddr.IPNetwork(ip).size / 2]

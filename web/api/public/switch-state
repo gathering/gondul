@@ -67,8 +67,10 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 		}
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
 		$json{'switches'}{$sysname}{ifs}{$smallport}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
-		$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
-		$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
+		if ($smallport ne "loopback") {
+			$json{'switches'}{$sysname}{totals}{'ifHCInOctets'} += $port{'ifHCInOctets'} || 0;
+			$json{'switches'}{$sysname}{totals}{'ifHCOutOctets'} += $port{'ifHCOutOctets'} || 0;
+		}
 		if ($port{'ifOperStatus'} eq "up") {
 			$json{'switches'}{$sysname}{ifs}{$smallport}{'live'} += 1;
 			$json{'switches'}{$sysname}{totals}{'live'} += 1;

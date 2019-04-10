@@ -819,6 +819,7 @@ var switchCommentsPanel = function () {
 	this.commentsHash = false;
 	this.refresh = function (reason) {
 		var domObj = document.createElement("div");
+		domObj.className = 'gondul-is-private';
 		var comments = [];
 		var logs = nmsOplog.getSwitchLogs(this.sw);
 		var table = document.createElement("table");

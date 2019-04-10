@@ -417,6 +417,8 @@ function detectHandler() {
 	var interval = nms.interval;
 	if (views == undefined || views == "")
 		views = "health";
+		if (nms._public)
+			views = "ping";
 	views = views.split(",");
 
 	if (views.length > 1) {

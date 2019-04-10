@@ -40,7 +40,8 @@ var nmsInfoBox = nmsInfoBox || {
 		'views': {
 			'initial': {
 				'name': 'Summary',
-				'panels': ['switchLatency','switchSummary','switchComments']
+				'panels': ['switchLatency','switchSummary','switchComments'],
+				'public': true
 			},
 			'ports': {
 				'name': 'Ports',
@@ -333,6 +334,8 @@ var windowHandler = function () {
 		for(var view in this._window.views) {
 			var viewObj = this._window.views[view];
 			var active = '';
+			if (viewObj.public == null || viewObj.public == false)
+				active = ' class="gondul-is-private" '
 			if(this._view == view)
 				active = ' class="active" ';
 			output += '<li' + active + '><a class="' + view + '" aria-label="' + viewObj.name + '" onclick="nmsInfoBox._windowHandler.showView(\'' + view + '\');">' + viewObj.name + '</a></li> ';
@@ -858,8 +861,10 @@ var switchLatencyPanel = function() {
 	nmsInfoPanel.call(this,"switchLatency");	
 	var latencyChart;
         this.init = function() {
-                this.addHandler("ticker");
-                this.refresh();
+		if(nms._public == false) {
+			this.addHandler("ticker");
+			this.refresh();
+		}
         };
 	this.refresh = function(reason) {
 		if (this.sw == false) {

@@ -450,7 +450,8 @@ function setMenu()
 
 function setOplog()
 {
-	nms.oplog.mini.show(nms.oplogShowing)
+	if(nms._public == false)
+		nms.oplog.mini.show(nms.oplogShowing)
 }
 
 function toggleMenu()

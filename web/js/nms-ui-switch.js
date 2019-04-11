@@ -291,11 +291,12 @@ class nmsModNet extends nmsModThing {
 	}
 	generateBaseTemplate() {
 		this._template = {
-			name: new nmsTypeNetwork("Unique networkname. Only required field. Read/only on existing nets."),
+			name: new nmsType("Unique networkname. Only required field. Read/only on existing nets."),
+			vlan: new nmsType("VLAN ID"),
 			gw4: new nmsTypeIP("Gateway address, IPv4"),
 			gw6: new nmsTypeIP("Gateway address, IPv6"),
-			subnet4: new nmsTypeIP("Subnet, IPv4"),
-			subnet6: new nmsTypeIP("Subnet, IPv6"),
+			subnet4: new nmsTypeCIDR("Subnet, IPv4"),
+			subnet6: new nmsTypeCIDR("Subnet, IPv6"),
 			router: new nmsTypeSysnameReference("Router where net is terminated. E.g.: r1.noc for floor traffic nets"),
 			tags: new nmsTypeTags("Additional tags in JSON text array format. Can be anything. Used to provide a simple escape hatch mechanism to tag systems.")
 	      }

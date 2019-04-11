@@ -1004,6 +1004,24 @@ var networkSummaryPanel = function() {
 }
 nmsInfoBox.addPanelType("networkSummary",networkSummaryPanel);
 
+
+/*
+ * Panel type: Edit network
+ *
+ * Lets you edit basic switch and switch management data through the switch-update api
+ *
+ */
+var networkEditPanel = function () {
+	nmsInfoPanel.call(this,"networkEdit");
+	this.refresh = function (reason) {
+		if (this.box) { return; }
+		this.box = new nmsModNet(this.sw);
+		this.box.attach(this.me)
+		this.box.show()
+	};
+};
+nmsInfoBox.addPanelType("networkEdit",networkEditPanel);
+
 /*
  * Provide common defaults for graph renders.
  *

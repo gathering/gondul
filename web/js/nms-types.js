@@ -113,6 +113,46 @@ class nmsTypeIP extends nmsType {
 		}
 	}
 }
+class nmsTypeCIDR extends nmsType {
+	get _defaultPriority() {
+		return nmsPriority.important;
+	}
+	_validateV4(input) {
+		var x = input.match(/^(\d+)\.(\d+).(\d+).(\d+)\/(\d+)$/)
+		if (!x) {
+			this.validationReason = "Doesn't look like IPv4 cidr or IPv6";
+			return false;
+		}
+		for (var i = 1; i < 5; i ++) {
+			if (x[i] < 0  || x[i] > 255) {
+				this.validationReason = "The " + i + "'th octet("+x[i]+") is outside of expected range (0-255)";
+				return false;
+			}
+		}
+		if (x[5] < 8 || x[5] > 32) {
+			this.validationReason = "/"+x[5]+" is outside of expected range (8-32)";
+			return false;
+		}
+		this.validationReason = "OK";
+		return true;
+	}
+	_validateV6(input) {
+		if (!!input.match(/^[a-fA-F0-9:]+\/(\d+)$/)) {
+			this.validationReason = "OK IPv6 cidr"
+			return true;
+		} else {
+			this.validationReason = "Doesn't parse as a IPv6 cidr despite :";
+			return false;
+		}
+	}
+	validate(input) {
+		if (input.match(":")) {
+			return this._validateV6(input);
+		} else {
+			return this._validateV4(input);
+		}
+	}
+}
 class nmsTypeNetwork extends nmsType { 
 	get _defaultPriority() { 
 		return nmsPriority.important;

@@ -59,7 +59,7 @@ foreach my $tmp2 (@tmp) {
 		push @added, $network{'name'};
 	} else {
 		if (defined($network{'tags'})) {
-			$network{'tags'} =~ s/'/"/g;
+			$network{'tags'} = "[". join(",", map { "\"".$_."\"" } @{$network{'tags'}})."]";
 		}
 		my @set;
 		map {

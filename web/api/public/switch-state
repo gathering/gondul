@@ -113,7 +113,7 @@ while ( my $ref = $q2->fetchrow_hashref() ) {
 			$json{'then'}{$sysname}{ifs}{$smallport}{'ifAlias'} = $port{'ifAlias'};
 		}
 		if ($data{'ports'}{$porti}{'ifType'} ne "propVirtual" and
-		    $data{'ports'}{$porti}{'ifAlias'} =~ m/Fysisk/i) {
+		    $data{'ports'}{$porti}{'ifAlias'} =~ m/G:/i) {
 			if ($port{'ifAdminStatus'} eq "up") {
 				$json{'then'}{$sysname}{'uplinks'}{'ifHCInOctets'} += $port{'ifHCInOctets'};
 				$json{'then'}{$sysname}{'uplinks'}{'ifHCOutOctets'} += $port{'ifHCOutOctets'};

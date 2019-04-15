@@ -63,6 +63,11 @@ foreach my $tmp2 (@tmp) {
 		} else {
 			%placement = %{convertplace($switch{'placement'})};
 		}
+		if (defined($switch{'tags'})) {
+			# MY GOD I HATE THIS
+			# But I'm too lazy to improve it more for now.
+			$switch{'tags'} = "[". join(",", map { "\"".$_."\"" } @{$switch{'tags'}})."]";
+		}
 		my ($x1,$x2,$y1,$y2);
 		$x1 = $placement{'x1'};
 		$y1 = $placement{'y1'};

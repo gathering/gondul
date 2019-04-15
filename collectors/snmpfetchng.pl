@@ -13,6 +13,8 @@ use IO::Socket::IP;
 use Scalar::Util qw(looks_like_number);
 use Time::HiRes qw(time);
 
+use Try::Tiny;
+
 SNMP::initMib();
 SNMP::addMibDirs("/opt/gondul/data/mibs/StandardMibs");
 SNMP::addMibDirs("/opt/gondul/data/mibs/JuniperMibs");
@@ -220,16 +222,20 @@ sub callback{
                     },
                     fields => { 'execution_time' => (time - $switch{'start'}) },
                 });
-                my $cv = AE::cv;
-                $influx->write(
-                    database => $nms::config::influx_database,
-                    data => [@influx_tree],
-                    on_success => $cv,
-                    on_error => sub {
-                        $cv->croak("Failed to write data: @_");
-                    }
-                );
-                $cv->recv;
+		try {
+			my $cv = AE::cv;
+			$influx->write(
+				database => $nms::config::influx_database,
+				data => [@influx_tree],
+				on_success => $cv,
+				on_error => sub {
+					$cv->croak("Failed to write data: @_");
+				}
+			);
+			$cv->recv;
+		} catch {
+		        warn "caught error: $_";
+		};
 
                 if ((time - $switch{'start'}) > 10) {
                         mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");

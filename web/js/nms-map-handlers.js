@@ -537,18 +537,21 @@ function getDhcpColor(stop)
 
 function dhcpUpdater()
 {
-	if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
+	if (!testTree(nmsData,['dhcp','dhcp4']) || !testTree(nmsData,['dhcp','dhcp6']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
 		return;
 	}
 	var now = nmsData.dhcp.time;
 	for (var sw in nmsData.switches.switches) {
 		var c = nmsColor.blue;
-		var s = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
-		if (s == undefined) {
+		var sv4 = nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
+		var sv6 = nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan]; 
+		if (sv4 == undefined || sv6 == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
-		}
-		var then = parseInt(s);
+		}	
+		var thenv4 = parseInt(sv4);
+		var thenv6 = parseInt(sv6);
+		var then = Math.max(thenv4, thenv6)
 		c = getDhcpColor(now - then);
 		nmsMap.setSwitchColor(sw, c);
 	}
@@ -556,8 +559,12 @@ function dhcpUpdater()
 function dhcpInfo(sw) {
 	var ret = new handlerInfo("dhcp","DHCP state");
 	ret.why = "No DHCP data";
-	ret.data[0].description = "DHCP age";
-        if (!testTree(nmsData,['dhcp','dhcp']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
+	ret.data[0].description = "DHCPv4 age";
+
+	ret.data[1] = {};
+	ret.data[1].description = "DHCPv6 age";
+
+        if (!testTree(nmsData,['dhcp','dhcp4']) || !testTree(nmsData,['dhcp','dhcp6']) || !testTree(nmsData,['switches','switches']) || !testTree(nmsData,['smanagement','switches'])) {
                 return ret.data[1] = {};
         }
 	var dhcpClients = 0;
@@ -567,9 +574,9 @@ function dhcpInfo(sw) {
 	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
 		dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
 	}
-	if (testTree(nmsData,['dhcp','dhcp',nmsData.smanagement.switches[sw].traffic_vlan])) {
+	if (testTree(nmsData,['dhcp','dhcp4',nmsData.smanagement.switches[sw].traffic_vlan])) {
 		var now = nmsData.dhcp.time;
-		var then = nmsData.dhcp.dhcp[nmsData.smanagement.switches[sw].traffic_vlan];
+		var then = nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
 		var diff = now - then;
 		var divider = 6;
 		if (dhcpClients < 10) {
@@ -583,7 +590,7 @@ function dhcpInfo(sw) {
 		ret.why = "DHCP freshness";
 		ret.score = diff/divider> 350 ? 350 : parseInt(diff/divider);
 	} else {
-		ret.data[0].value = "No DHCP data";
+		ret.data[0].value = "No DHCPv4 data";
 		if (testTree(nmsData,['smanagement','switches',sw])) {
 			if (nmsData.smanagement.switches[sw].traffic_vlan == undefined ||
 				nmsData.smanagement.switches[sw].traffic_vlan == "") {
@@ -593,9 +600,9 @@ function dhcpInfo(sw) {
 			} else {
 				if (!(clientPortsUp < 2 && clientPortsTotal > 20)) {
 					ret.score = 350;
-					ret.why = "No DHCP data";
+					ret.why = "No DHCPv4 data";
 				} else {
-					ret.data[0].value = "No DHCP data, but too few clients anyway";
+					ret.data[0].value = "No DHCPv4 data, but too few clients anyway";
 				}
 			}
 		} else {
@@ -603,11 +610,47 @@ function dhcpInfo(sw) {
 			ret.why = "No management data for DHCP";
 		}
 	}
+        if (testTree(nmsData,['dhcp','dhcp6',nmsData.smanagement.switches[sw].traffic_vlan])) {
+                var now = nmsData.dhcp.time;
+                var then = nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
+                var diff = now - then;
+                var divider = 6;
+                if (dhcpClients < 10) {
+                        divider = 12;
+                }
+                if(tagged(sw,'slowdhcp')) {
+                        divider = 12;
+                }
+
+                ret.data[1].value = secondsToTime(diff);
+                ret.why = "DHCP freshness";
+                ret.score = diff/divider> 350 ? 350 : parseInt(diff/divider);
+        } else {
+                ret.data[1].value = "No DHCPv6 data";
+                if (testTree(nmsData,['smanagement','switches',sw])) {
+                        if (nmsData.smanagement.switches[sw].traffic_vlan == undefined ||
+                                nmsData.smanagement.switches[sw].traffic_vlan == "") {
+                                ret.data[1].value = "No associated networks";
+                                ret.score = 0;
+                                ret.why = "No network associated";
+                        } else {
+                                if (!(clientPortsUp < 2 && clientPortsTotal > 20)) {
+                                        ret.score = 350;
+                                        ret.why = "No DHCPv6 data";
+                                } else {
+                                        ret.data[1].value = "No DHCPv6 data, but too few clients anyway";
+                                }
+                        }
+                } else {
+                        ret.score = 100;
+                        ret.why = "No management data for DHCP";
+                }
+        }
 	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
 		var dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
-		ret.data[1] = {};
-		ret.data[1].value = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
-		ret.data[1].description = "DHCP clients";
+		ret.data[2] = {};
+		ret.data[2].value = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
+		ret.data[2].description = "DHCP clients";
 		if (testTree(nmsData,['switchstate','switches',sw,'clients','live'])) {
 			var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
 			var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
@@ -767,11 +810,13 @@ function snmpUpInfo(sw) {
 		var seen_up = 0;
 		for (var port in nmsData.snmp.snmp[sw].ports) {
 			var x = nmsData.snmp.snmp[sw].ports[port];
-			if (x["ifAlias"].match(/B:/i) && x["ifOperStatus"] == "up") {
-				total_up += parseInt(x["ifHighSpeed"]);
-			}
-			if (x["ifAlias"].match(/G:/i) && x["ifOperStatus"] == "up") {
-				seen_up += parseInt(x["ifHighSpeed"]);
+			if(x["ifAlias"] != null) {
+				if (x["ifAlias"].match(/B:/i) && x["ifOperStatus"] == "up") {
+					total_up += parseInt(x["ifHighSpeed"]);
+				}
+				if (x["ifAlias"].match(/G:/i) && x["ifOperStatus"] == "up") {
+					seen_up += parseInt(x["ifHighSpeed"]);
+				}
 			}
 		}
 		ret.data[0].value = "LAG member speed and total speed is " + seen_up;

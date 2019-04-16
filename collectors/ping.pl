@@ -22,7 +22,7 @@ my $q = $dbh->prepare("SELECT switch,sysname,host(mgmt_v4_addr) as ip,host(mgmt_
 my $lq = $dbh->prepare("SELECT linknet,addr1,addr2 FROM linknets WHERE addr1 is not null and addr2 is not null;");
 
 my $last = time();
-my $target = 0.7;
+my $target = 1.0;
 while (1) {
 	my $now = time();
 	my $elapsed = ($now - $last);
@@ -35,7 +35,7 @@ while (1) {
 	$last = time();
 	# ping loopbacks
 	my $ping = Net::Oping->new;
-	$ping->timeout(0.3);
+	$ping->timeout(0.6);
 
 	$q->execute;
 	my %ip_to_switch = ();
@@ -131,31 +131,6 @@ while (1) {
 	}
 	$dbh->pg_putcopyend();
 
-	$dbh->commit;
-	# ping linknets
-	$ping = Net::Oping->new;
-	$ping->timeout(0.4);
-
-	$lq->execute;
-	my @linknets = ();
-	while (my $ref = $lq->fetchrow_hashref) {
-		push @linknets, $ref;
-		$ping->host_add($ref->{'addr1'});
-		$ping->host_add($ref->{'addr2'});
-	}
-	if (@linknets) {
-		$result = $ping->ping();
-		die $ping->get_error if (!defined($result));
-
-		$dbh->do('COPY linknet_ping (linknet, latency1_ms, latency2_ms) FROM STDIN');  # date is implicitly now.
-			for my $linknet (@linknets) {
-				my $id = $linknet->{'linknet'};
-				my $latency1 = $result->{$linknet->{'addr1'}} // '\N';
-				my $latency2 = $result->{$linknet->{'addr2'}} // '\N';
-				$dbh->pg_putcopydata("$id\t$latency1\t$latency2\n");
-			}
-		$dbh->pg_putcopyend();
-	}
 	$dbh->commit;
 
         my $cv = AE::cv;

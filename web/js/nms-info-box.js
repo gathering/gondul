@@ -940,9 +940,8 @@ var switchLinks = function() {
 		var sw = this.sw;
 		
 		var topp = document.createElement("div")
-		var urls = [ "https://gondul.tg.lol/api/templates/magic.conf/switch=" + sw,
-			     "http://185.110.148.5/api/templates/magic.conf/switch=" + sw,
-			     "http://gondul.tg.lol/api/templates/magic.conf/switch=" + sw ];
+		var urls = [ "http://gondul.tg19.gathering.org/api/templates/magic.conf/switch=" + sw,
+			     "http://185.110.149.4/api/templates/magic.conf/switch=" + sw ];
 		if (testTree(nmsData,['smanagement','switches',sw])) {
 			var mg = nmsData["smanagement"]["switches"][sw];
 			urls.push("ssh://[" + mg.mgmt_v6_addr + "]");

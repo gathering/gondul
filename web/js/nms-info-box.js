@@ -638,8 +638,16 @@ var switchPortsPanel = function () {
 		expanderButton.innerHTML = "Toggle all";
 		expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
 		expanderButton.setAttribute("role","button");
+
+                var interfaceAliasButton = document.createElement("a");
+                interfaceAliasButton.innerHTML = "Toggle interfaces without ifAlias";
+                interfaceAliasButton.setAttribute("onclick", "$('.nms-interface-missing-alias').toggle();");
+                interfaceAliasButton.setAttribute("role","button");
+
 		domObj.appendChild(chart);
 		domObj.appendChild(expanderButton);
+		domObj.appendChild(document.createElement("br"));
+		domObj.appendChild(interfaceAliasButton);
 		var indicies = [];
 		for (var obj in snmpJson) {
 			indicies.push(obj);
@@ -661,10 +669,12 @@ var switchPortsPanel = function () {
 			var glyphicon = "glyphicon-remove";
 			var button = "btn-danger";
 			var title = "link down";
+			groupObj.classList.add("nms-interface-down");
 			if (snmpJson[obj].ifOperStatus == "up") {
 				glyphicon = "glyphicon-ok";
 				button = "btn-success";
 				title = "link up";
+				groupObj.classList.remove("nms-interface-down");
 			}
 			if (snmpJson[obj].ifAdminStatus == "down") {
 				glyphicon = "glyphicon-ban-circle";
@@ -680,6 +690,9 @@ var switchPortsPanel = function () {
 				}
 			} catch(e) {};
 
+			if(snmpJson[obj].ifAlias == null || snmpJson[obj].ifAlias == '') {
+				groupObj.classList.add("nms-interface-missing-alias");
+			}
 			groupObj.innerHTML = '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#'+cleanObj+'-group">' + snmpJson[obj].ifName + ' </a><small>' + snmpJson[obj].ifAlias + '</small><span class="pull-right">' + traffic + '<i class="btn-xs ' + button + '"><span class="glyphicon ' + glyphicon + '" title="' + title + '" aria-hidden="true"></span></i></span></span>';
 
 			var groupObjCollapse = document.createElement("div");

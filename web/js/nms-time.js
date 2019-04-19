@@ -39,7 +39,7 @@ nmsTime.startNowPicker = function () {
 	now.setMilliseconds(0);
 	var datepicker = $('#nowPicker').datetimepicker({
 		value: now,
-		step: 5,
+		step: 1,
 		mask:false,
 		inline:true,
 		todayButton: true,
@@ -62,7 +62,7 @@ nmsTime.setNow = function(now) {
 	var newDate = new Date(now);
 	newDate.setSeconds(0);
 	newDate.setMilliseconds(0);
-	newDate.setMinutes(newDate.getMinutes() - newDate.getMinutes()%5);
+	newDate.setMinutes(newDate.getMinutes() - newDate.getMinutes()%1);
 	nmsTime._now = newDate;
 	nmsTime._updateData();
 }

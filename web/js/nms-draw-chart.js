@@ -351,16 +351,16 @@ function sizeToText(size) {
       return 'bit/s';
       break;
     case 1:
-      return 'kb/s';
+      return 'Kb/s';
       break;
     case 2:
-      return 'mb/s';
+      return 'Mb/s';
       break;
     case 3:
-      return 'gb/s';
+      return 'Gb/s';
       break;
     case 4:
-      return 'tb/s';
+      return 'Tb/s';
       break;
   }
 }

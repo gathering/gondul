@@ -571,8 +571,10 @@ function dhcpInfo(sw) {
 	var clientPortsUp = 0;
 	var clientPortsUp = setTree(nmsData,['switchstate','switches',sw,'clients','live'],0);
 	var clientPortsTotal = setTree(nmsData,['switchstate','switches',sw,'clients','total'],0);
-	if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
-		dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
+	if (testTree(nmsData,['smanagement','switches',sw,'traffic_vlan'])) {
+		if (testTree(nmsData,['dhcp','networks',nmsData.smanagement.switches[sw].traffic_vlan,'clients'])) {
+			dhcpClients = nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan].clients;
+		}
 	}
 	if (testTree(nmsData,['dhcp','dhcp4',nmsData.smanagement.switches[sw].traffic_vlan])) {
 		var now = nmsData.dhcp.time;
@@ -848,10 +850,10 @@ function cpuInfo(sw) {
 			ret.score = 0;
 		} else if (cpu < 50) {
 			ret.score = 100;
-		} else if (cpu < 95) {
-			ret.score = cpu * 2;
+		} else if (cpu < 70 ) {
+			ret.score = cpu * 3;
 		} else {
-			ret.score = cpu * 4;
+			ret.score = cpu * 7;
 		}
 		ret.why = "CPU utilization: " + cpu + "%";
 		ret.data[0].value = cpu + "%";

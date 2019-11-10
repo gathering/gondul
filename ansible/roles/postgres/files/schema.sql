@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.10
--- Dumped by pg_dump version 9.6.10
+-- Dumped from database version 9.6.11
+-- Dumped by pg_dump version 9.6.11
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,14 +16,14 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
@@ -150,11 +150,11 @@ ALTER SEQUENCE public.linknets_linknet_seq OWNED BY public.linknets.linknet;
 
 
 --
--- Name: metrics; Type: TABLE; Schema: public; Owner: postgres
+-- Name: metrics; Type: TABLE; Schema: public; Owner: nms
 --
 
 CREATE TABLE public.metrics (
-    ts timestamp with time zone DEFAULT now(),
+    "time" timestamp with time zone DEFAULT now(),
     src text,
     metadata jsonb,
     data jsonb
@@ -462,6 +462,13 @@ CREATE INDEX dhcp_time ON public.dhcp USING btree ("time");
 
 
 --
+-- Name: metric_data; Type: INDEX; Schema: public; Owner: nms
+--
+
+CREATE INDEX metric_data ON public.metrics USING gin (data);
+
+
+--
 -- Name: ping_brin_time; Type: INDEX; Schema: public; Owner: nms
 --
 
@@ -640,95 +647,10 @@ ALTER TABLE ONLY public.ping
 
 
 --
--- Name: TABLE config; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.config TO dhcptail;
-
-
---
--- Name: TABLE dhcp; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.dhcp TO dhcptail;
-
-
---
--- Name: TABLE linknet_ping; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.linknet_ping TO dhcptail;
-
-
---
--- Name: TABLE linknets; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.linknets TO dhcptail;
-
-
---
--- Name: TABLE metrics; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.metrics TO nms;
-
-
---
--- Name: TABLE networks; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.networks TO dhcptail;
-
-
---
--- Name: TABLE oplog; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.oplog TO dhcptail;
-
-
---
--- Name: TABLE ping; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.ping TO dhcptail;
-
-
---
--- Name: TABLE ping_secondary_ip; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.ping_secondary_ip TO dhcptail;
-
-
---
--- Name: TABLE seen_mac; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.seen_mac TO dhcptail;
-
-
---
--- Name: TABLE snmp; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.snmp TO postgres;
-GRANT ALL ON TABLE public.snmp TO dhcptail;
-
-
---
 -- Name: SEQUENCE snmp_id_seq; Type: ACL; Schema: public; Owner: nms
 --
 
 GRANT ALL ON SEQUENCE public.snmp_id_seq TO postgres;
-
-
---
--- Name: TABLE switches; Type: ACL; Schema: public; Owner: nms
---
-
-GRANT ALL ON TABLE public.switches TO dhcptail;
 
 
 --

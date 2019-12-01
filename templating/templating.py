@@ -8,7 +8,7 @@ import netaddr
 import requests
 
 from flask import Flask, request
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, TemplateError
 
 endpoints = "read/networks read/oplog read/snmp read/switches-management public/distro-tree public/config public/dhcp public/dhcp-summary public/ping public/switches public/switch-state".split()
 
@@ -16,9 +16,12 @@ objects = {}
 
 
 def getEndpoint(endpoint):
-    r = requests.get("http://localhost:80/api/{}".format(endpoint))
-    if r.status_code != 200:
-        raise Exception("Bad status code for endpoint {}: {}".format(endpoint, r.status_code))
+    uri = "{}/api/{}".format(args.server, endpoint)
+    try:
+        r = requests.get(uri, timeout=args.timeout)
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError):
+        raise Exception("Couldn't connect to server {}".format(uri))
+    r.raise_for_status()
     return r.json()
 
 
@@ -52,14 +55,18 @@ def add_header(response):
 
 @app.route("/<path>", methods=["GET"])
 def root_get(path):
-    updateData()
     try:
+        updateData()
         template = env.get_template(path)
         body = template.render(objects=objects, options=request.args)
     except TemplateNotFound:
         return 'Template "{}" not found\n'.format(path), 404
-    except Exception as err:
+    except TemplateError as err:
         return 'Templating of "{}" failed to render. Most likely due to an error in the template. Error transcript:\n\n{}\n----\n\n{}\n'.format(path, err, traceback.format_exc()), 400
+    except requests.exceptions.HTTPError as err:
+        return 'HTTP error from gondul: {}'.format(err), 500
+    except Exception as err:
+        return 'Connection issues: {}'.format(err), 500
     return body, 200
 
 
@@ -80,6 +87,8 @@ parser.add_argument("-t", "--templates", type=str, nargs="+", help="location of 
 parser.add_argument("-h", "--host", type=str, default="127.0.0.1", help="host address")
 parser.add_argument("-p", "--port", type=int, default=8080, help="host port")
 parser.add_argument("-d", "--debug", action="store_true", help="enable debug mode")
+parser.add_argument("-s", "--server", type=str, default="http://localhost:80", help="gondul server address")
+parser.add_argument("-x", "--timeout", type=int, default=1, help="gondul server timeout")
 
 args = parser.parse_args()
 env.loader.searchpath = args.templates

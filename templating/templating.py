@@ -88,12 +88,13 @@ parser.add_argument("-h", "--host", type=str, default="127.0.0.1", help="host ad
 parser.add_argument("-p", "--port", type=int, default=8080, help="host port")
 parser.add_argument("-d", "--debug", action="store_true", help="enable debug mode")
 parser.add_argument("-s", "--server", type=str, default="http://localhost:80", help="gondul server address")
-parser.add_argument("-x", "--timeout", type=int, default=1, help="gondul server timeout")
+parser.add_argument("-x", "--timeout", type=int, default=2, help="gondul server timeout")
 
 args = parser.parse_args()
 env.loader.searchpath = args.templates
 
 if not sys.argv[1:]:
     parser.print_help()
+    sys.exit(1)
 
 app.run(host=args.host, port=args.port, debug=args.debug)

@@ -3,11 +3,10 @@ New approach to Gondul API
 
 The current api is split in three/four:
 
-/api/read - read/only access for sensitive data
-/api/public - read/only access for public data
-/api/write - write-only (authenticated)
-/templating or similar - for templating (read/sort-of-write-but-not-quite,
-   sensitive)
+- /api/read - read/only access for sensitive data
+- /api/public - read/only access for public data
+- /api/write - write-only (authenticated)
+- /templating or similar - for templating (read/sort-of-write-but-not-quite, sensitive)
 
 Today
 -----

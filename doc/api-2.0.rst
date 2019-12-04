@@ -119,7 +119,8 @@ I'm fairly convinced about:
 I'm somewhat convinced about:
 
 - /api/ifmetrics - Get all interface metrics - regardless of source. Also
-  integrates the logic of "switch-state".
+  integrates the logic of "switch-state". If possible: Get "rates" for
+  relevant counters.
 
 - /api/ifmetrics/some-switch - Get all interface metrics for a single
   switch
@@ -129,12 +130,13 @@ I'm somewhat convinced about:
 
 Less sure:
 
-- /api/templates/ - List all templates
+- /api/templates/ - List all templates (in JSON format)
 
-- /api/templates/some-template - GET/POST uncompiled template. Should be
-  git-backed.
+- /api/templates/some-template - GET uncompiled template. Should optionally
+  support "Accept: application/json" to provide the data json-encoded as
+  well as "Accept: text/plain" for plain text/raw (default).
 
-- /api/t/some-template - GET the compiled template
+- /templating/ GET the compiled template (uses templating.py)
 
 - /api/collector/{name} - POST url for relevant collector. Uses Skogul
   JSON format (and implementation).
@@ -142,18 +144,6 @@ Less sure:
 - /api/collector/{dhcp,snmp,telemetry,ping,generic} - Some examples, where
   "generic" will allow us to accept any data, and just stick it in some
   general-purpose format or something. I have some more ideas about that.
-
-I also believe we should strive to implement something for time series,
-very dumbed down. E.g.: hardocded a set of time series queries we support.
-We should strive to support "what is the current rate of an interface". I'm
-thinking:
-
-- /api/rates/some-switch - rates for all interfaces on a switch
-
-- /api/rates/some-switch/port - rates for a specific interface
-
-This will also allow us to white-list by interface if we need password-less
-authentication....
 
 We could also consider implementing https://grafana.com/grafana/plugins/grafana-simple-json-datasource
 
@@ -169,3 +159,173 @@ Next up is probably ping, simply because it is, well, simple. It means
 re-factoring the collector to do HTTP POST, but that's a minor issue.
 
 Then I believe tackling SNMP and interfaces is important. 
+
+Ifmetrics example
+-----------------
+
+Interface metrics should be agnostic to SNMP vs Telemetry vs Magic. It will
+therefore have a subset of curated fields. A spec needs to be written and
+maintained that defines what is and isn't REQUIRED, so front-ends can
+gracefully reduce functionality.
+
+Example, which WILL change during implementation::
+
+   {
+      "e13-1": {
+         "ge-0/0/1": {
+            "name": "ge-0/0/1",
+            "snmp_if_index": 1234,
+            "ifHighSpeed": 10000,
+            "if_operational_status": "UP",
+            "parent_ae_name": "ae95",
+            "description": "alias|name?",
+            "ingress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            },
+            "egress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            },
+            "rates": {
+               "ingress": {
+                  "octets": 125,
+                  "errors": 5,
+                  "discards": 0,
+                  ...
+               },
+               "egress": {
+                  "octets": 125,
+                  "errors": 5,
+                  "discards": 0,
+                  ...
+               }
+            }
+         },
+         "ge-0/0/2": {....}
+      },
+      "e15-1": {
+         "ge-0/0/1": {
+            "name": "ge-0/0/1",
+            "snmp_if_index": 1234,
+            "ifHighSpeed": 10000,
+            "if_operational_status": "UP",
+            "parent_ae_name": "ae95",
+            "description": "alias|name?",
+            "ingress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            },
+            "egress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            },
+            "rates": {
+               "ingress": {
+                  "octets": 125,
+                  "errors": 5,
+                  "discards": 0,
+                  ...
+               },
+               "egress": {
+                  "octets": 125,
+                  "errors": 5,
+                  "discards": 0,
+                  ...
+               }
+            }
+         },
+         "ge-0/0/2": {....}
+      }
+   }
+
+Requesting /api/ifmetrics/e15-1 would give::
+
+   {
+      "ge-0/0/1": {
+         "name": "ge-0/0/1",
+         "snmp_if_index": 1234,
+         "ifHighSpeed": 10000,
+         "if_operational_status": "UP",
+         "parent_ae_name": "ae95",
+         "description": "alias|name?",
+         "ingress": {
+            "octets": 125,
+            "errors": 5,
+            "discards": 0,
+            ...
+         },
+         "egress": {
+            "octets": 125,
+            "errors": 5,
+            "discards": 0,
+            ...
+         },
+         "rates": {
+            "ingress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            },
+            "egress": {
+               "octets": 125,
+               "errors": 5,
+               "discards": 0,
+               ...
+            }
+         }
+      },
+      "ge-0/0/2": {....}
+   }
+
+And /api/ifmetrics/e15-1/ge-0/0/1 ::
+
+   {
+      "name": "ge-0/0/1",
+      "snmp_if_index": 1234,
+      "ifHighSpeed": 10000,
+      "if_operational_status": "UP",
+      "parent_ae_name": "ae95",
+      "description": "alias|name?",
+      "ingress": {
+         "octets": 125,
+         "errors": 5,
+         "discards": 0,
+         ...
+      },
+      "egress": {
+         "octets": 125,
+         "errors": 5,
+         "discards": 0,
+         ...
+      },
+      "rates": {
+         "ingress": {
+            "octets": 125,
+            "errors": 5,
+            "discards": 0,
+            ...
+         },
+         "egress": {
+            "octets": 125,
+            "errors": 5,
+            "discards": 0,
+            ...
+         }
+      }
+   }
+
+Some issues remains: There should be an idea of totals, for convenience.
+Some metadata regarding precision of rates (e.g.: number of measurements or
+something), and various other enrichments. So the exact details here might
+need some refinement.
+

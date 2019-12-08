@@ -18,7 +18,7 @@ if (req.url ~ "^/api/templates") {
 
 ## Requirements
 
-* Python3
+* Python3.6
 * jinja2
 * requests
 * flask

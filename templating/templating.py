@@ -71,7 +71,7 @@ def root_get(path):
     except requests.exceptions.HTTPError as err:
         return f'HTTP error from gondul: {err}', 500
     except Exception as err:
-        return f'Uncaight error: {err}', 500
+        return f'Uncaught error: {err}', 500
     return body, 200
 
 

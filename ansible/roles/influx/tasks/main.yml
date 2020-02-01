@@ -7,7 +7,7 @@
   apt_key: url=https://repos.influxdata.com/influxdb.key state=present
 
 - name: Add InfluxDB repository
-  apt_repository: repo='deb https://repos.influxdata.com/debian jessie stable' state=present
+  apt_repository: repo='deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable' state=present
 
 - name: Install InfluxDB packages
   apt: name=influxdb state=present update_cache=yes

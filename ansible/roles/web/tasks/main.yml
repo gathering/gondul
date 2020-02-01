@@ -36,14 +36,37 @@
           'python3-flask']
       state: present
 
+- name: Install InfluxDB module
+  cpanm:
+    name: AnyEvent::InfluxDB
+
+- name: Make apache listen on port 8080
+  lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
+  notify: restart apache
+
+- apache2_module:
+    state: present
+    name: cgid
+  notify: restart apache
+
+- name: Enable gondul-config
+  copy:
+      dest: /etc/apache2/sites-enabled/gondul.conf
+      src: apache-virtualhost.conf
+  notify: restart apache
+
+- command: a2dissite 000-default
+  ignore_errors: true
+  notify: restart apache
+
 - name: Add packagecloud.io Varnish apt key.
   apt_key:
-    url: https://packagecloud.io/varnishcache/varnish5/gpgkey
+    url: https://packagecloud.io/varnishcache/varnish63/gpgkey
     state: present
 
 - name: Add packagecloud.io Varnish apt repository.
   apt_repository:
-    repo: "deb https://packagecloud.io/varnishcache/varnish5/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+    repo: "deb https://packagecloud.io/varnishcache/varnish63/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
     state: present
 
 - name: Ensure Varnish is installed.
@@ -73,32 +96,8 @@
       src: varnish.vcl
   notify: restart varnish
 
-- name: Make apache listen on port 8080
-  lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
-  notify: restart apache
-
-- apache2_module:
-    state: present
-    name: cgid
-  notify: restart apache
-
-- name: Enable gondul-config
-  copy:
-      dest: /etc/apache2/sites-enabled/gondul.conf
-      src: apache-virtualhost.conf
-  notify: restart apache
-
-- command: a2dissite 000-default
-  ignore_errors: true
-  notify: restart apache
-
-- name: Install InfluxDB module
-  cpanm:
-    name: AnyEvent::InfluxDB
-
 - name: add systemd service file for gondul-template
   copy:
     dest: /etc/systemd/system/gondul-template.service
     src: gondul-template.service
   notify: restart gondul-template
-

@@ -5,10 +5,6 @@
   apt:
       name: ['postgresql', 'python-psycopg2', 'sudo']
       state: present
-- name: Drop postgresql-config
-  copy:
-      dest: /etc/postgresql/9.6/main/postgresql.conf
-      src: postgresql.conf
 - name: Add db to hosts
   lineinfile:
     dest: /etc/hosts

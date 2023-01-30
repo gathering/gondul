@@ -828,7 +828,7 @@ function snmpUpInfo(sw) {
 				ret.score = 0;
 			}
 
-			ret.why = "LAG member (ge/xe/et) speed is " + seen_up + " but logical (ae) is " + total_up;
+			ret.why = "LAG member (ge/mge/xe/et) speed is " + seen_up + " but logical (ae) is " + total_up;
 			ret.data[0].value = ret.why;
 		}
 	}

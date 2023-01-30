@@ -953,7 +953,7 @@ var switchLinks = function() {
 		var sw = this.sw;
 		
 		var topp = document.createElement("div")
-		var urls = [ "http://gondul.tg19.gathering.org/api/templates/magic.conf/switch=" + sw,
+		var urls = [ "http://gondul.tg23.gathering.org/api/templates/magic.conf/switch=" + sw,
 			     "http://185.110.149.4/api/templates/magic.conf/switch=" + sw ];
 		if (testTree(nmsData,['smanagement','switches',sw])) {
 			var mg = nmsData["smanagement"]["switches"][sw];

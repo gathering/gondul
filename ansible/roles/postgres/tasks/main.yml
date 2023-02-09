@@ -3,7 +3,7 @@
 #
 - name: Install db-packages
   apt:
-      name: ['postgresql', 'python-psycopg2', 'sudo']
+      name: ['postgresql', 'python3-psycopg2', 'sudo']
       state: present
 - name: Add db to hosts
   lineinfile:

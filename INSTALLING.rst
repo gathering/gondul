@@ -34,7 +34,7 @@ As ``$YOURUSER``::
 
         $ git clone https://github.com/gathering/gondul.git
         $ cd gondul/ansible
-        $ cd 
+        $ ansible-playbook -i inventory-localhost site.yml
 
 Then visit http://ip-your-boxen/
 

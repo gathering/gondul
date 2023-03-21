@@ -48,13 +48,13 @@ sub vcl_recv {
        return(pass);
     }
 
-    # Redirect to https - note that this does NOT happen for 
+    # Redirect to https - note that this does NOT happen for
     # "whitelisted" stuff - e.g., templating engine.
-    #disabled as we haven't fixd hitch for ssl termination
-    #if (std.port(local.ip) == 80 && client.ip !~ white) {
-    #    set req.http.x-redir = "https://" + req.http.host + req.url;
-    #    return(synth(301));
-    #}
+    # disabled as we haven't fixd hitch for ssl termination
+    # if (std.port(local.ip) == 80 && client.ip !~ white) {
+    #     set req.http.x-redir = "https://" + req.http.host + req.url;
+    #     return(synth(301));
+    # }
 
     # Basic authentication ....
     # We include the following from /etc/varnish/auth.vcl, to keep passwords
@@ -64,11 +64,11 @@ sub vcl_recv {
     # where AAAA is the result of:
     # echo -n user:password | base64.
     # Example:
-    # kly@jade:~$ echo -n tech:rules | base64 
+    # kly@jade:~$ echo -n tech:rules | base64
     # dGVjaDpydWxlcw==
-    # # cat /etc/varnish/auth.vcl 
+    # # cat /etc/varnish/auth.vcl
     # req.http.Authorization != "Basic dGVjaDpydWxlcw=="
-    if (client.ip !~ white && 
+    if (client.ip !~ white &&
             include "/etc/varnish/auth.vcl";) {
         return(synth(401));
     } else {
@@ -78,18 +78,20 @@ sub vcl_recv {
 
     if (req.url ~ "^/api/templates") {
         set req.url = regsub(req.url,"^/api/templates","");
+        set req.url = regsub(req.url, "magic.conf/", "magic.conf?");
         set req.backend_hint = templating;
     }
-    
+
     if (req.url ~ "^/query") {
-        set req.backend_hint = influx;
+	set req.backend_hint = influx;
+	# set req.http.Authorization = "Basic";
     }
 
     # More human-typable URL
     if (req.url ~ "^/where" || req.url ~ "^/location") {
         set req.url = "/api/public/location";
     }
-    
+
     # Fairly standard filtering. Default VCL will do "pipe", which is
     # pointless for us.
     if (req.method != "GET" &&
@@ -159,9 +161,9 @@ sub vcl_backend_response {
     if (beresp.http.x-ban) {
         ban("obj.http.x-url ~ " + beresp.http.x-ban);
     }
-    
+
     # Force gzip on text-based content so we don't have to
-    # rely on Apache. 
+    # rely on Apache.
     if (beresp.http.content-type ~ "text") {
         set beresp.do_gzip = true;
     }
@@ -175,9 +177,9 @@ sub vcl_backend_response {
         set beresp.grace = 10s;
         set beresp.ttl = 5s;
     }
-    
+
     # Wait, nvm, we catch non-200 here and make them actually cacheable for 5
-    # seconds - we don't want to nuke a backend just because it has ...issues. 
+    # seconds - we don't want to nuke a backend just because it has ...issues.
     if (beresp.status != 200) {
         set beresp.uncacheable = false;
         set beresp.ttl = 5s;

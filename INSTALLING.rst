@@ -4,8 +4,8 @@ Installing Gondul
 Requirements
 ------------
 
-- Debian Stable (stretch) with backports (possibly newer)
-- Ansible v2.7 or newer (recommended: from backports)
+- Debian Stable
+- Ansible v2.7 or newer
 - A harddrive of some size. Recommended: SSD. 200GB should be sufficient
   for almost any party.
 - CPU: Depends on client-load. Most semi-modern cpu's will be more than
@@ -27,15 +27,14 @@ As root:
         # YOURUSER=kly
         # apt-get install sudo git
         # echo ${YOURUSER} ALL=NOPASSWD: ALL >> /etc/sudoers
-        # echo  deb http://http.debian.net/debian stretch-backports main non-free contrib > /etc/apt/sources.list.d/bp.list
         # apt-get update
-        # apt-get install ansible/stretch-backports
+        # apt-get install ansible
 
 As ``$YOURUSER``::
 
         $ git clone https://github.com/gathering/gondul.git
         $ cd gondul/ansible
-        $ ansible-playbook -i inventory-localhost site.yml
+        $ cd 
 
 Then visit http://ip-your-boxen/
 
@@ -61,7 +60,7 @@ req.http.Authorization != "Basic dGVjaDpydWxlcw=="
 Securing InfluxDB
 -----------------
 
-Default InfluxDB is wide open, to limit this a little we need to configure a few users
+Default InfluxDB is wide open, to limit this we need to configure a few users
 
 Create the users needed:
 

@@ -410,6 +410,7 @@ function initNMS() {
 	setupKeyhandler();
 	nmsSearch.init();
 	nmsDhcp.init();
+	nmsNightMode.init();
 }
 
 function detectHandler() {

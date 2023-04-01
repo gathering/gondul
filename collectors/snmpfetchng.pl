@@ -99,6 +99,7 @@ sub inner_loop
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
 					  UseEnums => 1,
+					  Timeout => 5000000,
 					  Version => '2');
 		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
 		if (!defined($ret)) {
@@ -106,7 +107,7 @@ sub inner_loop
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
-	SNMP::MainLoop(5);
+	SNMP::MainLoop(10);
 }
 
 sub callback{
@@ -197,11 +198,15 @@ sub callback{
                                         $tmp_field = '"'.$tree{$iid}{$key}.'"';
                                 }
 
+				if ($iid eq "") {
+					$iid = "0";
+				}
                                 push (@influx_tree,
                                 {
                                         measurement => 'snmp',
                                         tags => {
                                                 switch =>  $switch{'sysname'},
+						idd => $iid
                                                 },
                                         fields => { $key => $tmp_field },
                                 });
@@ -237,7 +242,7 @@ sub callback{
 		        warn "caught error: $_";
 		};
 
-                if ((time - $switch{'start'}) > 10) {
+                if ((time - $switch{'start'}) > 5) {
                         mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
 		}
 	} else {

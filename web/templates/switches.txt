@@ -1,4 +1,0 @@
-{% for (switch, s) in objects["public/switches"].switches|dictsort %}
-	{% set mg = objects["read/switches-management"].switches[switch]  -%}
-	{{ switch }} {{mg.subnet4 }} {{ mg.subnet6 }} {{ mg.mgmt_v4_addr }} {{ mg.mgmt_v6_addr }} {{ mg.traffic_vlan }} {{ s.distro_name }}
-{% endfor %}

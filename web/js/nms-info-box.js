@@ -954,7 +954,7 @@ var switchLinks = function() {
 		
 		var topp = document.createElement("div")
 		var urls = [ "http://gondul.tg23.gathering.org/api/templates/magic.conf/switch=" + sw,
-			     "http://185.110.149.4/api/templates/magic.conf/switch=" + sw ];
+			     "http://185.110.148.105/api/templates/magic.conf/switch=" + sw ];
 		if (testTree(nmsData,['smanagement','switches',sw])) {
 			var mg = nmsData["smanagement"]["switches"][sw];
 			urls.push("ssh://[" + mg.mgmt_v6_addr + "]");

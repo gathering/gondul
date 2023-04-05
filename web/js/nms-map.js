@@ -333,8 +333,17 @@ nmsMap._drawSwitch = function(sw)
 	this._c.switch.ctx.shadowBlur = 0;
 	var switchtext = sw;
 	var textl = switchtext.length;
-	if (textl > 12)
-		switchtext = switchtext.slice(0,7) + ".." + switchtext.slice(textl-2,textl);
+	// Cut switch name if longer than this
+	var text_cut_l = 14;
+	// Cut switch name by more if we have a status indicator
+	if (this._info[sw]) {
+		text_cut_l -= this._info[sw].length
+	}
+	if (textl > text_cut_l) {
+		var rhs_text = this._info[sw];
+
+		switchtext = switchtext.slice(0,text_cut_l - 5) + ".." + switchtext.slice(textl-2,textl);
+	}
 
 	if (this._lastName[sw] != switchtext) {
 		nmsMap.stats.textSwitchDraws++;

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+fil=/var/log/apache2/kek
+echo 'Content-Type: text/html'
+echo
+echo
+pw="nise1heePhohpheixa9ques7ziesh7Ach1Ahthees9ang1zohph2ahSh6ahweitu1Ooquiegh6Oipie2ohch6aebooxieng8hie4jumagoob5ethoh5ahfum4au2oothie1oochuj3aebei1aenojain9usae0siehoop8eiNgaekahhiSiep8jei5oG8zu8eeLei8yojoo6aika0jaupoogh6aequo2eitai0ahhounao2paiQuifahVesh4Oud"
+sw=$(echo $PATH_INFO | sed 's/^\///')
+POST -H'Content-Type: application/json'  https://gondul:${pw}@awx.tg23.gathering.org/api/v2/job_templates/19/launch/ >/dev/null 2>&1 <<_EOF_
+{"credential_passwords":{},"limit":"$sw","extra_vars":{}}
+_EOF_
+ret=$?
+./oplog >/dev/null 2>&1 <<_EOF_
+{"systems": "$sw", "log": "Refap queued in AWX for $sw"}
+_EOF_
+while read; do
+	true	
+done
+echo '"ok"'

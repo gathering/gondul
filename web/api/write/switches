@@ -23,7 +23,6 @@ my @dups;
 
 my $sth = $nms::web::dbh->prepare("SELECT sysname FROM switches WHERE sysname=?");
 
-
 my @fields = ( 'community', 'tags', 'distro_name', 'distro_phy_port',  'mgmt_v4_addr', 'mgmt_v6_addr', 'mgmt_vlan', 'placement', 'poll_frequency', 'sysname', 'traffic_vlan', 'deleted');
 
 sub convertplace
@@ -112,7 +111,7 @@ foreach my $tmp2 (@tmp) {
 				push @set, "$_=" . $dbh->quote($switch{$_});
 			}
 		} keys %switch;
-		$nms::web::dbh->do("UPDATE SWITCHES SET " . join(", ", @set) . "WHERE sysname=" . $dbh->quote($switch{'sysname'}) . ";");
+		$nms::web::dbh->do("UPDATE SWITCHES SET " . join(", ", @set) . " WHERE sysname=" . $dbh->quote($switch{'sysname'}) . ";");
 		push @dups, $switch{'sysname'};
 	}
 }

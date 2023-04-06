@@ -55,6 +55,9 @@ foreach my $tmp2 (@tmp) {
 		if ($template{'gw6'} eq 'DEFAULT' and $template{'subnet6'} ne 'DEFAULT') {
 			$template{'gw6'} = "host(inet $template{'subnet6'} + 1)";
 		}
+		if (defined($network{'tags'})) {
+			$template{'tags'} = "'[". join(",", map { "\"".$_."\"" } @{$network{'tags'}})."]'";
+		}
 		$nms::web::dbh->do("INSERT INTO NETWORKS (name, subnet4, subnet6, router, gw4, gw6, vlan, tags)  VALUES ($template{'name'}, $template{'subnet4'}, $template{'subnet6'}, $template{'router'}, $template{'gw4'}, $template{'gw6'}, $template{'vlan'}, $template{'tags'});");
 		push @added, $network{'name'};
 	} else {

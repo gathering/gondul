@@ -13,5 +13,14 @@ nmsDhcp.updateSummary = function() {
 	if (e == undefined) {
 		return;
 	}
-	e.innerHTML = nmsData.dhcpsummary.dhcp.clients + " clients";
+	e.innerHTML = "";
+	if(nmsData.dhcpsummary.dhcp[4] != undefined){
+		e.innerHTML = e.innerHTML + nmsData.dhcpsummary.dhcp[4] + " IPv4 clients";
+	}
+	if(nmsData.dhcpsummary.dhcp[4] != undefined && nmsData.dhcpsummary.dhcp[6] != undefined){
+		e.innerHTML = e.innerHTML + " | ";
+	}
+        if(nmsData.dhcpsummary.dhcp[6] != undefined){
+                e.innerHTML = e.innerHTML + nmsData.dhcpsummary.dhcp[6] + " IPv6 clients";
+        }
 }

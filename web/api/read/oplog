@@ -17,9 +17,12 @@ my $query = $nms::web::dbh->prepare('select id,date_trunc(\'second\',time) as ti
 $query->execute();
 while (my $ref = $query->fetchrow_hashref()) {
 	my %meh;
+	if (!defined($ref->{'log'})) {
+		next;
+	}
 	$meh{'time'} = $ref->{'h'} . ":" . $ref->{'m'};
-	$meh{'log'} = $ref->{'log'};
-	$meh{'username'} = $ref->{'username'};
+	$meh{'log'} = $ref->{'log'} || "weird?";
+	$meh{'username'} = $ref->{'username'} || "undefined";
 	$meh{'id'} = $ref->{'id'};
 	$meh{'systems'} = $ref->{'systems'};
 	$meh{'timestamp'} = $ref->{'timestamp'};

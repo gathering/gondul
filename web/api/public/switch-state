@@ -80,7 +80,7 @@ while ( my $ref = $q->fetchrow_hashref() ) {
 
 	$json{'switches'}{$sysname}{vcp}{jnxVirtualChassisPortInOctets} = $data{'vcp'}{'jnxVirtualChassisPortInOctets'};
 	$json{'switches'}{$sysname}{vcp}{jnxVirtualChassisPortOutOctets} = $data{'vcp'}{'jnxVirtualChassisPortOutOctets'};
-	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1008'};
+	$json{'switches'}{$sysname}{'temp'} = $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.1.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.2.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.3.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.4.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.5.0.0'} || $data{'misc'}{'jnxOperatingTemp'}{'7.6.0.0'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1011'} || $data{'misc'}{'ciscoEnvMonTemperatureStatusValue'}{'1008'};
 	$json{'switches'}{$sysname}{'time'} = $ref->{'time'};
 }
 

@@ -938,6 +938,10 @@ nmsInfoBox.setLegendPick = function(tag,id) {
 
 nmsInfoBox.addPanelType("switchSummary",switchSummaryPanel);
 
+var copybuttonfunc = function(text) {
+	console.log('clickened', text);
+	navigator.clipboard.writeText(text);
+}
 var switchLinks = function() {
 	nmsInfoPanel.call(this,"switchLinks");
 	var latencyChart;
@@ -954,18 +958,30 @@ var switchLinks = function() {
 		
 		var topp = document.createElement("div")
 		var urls = [ "http://gondul.tg23.gathering.org/api/templates/magic.conf/switch=" + sw,
-			     "http://185.110.148.105/api/templates/magic.conf/switch=" + sw ];
+			     "http://185.110.148.105/api/templates/magic.conf/switch=" + sw,
+			     "http://gondul.tg23.gathering.org/api/write/fap/" + sw
+		];
 		if (testTree(nmsData,['smanagement','switches',sw])) {
 			var mg = nmsData["smanagement"]["switches"][sw];
 			urls.push("ssh://[" + mg.mgmt_v6_addr + "]");
 			urls.push("ssh://" + mg.mgmt_v4_addr);
 		}
 		for (var x in urls) {
+			console.log("create link")
 			topp.appendChild(document.createElement("br"));
+			var container = document.createElement("div");
 			var link = document.createElement("a");
 			link.href = urls[x];
 			link.textContent = urls[x];
-			topp.appendChild(link);
+			var copybutton = document.createElement("button");
+			copybutton.setAttribute("onclick", "copybuttonfunc('"+urls[x]+"')");
+			copybutton.type = "button";
+			var btnText = document.createTextNode("copy url");
+			copybutton.className = "btn btn-primary";
+			copybutton.appendChild(btnText);
+			container.appendChild(link);
+			container.appendChild(copybutton);
+			topp.appendChild(container);
 		}
 		this._render(topp);
 	};

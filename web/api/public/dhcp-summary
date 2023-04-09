@@ -6,10 +6,10 @@ use nms::web;
 
 nms::web::setwhen('2h');
 
-my $q2 = $nms::web::dbh->prepare("select count(distinct data->>'clientmac') as clients from metrics where $nms::web::when;");
+my $q2 = $nms::web::dbh->prepare("select count(DISTINCT data ->> 'clientip') as clients, family(inet (data ->> 'clientip')) as family from metrics where $nms::web::when GROUP by family;");
 $q2->execute();
 while (my $ref = $q2->fetchrow_hashref()) {
-	$nms::web::json{'dhcp'} = $ref;
+	$nms::web::json{'dhcp'}{$ref->{'family'}} = $ref->{'clients'};
 }
 $nms::web::cc{'max-age'} = "10";
 $nms::web::cc{'stale-while-revalidate'} = "15";

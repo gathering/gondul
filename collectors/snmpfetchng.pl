@@ -28,12 +28,13 @@ $dbh->{RaiseError} = 1;
 my $influx = nms::influx_connect();
 my $qualification = <<"EOF";
 (last_updated IS NULL OR now() - last_updated > poll_frequency)
-AND (locked='f' OR now() - last_updated > '15 minutes'::interval)
+AND (locked='f' OR now() - last_updated > '5 minutes'::interval)
 AND (mgmt_v4_addr is not null or mgmt_v6_addr is not null) AND deleted = false
+AND NOT tags ? 'skip-snmp-polling'
 EOF
 
 # Borrowed from snmpfetch.pl
-our $qswitch = $dbh->prepare(<<"EOF")
+our $qswitch = $dbh->prepare(<<"EOF", {pg_placeholder_dollaronly => 1})
 SELECT
   sysname,switch,host(mgmt_v6_addr) as ip2,host(mgmt_v4_addr) as ip,community,
   DATE_TRUNC('second', now() - last_updated - poll_frequency) AS overdue
@@ -43,7 +44,7 @@ WHERE
 $qualification
 ORDER BY
   overdue DESC
-LIMIT ?
+LIMIT \$1
 EOF
 	or die "Couldn't prepare qswitch";
 our $qlock = $dbh->prepare("UPDATE switches SET locked='t', last_updated=now() WHERE switch=?")
@@ -99,11 +100,15 @@ sub inner_loop
 		my $s = SNMP::Session->new(DestHost => $switch{'mgtip'},
 					  Community => $switch{'community'},
 					  UseEnums => 1,
-					  Timeout => 5000000,
+					  Timeout  => 5000000,
 					  Version => '2');
-		my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
-		if (!defined($ret)) {
-			mylog("Fudge: ".  $s->{'ErrorStr'});
+		if (!defined($s)) {
+			mylog("Fudge, no session defined. Now what?");
+		} else {
+			my $ret = $s->bulkwalk(0, 10, @nms::config::snmp_objects, sub{ callback(\%switch, @_); });
+			if (!defined($ret)) {
+				mylog("Fudge: ".  $s->{'ErrorStr'});
+			}
 		}
 	}
 	mylog( "Polling " . @switches . " switches: $poll_todo");
@@ -201,15 +206,17 @@ sub callback{
 				if ($iid eq "") {
 					$iid = "0";
 				}
-                                push (@influx_tree,
-                                {
-                                        measurement => 'snmp',
-                                        tags => {
-                                                switch =>  $switch{'sysname'},
-						idd => $iid
-                                                },
-                                        fields => { $key => $tmp_field },
-                                });
+				if ($key ne "entPhysicalFirmwareRev" && $key ne "entPhysicalHardwareRev" && $key ne "entPhysicalSerialNum") {
+                                	push (@influx_tree,
+                                	{
+                                        	measurement => 'snmp',
+                                        	tags => {
+                                                	switch =>  $switch{'sysname'},
+							idd => $iid
+                                                	},
+                                        	fields => { $key => $tmp_field },
+                        	        });
+				}
 		}
 	}
 	if ($total > 0) {
@@ -235,6 +242,7 @@ sub callback{
 				on_success => $cv,
 				on_error => sub {
 					$cv->croak("Failed to write data: @_");
+					# warn "Failed to write data: @_";
 				}
 			);
 			$cv->recv;
@@ -242,7 +250,7 @@ sub callback{
 		        warn "caught error: $_";
 		};
 
-                if ((time - $switch{'start'}) > 5) {
+                if ((time - $switch{'start'}) > 10) {
                         mylog( "Polled $switch{'sysname'} in " . (time - $switch{'start'}) . "s.");
 		}
 	} else {

@@ -130,7 +130,10 @@ sub guess_placement_tg {
 		my ($e, $s) = ($1, $2);
 		$src = "main";
 
-		$x = int(292 + (($e-1)/2) * 31.1);
+		$x = int(572 + (($e-1)/2) * 31.1);
+		if (($e-1/2)>9) {
+			$x += 140;
+		}
 		$y = undef;
 
 		$x += 14 if ($e >= 21);
@@ -148,15 +151,16 @@ sub guess_placement_tg {
 		$yy = $y + 120;
 
 		# Justeringer
-		$y += 45 if $name eq "e1-4";
-		$y += 20 if $name eq "e3-4";
-		$y += 15 if $name eq "e5-4";
-		$yy -= 25 if $name eq "e7-1";
-		$yy -= 25 if $name eq "e5-1";
-		$yy -= 25 if $name eq "e3-1";
-		$y += 20 if ($e >= 79 and $s == 2);
-		$yy -= 20 if ($e >= 79 and $s == 1);
-		$yy -= 30 if ($e >= 81 and $s == 1);
+		
+		#	$y += 45 if $name eq "e1-4";
+		#$y += 20 if $name eq "e3-4";
+		#$y += 15 if $name eq "e5-4";
+		#$yy -= 25 if $name eq "e7-1";
+		#$yy -= 25 if $name eq "e5-1";
+		#$yy -= 25 if $name eq "e3-1";
+		#$y += 20 if ($e >= 79 and $s == 2);
+		#$yy -= 20 if ($e >= 79 and $s == 1);
+		#$yy -= 30 if ($e >= 81 and $s == 1);
 
 	} elsif ($name =~ /^creativia(\d+)$/) {
 		my ($s) = ($1);
@@ -181,11 +185,14 @@ sub guess_placement_tg {
 		$y = int(759 + 20.5 * $s);
 		$xx = $x + 65;
 		$yy = $y + 14;
-	} elsif ($name =~ /^s(\d).floor/) {
+	} elsif ($name =~ /^d(\d).floor/) {
 		my $d = ($1);
 		$src = "distro";
 		$d -= 1;
-		$x = 260 + $d * 145;
+		$x = 438 + $d * 145;
+		if ($d > 1) {
+			$x += 230;
+		}
 		$y = 417;
 		$xx = $x + 130;
 		$yy = $y + 20;

@@ -72,6 +72,12 @@ nmsMap.init = function() {
 };
 
 nmsMap.setSwitchColor = function(sw, color) {
+	/*
+         * NEED TO LOCATE? YAS.	
+	if (nmsData.switches.switches[sw] && nmsData.switches.switches[sw].tags.includes("locating") && this._color[sw] != "purple") {
+		color = "purple";
+	}
+	*/
 	if (this._color[sw] != color) {
 		this._color[sw] = color;
 		this._drawSwitch(sw);
@@ -333,8 +339,21 @@ nmsMap._drawSwitch = function(sw)
 	this._c.switch.ctx.shadowBlur = 0;
 	var switchtext = sw;
 	var textl = switchtext.length;
-	if (textl > 12)
-		switchtext = switchtext.slice(0,7) + ".." + switchtext.slice(textl-2,textl);
+	// Cut switch name if longer than this
+	var text_cut_l = 14;
+	// Cut switch name by more if we have a status indicator
+	if (this._info[sw]) {
+		text_cut_l -= this._info[sw].length
+	}
+	if (textl > text_cut_l) {
+		var rhs_text = this._info[sw];
+
+		switchtext = switchtext.slice(0,text_cut_l - 5) + ".." + switchtext.slice(textl-2,textl);
+	}
+	// Don't display AP name
+	if (switchtext[0] == "a" && switchtext[1] == "p") {
+		switchtext = "ap";
+	}
 
 	if (this._lastName[sw] != switchtext) {
 		nmsMap.stats.textSwitchDraws++;
@@ -350,6 +369,10 @@ nmsMap._drawSwitchInfo = function(sw) {
 	var box = this._getBox(sw);
 	if (this._lastInfo[sw] == this._info[sw])
 		return;
+	// Skip info on APs
+	if (sw[0] == "a" && sw[1] == "p") {
+		return;
+	}
 	this._clearBox(this._c.textInfo.ctx, box, 3);
 	nmsMap.stats.textInfoClears++;
 	if (this._info[sw] != undefined) {

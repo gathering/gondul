@@ -75,6 +75,7 @@ var nms = {
 		'7':setMapModeFromN,
 		'8':setMapModeFromN,
 		'9':setMapModeFromN,
+		'0':setMapModeFromN,
 		'c':toggleConnect,
 		'H':moveTimeFromKey,
 		'h':moveTimeFromKey,

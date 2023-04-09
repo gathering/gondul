@@ -200,7 +200,7 @@ function uplinkInfo(sw)
 		var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
 		var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
 		ret.data[1] = {};
-		ret.data[1].value = (tu && tt) ? (tu) + " / " + (tt) : "None configured";
+		ret.data[1].value = tt ? (tu) + " / " + (tt) : "None configured";
 		ret.data[1].description = "Client ports (live/total)";
 	}
 	if (testTree(nmsData,['switchstate','switches',sw,'totals','live'])) {
@@ -432,6 +432,36 @@ function pingUpdater()
 		}
 	}
 }
+function printDiff(t)
+{
+        var str = "";
+        if (t.d > 1)
+                str = t.d + " days";
+        else if (t.d == 1)
+                str = t.d + " day";
+        
+        if (t.h > 1)
+                str += " " + t.h + " hours";
+        else if (t.h == 1)
+                str += " " + t.h + " hour";
+        else if (t.d > 0)
+                str += " 0 hours";
+
+        if (t.m > 1)
+                str += " " + t.m + " minutes";
+        else if (t.m == 1)
+                str += " " + t.m + " minute";
+        else if (t.d > 0 || t.h > 0)
+                str += " 0 minutes";
+
+        if (t.s > 1)
+                str += " " + t.s + " seconds";
+        else if (t.s == 1)
+                str += " " + t.s + " second";
+        else if (t.d > 0 || t.h > 0 || t.m > 0)
+                str += " 0 seconds";
+        return str;
+}
 
 function pingInfo(sw)
 {
@@ -445,11 +475,8 @@ function pingInfo(sw)
 			v4 = undefined;
 		if (v6 == undefined || v6 == null || isNaN(v6))
 			v6 = undefined;
-		ret.data[0].value = v4;
-		ret.data[0].description = "IPv4 latency(ms)";
-		ret.data[1] = {};
-		ret.data[1].value = v6;
-		ret.data[1].description = "IPv6 latency(ms)";
+		ret.data[0].value = v6 + " (v4: " +  v4 + " )";
+		ret.data[0].description = "Latency(ms)";
 		if (v4 == undefined && v6 == undefined) {
 			ret.score = 1000;
 			ret.why = "No IPv4 or IPv6 ping reply";
@@ -485,6 +512,9 @@ function pingInfo(sw)
 			var distro = nmsData['smanagement']['switches'][sw]['distro_name'];
 			var phy = nmsData['smanagement']['switches'][sw]['distro_phy_port'];
 			if (!(distro == "" || phy == "" || distro == undefined || phy == undefined)) {
+						ret.data[3] = {};
+						ret.data[3].description = "Distro-port";
+						ret.data[3].value = distro + " " + phy;
 				if (testTree(nmsData,['snmp','snmp',distro, 'ports',phy,'ifOperStatus'])) {
 					var x = nmsData['snmp']['snmp'][distro]['ports'][phy]['ifOperStatus'];
 					var ping = "no";
@@ -494,13 +524,30 @@ function pingInfo(sw)
 						ping6 = parseFloat(nmsData["ping"]["switches"][sw]["latency6"]);
 					} catch(e) {}
 					if (x == "up") {
-						ret.data[3] = {};
-						ret.data[3].description = "Distro-port";
-						ret.data[3].value = "Distro port is live";
+						ret.data[3].value += " (😇 up!)";
 						if (isNaN(ping) && isNaN(ping6)) {
 							ret.score = 700;
-							ret.why = "Distro port is alive, but no IPv4/IPv6 ping. ROLLBACK!";
+							ret.why = "Distro port is alive, but no IPv4/IPv6 ping.";
+							if (testTree(nmsData,['snmp','snmp',distro, 'ports',phy,'ifLastChange'])) {
+								if (testTree(nmsData,['snmp','snmp',distro, 'misc','sysUpTimeInstance'])) {
+									ret.data[4] = {};
+									ret.data[4].description = 'Distro port changed';
+									diff = (parseInt(nmsData['snmp']['snmp'][distro]['misc']['sysUpTimeInstance']['']) - parseInt(nmsData['snmp']['snmp'][distro]['ports'][phy]['ifLastChange'])) / 100;
+									var diff2 = {
+										d:parseInt((diff/60/60/24)),
+										h:parseInt((diff/60/60)%24),
+										m:parseInt((diff/60)%60),
+										s:parseInt(diff%60)
+									}
+
+
+
+									ret.data[4].value = printDiff(diff2);
+								}
+							}
 						}
+					} else {
+						ret.data[3].value += " (👺down)";
 					}
 				}
 			}
@@ -545,7 +592,7 @@ function dhcpUpdater()
 		var c = nmsColor.blue;
 		var sv4 = nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
 		var sv6 = nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan]; 
-		if (sv4 == undefined || sv6 == undefined) {
+		if (sv4 == undefined && sv6 == undefined) {
 			nmsMap.setSwitchColor(sw,c);
 			continue;
 		}	
@@ -580,7 +627,7 @@ function dhcpInfo(sw) {
 		var now = nmsData.dhcp.time;
 		var then = nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
 		var diff = now - then;
-		var divider = 6;
+		var divider = 10;
 		if (dhcpClients < 10) {
 			divider = 12;
 		}
@@ -616,7 +663,7 @@ function dhcpInfo(sw) {
                 var now = nmsData.dhcp.time;
                 var then = nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
                 var diff = now - then;
-                var divider = 6;
+                var divider = 10;
                 if (dhcpClients < 10) {
                         divider = 12;
                 }
@@ -752,7 +799,12 @@ function secondsToTime(input) {
 function snmpInfo(sw) {
 	var ret = new handlerInfo("snmp","SNMP data");
 	ret.why = "No SNMP data";
-	if (!testTree(nmsData,['snmp','snmp',sw,'misc'])) {
+	if (tagged(sw,'ignore-snmp')) {
+		ret.score = 0;
+		ret.why += "(Ignored)";
+		ret.data[0].value += "(Ignored)";
+	}
+	else if (!testTree(nmsData,['snmp','snmp',sw,'misc'])) {
 		ret.score = 500;
 		ret.why = "No SNMP data";
 		ret.data[0].value = "No data";
@@ -786,6 +838,15 @@ function snmpInfo(sw) {
 			ret.score = 250;
 			ret.why = "System rebooted last 15 minutes";
 		}
+	}
+	if (testTree(nmsData,['snmp','snmp',sw,'misc','sysDescr','0'])) {
+		ret.data[1].description = "Description";
+		lol = nmsData['snmp']['snmp'][sw]['misc']['sysDescr']['0'];
+		re1 = /Juniper Networks, Inc./
+		re2 = /, Build date.*$/
+		lol = lol.replace(re1,"")
+		lol = lol.replace(re2,"")
+		ret.data[1].value = lol
 	}
 	return ret;
 }
@@ -846,11 +907,11 @@ function cpuInfo(sw) {
 			var local = nmsData.snmp.snmp[sw].misc['jnxOperatingCPU'][u];
 			cpu = Math.max(nmsData.snmp.snmp[sw].misc.jnxOperatingCPU[u],cpu);
 		}
-		if (cpu < 30) {
+		if (cpu < 40) {
 			ret.score = 0;
 		} else if (cpu < 50) {
 			ret.score = 100;
-		} else if (cpu < 70 ) {
+		} else if (cpu < 85 ) {
 			ret.score = cpu * 3;
 		} else {
 			ret.score = cpu * 7;
@@ -958,28 +1019,16 @@ function networkInfo(sw) {
 			}
 			
 			ret.data[i++] = {
-				value: a.v.name || "Not set",
+				value: (a.v.name || "Not set") + " " + "vlan: " + (a.v.vlan || "Not set"),
 				description: a.d + " network"
-			}
-			ret.data[i++] = {
-				value: a.v.vlan || "Not set",
-				description: a.d + " vlan"
 			}
 			ret.data[i++]  = {
 				value: a.v.subnet4 || "Not set",
 				description: a.d + " subnet IPv4"
 			}
 			ret.data[i++]  = {
-				value: a.v.gw4 || "Not set",
-				description: a.d + " gw IPv4"
-			}
-			ret.data[i++]  = {
 				value: a.v.subnet6 || "Not set",
 				description: a.d + " subnet IPv6"
-			}
-			ret.data[i++]  = {
-				value: a.v.gw6 || "Not set",
-				description: a.d + " gw IPv6"
 			}
 			ret.data[i++]  = {
 				value: a.v.router || "Not set",
@@ -997,14 +1046,8 @@ function mgmtInfo(sw) {
 		var mg = nmsData.smanagement.switches[sw];
 		ret.data =
 			[{
-				value: mg.mgmt_v4_addr || "N/A",
-				description: "Management IP (v4)"
-			}, {
-				value: mg.mgmt_v6_addr || "N/A",
-				description: "Management IP (v6)"
-			}, {
-				value: mg.distro_name || "N/A",
-				description: "Distro"
+				value: (mg.mgmt_v4_addr || "N/A") + " / " + (mg.mgmt_v6_addr || "N/A"),
+				description: "Management IP"
 			}
 			];
 		if ((mg.mgmt_v4_addr == undefined || mg.mgmt_v4_addr == "") && (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "")) {
@@ -1015,7 +1058,7 @@ function mgmtInfo(sw) {
 			ret.score = 550;
 		} else if (mg.mgmt_v6_addr == undefined || mg.mgmt_v6_addr == "") {
 			ret.why = "No IPv6 management IP";
-			ret.score = 550;
+			ret.score = 560;
 			if (tagged(sw,'ignorev6')) {
 				ret.score = 0;
 			}
@@ -1027,6 +1070,10 @@ function mgmtInfo(sw) {
 		ret.data[0].value = "N/A";
 		ret.data[0].description = "Management info";
 	};
+	if (tagged(sw,'maint')) {
+		ret.score = 1337;
+		ret.why = "Maintenance mode: maint tag";
+	}
 	return ret;
 }
 
@@ -1076,12 +1123,32 @@ function healthInfo(sw) {
 	return worst;
 }
 
+var nmsBlink = []
 function healthUpdater() {
 	if (nmsData.switches == undefined || nmsData.switches.switches == undefined)
 		return;
 	for (var sw in nmsData.switches.switches) {
 		var worst = healthInfo(sw);
-		nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
+		color = nmsColor.getColorStop(worst.score);
+		// maint
+		if (worst.score == 1337) {
+			nmsMap.setSwitchColor(sw, "#89cff0");
+			nmsMap.setSwitchInfo(sw, "maint");
+			continue;
+		}
+		rigge = true;
+		// blinkenlights
+		if (rigge == false && worst.score > 650) {
+			if (nmsBlink[sw] == true) {
+				nmsMap.setSwitchColor(sw, "rebeccapurple");
+				nmsBlink[sw] = false;
+			} else {
+				nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
+				nmsBlink[sw] = true;
+			}
+		} else {
+			nmsMap.setSwitchColor(sw, nmsColor.getColorStop(worst.score));
+		}
 		if (worst.score > 200)
 			nmsMap.setSwitchInfo(sw, worst.tag);
 		else {

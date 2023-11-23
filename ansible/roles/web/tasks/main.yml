@@ -1,103 +1,98 @@
 - name: Install front-packages
-  apt:
-      name: [
-          'libcapture-tiny-perl',
-          'libcommon-sense-perl',
-          'libdata-dumper-simple-perl',
-          'libdbd-pg-perl',
-          'libdbi-perl',
-          'libdigest-perl',
-          'libgd-perl',
-          'libgeo-ip-perl',
-          'libhtml-parser-perl',
-          'libhtml-template-perl',
-          'libjson-perl',
-          'libjson-xs-perl',
-          'libnetaddr-ip-perl',
-          'libnet-cidr-perl',
-          'libnet-ip-perl',
-          'libnet-oping-perl',
-          'libnet-rawip-perl',
-          'libsnmp-perl',
-          'libsocket6-perl',
-          'libsocket-perl',
-          'libswitch-perl',
-          'libtimedate-perl',
-          'perl',
-          'perl-base',
-          'perl-modules',
-          'libfreezethaw-perl',
-          'apache2',
-          'libxml2-dev',
-          'build-essential',
-          'cpanminus',
-          'apt-transport-https',
-          'python3-netaddr',
-          'python3-flask']
-      state: present
+  ansible.builtin.apt:
+    name: [
+      'libcapture-tiny-perl',
+      'libcommon-sense-perl',
+      'libdata-dumper-simple-perl',
+      'libdbd-pg-perl',
+      'libdbi-perl',
+      'libdigest-perl',
+      'libgd-perl',
+      'libgeo-ip-perl',
+      'libhtml-parser-perl',
+      'libhtml-template-perl',
+      'libjson-perl',
+      'libjson-xs-perl',
+      'libnetaddr-ip-perl',
+      'libnet-cidr-perl',
+      'libnet-ip-perl',
+      'libnet-oping-perl',
+      'libnet-rawip-perl',
+      'libsnmp-perl',
+      'libsocket6-perl',
+      'libsocket-perl',
+      'libswitch-perl',
+      'libtimedate-perl',
+      'perl',
+      'perl-base',
+      'perl-modules',
+      'libfreezethaw-perl',
+      'apache2',
+      'libxml2-dev',
+      'build-essential',
+      'cpanminus',
+      'apt-transport-https',
+      'python3-netaddr',
+      'python3-flask']
+    state: present
 
 - name: Install InfluxDB module
-  cpanm:
+  community.general.cpanm:
     name: AnyEvent::InfluxDB
 
 - name: Make apache listen on port 8080
-  lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
+  ansible.builtin.lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
   notify: restart apache
 
-- apache2_module:
+- name: Add Apache2 Module
+  ansible.builtin.apache2_module:
     state: present
     name: cgid
   notify: restart apache
 
 - name: Enable gondul-config
-  copy:
-      dest: /etc/apache2/sites-enabled/gondul.conf
-      src: apache-virtualhost.conf
+  ansible.builtin.copy:
+    dest: /etc/apache2/sites-enabled/gondul.conf
+    src: apache-virtualhost.conf
   notify: restart apache
 
-- command: a2dissite 000-default
+- name: Disable default Apache site
+  ansible.builtin.command: a2dissite 000-default
   ignore_errors: true
   notify: restart apache
 
-- name: Add packagecloud.io Varnish apt key.
-  apt_key:
-    url: https://packagecloud.io/varnishcache/varnish60lts/gpgkey
-    state: present
-
-- name: Add packagecloud.io Varnish apt repository.
-  apt_repository:
-    repo: "deb https://packagecloud.io/varnishcache/varnish60lts/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
-    state: present
-
 - name: Ensure Varnish is installed.
-  apt:
+  ansible.builtin.apt:
     name: "varnish"
     state: present
 
 - name: Ensure folder varnish.service.d exists
-  file: path=/etc/systemd/system/varnish.service.d/ state=directory mode=0755
+  ansible.builtin.file:
+    path: /etc/systemd/system/varnish.service.d/
+    state: directory
+    mode: 0755
 
 - name: Change varnish service.d
-  copy:
-      dest: /etc/systemd/system/varnish.service.d/customexec.conf
-      src: varnish.service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/varnish.service.d/customexec.conf
+    src: varnish.service
   notify:
     - reload systemd
 
 - name: Copy varnish-acl config
-  copy:
-      dest: /etc/varnish/auth.vcl
-      src: auth.vcl
+  ansible.builtin.copy:
+    dest: /etc/varnish/auth.vcl
+    src: auth.vcl
   notify: restart varnish
 
 - name: Copy varnish config
-  copy:
-      dest: /etc/varnish/default.vcl
-      src: varnish.vcl
+  ansible.builtin.copy:
+    dest: /etc/varnish/default.vcl
+    src: varnish.vcl
   notify: restart varnish
 
-- name: add systemd service file for gondul-template
-  copy:
+- name: Add systemd service file for gondul-template
+  ansible.builtin.copy:
     dest: /etc/systemd/system/gondul-template.service
     src: gondul-template.service
   notify: restart gondul-template

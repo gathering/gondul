@@ -1,27 +1,38 @@
 ---
-- hosts: all
+- name: Common role
+  hosts: all
   roles:
     - common
   vars:
     git_repo: https://github.com/gathering/gondul.git
     git_branch: master
-- hosts: postgres
+
+- name: Postgres Install
+  hosts: postgres
   become: true
   roles:
     - postgres
-- hosts: web
+
+- name: Web Install
+  hosts: web
   become: true
   roles:
     - web
-- hosts: influx
+
+- name: Influx Install
+  hosts: influx
   become: true
   roles:
     - influx
-- hosts: ping
+
+- name: Ping Install
+  hosts: ping
   become: true
   roles:
     - ping
-- hosts: snmp
+
+- name: SNMP Install
+  hosts: snmp
   become: true
   roles:
     - snmp

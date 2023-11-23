@@ -1,3 +1,5 @@
 ---
-- name: restart gondul-pinger
-  service: name=gondul-pinger state=restarted
+- name: Restart gondul-pinger
+  ansible.builtin.service:
+    name: gondul-pinger
+    state: restarted

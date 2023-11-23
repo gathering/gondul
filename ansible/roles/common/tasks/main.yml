@@ -1,15 +1,20 @@
 - name: Install basic packages
-  apt:
-      name: [
-          'curl',
-          'vim',
-          'git',
-          'iptables-persistent']
-      state: present
+  ansible.builtin.apt:
+    name: [
+      'curl',
+      'vim',
+      'git',
+      'iptables-persistent']
+    state: present
 
 - name: Gondul-repo
   become: true
   tags:
-  - git-all
-  - git-gondul
-  git: repo={{ git_repo }} dest=/opt/gondul update=no accept_hostkey=yes version={{ git_branch }}
+    - git-all
+    - git-gondul
+  ansible.builtin.git:
+    repo: "{{ git_repo }}"
+    dest: /opt/gondul
+    update: false
+    accept_hostkey: true
+    version: "{{ git_branch }}"

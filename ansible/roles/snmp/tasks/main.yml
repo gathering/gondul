@@ -1,25 +1,29 @@
 - name: Create data directory
-  file:
+  ansible.builtin.file:
     path: /opt/gondul/data
     state: directory
     mode: 0755
-- name: register mibdir
-  stat:
+
+- name: Register mibdir
+  ansible.builtin.stat:
     path: /opt/gondul/data/mibs
   register: mibdir
+
 - name: Get mibs
-  command: /opt/gondul/extras/tools/get_mibs.sh
+  ansible.builtin.command: /opt/gondul/extras/tools/get_mibs.sh
   args:
      chdir: /opt/gondul/data/
   when: not mibdir.stat.exists
   notify: restart gondul-snmp
+
 - name: Add systemd service file for gondul-snmp
-  copy:
+  ansible.builtin.copy:
       dest: /etc/systemd/system/gondul-snmp.service
       src: gondul-snmp.service
   notify: restart gondul-snmp
+
 - name: Enable snmp service
-  systemd:
+  ansible.builtin.systemd:
      name: gondul-snmp.service
      enabled: yes
   notify: restart gondul-snmp

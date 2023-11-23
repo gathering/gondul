@@ -14,16 +14,16 @@
   args:
      chdir: /opt/gondul/data/
   when: not mibdir.stat.exists
-  notify: restart gondul-snmp
+  notify: Restart gondul-snmp
 
 - name: Add systemd service file for gondul-snmp
   ansible.builtin.copy:
       dest: /etc/systemd/system/gondul-snmp.service
       src: gondul-snmp.service
-  notify: restart gondul-snmp
+  notify: Restart gondul-snmp
 
 - name: Enable snmp service
   ansible.builtin.systemd:
      name: gondul-snmp.service
      enabled: yes
-  notify: restart gondul-snmp
+  notify: Restart gondul-snmp

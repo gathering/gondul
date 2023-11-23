@@ -2,10 +2,10 @@
   ansible.builtin.copy:
       dest: /etc/systemd/system/gondul-pinger.service
       src: gondul-pinger.service
-  notify: restart gondul-pinger
+  notify: Restart gondul-pinger
 
 - name: Enable ping service
   ansible.builtin.systemd:
      name: gondul-pinger.service
      enabled: yes
-  notify: restart gondul-pinger
+  notify: Restart gondul-pinger

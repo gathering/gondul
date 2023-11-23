@@ -42,24 +42,24 @@
 
 - name: Make apache listen on port 8080
   ansible.builtin.lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
-  notify: restart apache
+  notify: Restart apache
 
 - name: Add Apache2 Module
   ansible.builtin.apache2_module:
     state: present
     name: cgid
-  notify: restart apache
+  notify: Restart apache
 
 - name: Enable gondul-config
   ansible.builtin.copy:
     dest: /etc/apache2/sites-enabled/gondul.conf
     src: apache-virtualhost.conf
-  notify: restart apache
+  notify: Restart apache
 
 - name: Disable default Apache site
   ansible.builtin.command: a2dissite 000-default
   ignore_errors: true
-  notify: restart apache
+  notify: Restart apache
 
 - name: Ensure Varnish is installed.
   ansible.builtin.apt:
@@ -77,22 +77,22 @@
     dest: /etc/systemd/system/varnish.service.d/customexec.conf
     src: varnish.service
   notify:
-    - reload systemd
+    - Reload systemd
 
 - name: Copy varnish-acl config
   ansible.builtin.copy:
     dest: /etc/varnish/auth.vcl
     src: auth.vcl
-  notify: restart varnish
+  notify: Restart apache
 
 - name: Copy varnish config
   ansible.builtin.copy:
     dest: /etc/varnish/default.vcl
     src: varnish.vcl
-  notify: restart varnish
+  notify: Restart apache
 
 - name: Add systemd service file for gondul-template
   ansible.builtin.copy:
     dest: /etc/systemd/system/gondul-template.service
     src: gondul-template.service
-  notify: restart gondul-template
+  notify: Restart gondul-template

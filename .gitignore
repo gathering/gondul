@@ -3,3 +3,4 @@ data/
 web/templates
 web/templates/
 web/files/
+__pycache__

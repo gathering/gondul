@@ -6,7 +6,7 @@ authors = [
     {name = "Ole Mathias Heggem",email = "olemathias.aa.heggem@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "pynetbox (>=7.4.1,<8.0.0)",
     "redis[hiredis] (>=5.2.1,<6.0.0)",

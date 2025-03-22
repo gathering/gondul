@@ -17,8 +17,8 @@ cache = redis.Redis(connection_pool=redis.ConnectionPool(
     decode_responses=True
   ))
 nb = pynetbox.api(
-    'https://netbox.tg25.tg.no',
-    token='c49232497b8c8b966be0365f5335669b524cb190',
+    'https://<removed>',
+    token='<removed>',
     threading=True
 )
 

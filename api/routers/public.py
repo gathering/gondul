@@ -3,10 +3,10 @@ import json
 import time
 import hashlib
 
-from models.device import PublicDevice, PublicDevices
-from models.config import Config
-from models.ping import Ping
-from dependencies import get_redis
+from ..models.device import PublicDevice, PublicDevices
+from ..models.config import Config
+from ..models.ping import Ping
+from ..dependencies import get_redis
 
 router = APIRouter(
     prefix="/api/public",

@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, Request, Response, HTTPException
 import json
 import hashlib
 
-from models.device import DeviceManagement, DevicesManagement
-from models.network import Network, Networks
-from models.snmp import Snmp
-from models.oplog import Oplog
-from dependencies import get_redis
+from ..models.device import DeviceManagement, DevicesManagement
+from ..models.network import Network, Networks
+from ..models.snmp import Snmp
+from ..models.oplog import Oplog
+from ..dependencies import get_redis
 
 router = APIRouter(
     prefix="/api/read",

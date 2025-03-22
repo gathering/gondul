@@ -6,8 +6,8 @@ from typing import Callable
 from fastapi import FastAPI, Request
 import redis
 
-from config.cache import pool
-from config.logger import setup_logger
+from .config.cache import pool
+from .config.logger import setup_logger
 
 logger = logging.getLogger(__name__)
 

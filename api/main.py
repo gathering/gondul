@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from routers import public, read
-from dependencies import lifespan, add_process_time_header
+from .routers import public, read
+from .dependencies import lifespan, add_process_time_header
 
 app = FastAPI(lifespan=lifespan)
 app.middleware("http")(add_process_time_header)

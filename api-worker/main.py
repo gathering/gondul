@@ -10,22 +10,29 @@ import pynetbox
 import random
 import netaddr
 
+import requests
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
 cache = redis.Redis(connection_pool=redis.ConnectionPool(
     host=os.environ.get('REDIS_HOST', 'localhost'), 
     port=os.environ.get('REDIS_PORT', 6379), 
     db=os.environ.get('REDIS_DB', 0), 
     decode_responses=True
   ))
+
 nb = pynetbox.api(
-    'https://<removed>',
-    token='<removed>',
+    os.environ.get('NETBOX_URL'),
+    token=os.environ.get('NETBOX_TOKEN'),
     threading=True
 )
 
 def get_devices():
     devices = {}
-    for device in nb.dcim.devices.filter(role=["access-switch", "distro", "firewall", "inet-router", "leaf", "oob-switch", "spine"]):
-        print(device.name)
+    for device in nb.dcim.devices.filter(role=["access-switch", "distro", "firewall", "internett-router", "leaf", "oob-switch", "spine"]):
+        #print(device.name)
         distro = None
         uplink = None
         mgmt_vlan = None
@@ -49,10 +56,23 @@ def get_devices():
             for interface in interfaces:
                 if interface["lag"] is not None and interface["lag"]["id"] == lag_id:
                     distro = interface["lag"]["device"]["name"]
-                    print(distro)
+                    #print(distro)
                     uplink = interface["name"]
-                    print(uplink)
+                    #print(uplink)
                     break
+
+        if device.custom_fields["gondul_placement"] is None:
+            placement = {"height":16,"x":random.randrange(50,1400,20),"y":random.randrange(50,600,20),"width":120}
+        else:
+            placement = device.custom_fields["gondul_placement"]
+            if "x" not in placement:
+                placement["x"] = random.randrange(50,1400,20)
+            if "y" not in placement:
+                placement["y"] = random.randrange(50,600,20)
+            if "height" not in placement:
+                placement["height"] = 16
+            if "width" not in placement:
+                placement["width"] = 120
                             
         devices.update({device.name: {
             "sysname": device.name,
@@ -64,25 +84,39 @@ def get_devices():
             "distro_name": distro,
             "distro_phy_port": uplink,
             "tags": [tag.slug for tag in list(device.tags)],
-            #"placement": device.custom_fields["gondul_placement"]
-            "placement": {"height":120,"x":random.randrange(50,1400,20),"y":random.randrange(50,600,20),"width":16}
+            "placement": placement
         }})
 
     return devices
 
 def generateDevices():
     start_time = time.time()
-    print("Updating device cache")
+    #print("Updating device cache")
     cache.set('devices:updated', round(time.time()))
     cache.set('devices:data', json.dumps(get_devices()))
-    print("Device cache updated")
-    print("--- %s seconds ---" % (time.time() - start_time))
+    #print("Device cache updated")
+    #print("--- %s seconds ---" % (time.time() - start_time))
     
     
 def getSnmp():
     pass
     
 def getPing():
+    # gondul ouput
+    #output = {
+    #    "switch": {"ping": { "success": True, "v4_rtt": 0.00001, "v6_rtt": 0.0000009 }, "cvp": { "success": True, "latency": 0.6121 } }
+    #}
+    
+    output = {"switch": { "success": True, "v4_rtt": 0.00001, "v6_rtt": 0.0000009 }}
+    
+    probe_success = requests.get("http://localhost:9090" + '/api/v1/query', params={'query': 'probe_success'})
+    probe_icmp_duration_seconds = requests.get("http://localhost:9090" + '/api/v1/query', params={'query': 'probe_icmp_duration_seconds{phase="rtt"}'})
+    
+    if probe_success.ok and probe_success.json()["status"] == "success":
+        for metric in probe_success.json()["data"]["result"]:
+            print(f'{metric["metric"]["sysname"]}: {metric["value"][1]} ({metric["value"][0]})')
+            print(datetime.fromtimestamp(metric["value"][0]).strftime('%Y-%m-%d %H:%M:%S'))
+        pass
     pass
 
 # DCIM

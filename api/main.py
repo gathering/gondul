@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import public, read, prometheus
+from .routers import public, read, prometheus, v2
 from .dependencies import lifespan, add_process_time_header
 
 app = FastAPI(lifespan=lifespan)
@@ -18,6 +18,7 @@ app.add_middleware(CORSMiddleware,
 app.include_router(public.router)
 app.include_router(read.router)
 app.include_router(prometheus.router)
+app.include_router(v2.router)
 
 @app.get("/api/")
 async def root():

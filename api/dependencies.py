@@ -8,6 +8,7 @@ import redis
 
 from .config.cache import pool
 from .config.logger import setup_logger
+from .config.netbox import nb
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ async def lifespan(_: FastAPI):
 
 async def get_redis():
     return redis.Redis(connection_pool=pool)
+
+async def get_netbox():
+    return nb
 
 async def add_process_time_header(request: Request, call_next: Callable):
     start_time = time.time()

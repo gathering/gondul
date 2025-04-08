@@ -359,7 +359,7 @@ async function getInitialConfig() {
   nms._public = false;
   document.body.classList.add("gondul-private");
 
-  const data = await getData("http://localhost:8000/api/public/config");
+  const data = await getData("/api/public/config");
   if (data["config"]["public"] == "true") {
     nms._public = true;
     document.body.classList.add("gondul-public");
@@ -378,13 +378,13 @@ async function initNMS() {
   nms._startTime = Date.now();
 
   // Public
-  nmsData.registerSource("config", "http://localhost:8000/api/public/config");
-  nmsData.registerSource("ping", "http://localhost:8000/api/public/ping");
+  nmsData.registerSource("config", "/api/public/config");
+  nmsData.registerSource("ping", "/api/public/ping");
   nmsData.registerSource(
     "switches",
-    "http://localhost:8000/api/public/switches"
+    "/api/public/switches"
   );
-  nmsData.registerSource("switchstate", "http://localhost:8000/api/public/switch-state");
+  //nmsData.registerSource("switchstate", "/api/public/switch-state");
   //nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
   //nmsData.registerSource("dhcp","/api/public/dhcp");
 
@@ -401,15 +401,15 @@ async function initNMS() {
 
   if (!nms._public) {
     // Private
-    nmsData.registerSource("snmp", "http://localhost:8000/api/read/snmp");
+    nmsData.registerSource("snmp", "/api/read/snmp");
     nmsData.registerSource(
       "smanagement",
-      "http://localhost:8000/api/read/switches-management"
+      "/api/read/switches-management"
     );
-    nmsData.registerSource("oplog", "http://localhost:8000/api/read/oplog");
+    nmsData.registerSource("oplog", "/api/read/oplog");
     nmsData.registerSource(
       "networks",
-      "http://localhost:8000/api/read/networks"
+      "/api/read/networks"
     );
     nmsOplog.init();
   }

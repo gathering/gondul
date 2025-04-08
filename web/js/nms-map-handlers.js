@@ -464,7 +464,7 @@ function printDiff(t) {
 }
 
 function pingInfo(sw) {
-  var ret = new handlerInfo("ping", "Latency(ms)");
+  var ret = new handlerInfo("ping", "Latency");
   ret.why = "Latency (?)";
   ret.score = 0;
   if (testTree(nmsData, ["ping", "switches", sw])) {
@@ -472,7 +472,7 @@ function pingInfo(sw) {
     var v6 = nmsData.ping.switches[sw].latency6;
     if (v4 == undefined || v4 == null || isNaN(v4)) v4 = undefined;
     if (v6 == undefined || v6 == null || isNaN(v6)) v6 = undefined;
-    ret.data[0].value = v6 + " (v4: " + v4 + " )";
+    ret.data[0].value = v6 + " ms (v4: " + v4 + " ms)";
     ret.data[0].description = "Latency(ms)";
     if (v4 == undefined && v6 == undefined) {
       ret.score = 1000;
@@ -942,13 +942,14 @@ function snmpInfo(sw) {
     }
   }
   if (testTree(nmsData, ["snmp", "snmp", sw, "misc", "sysDescr", "0"])) {
-    ret.data[1].description = "Description";
     lol = nmsData["snmp"]["snmp"][sw]["misc"]["sysDescr"]["0"];
     re1 = /Juniper Networks, Inc./;
     re2 = /, Build date.*$/;
+    re3 = /Arista Networks./;
     lol = lol.replace(re1, "");
     lol = lol.replace(re2, "");
-    ret.data[1].value = lol;
+    lol = lol.replace(re3, "");
+    ret.data.push({ value: lol, description: "Description" });
   }
   return ret;
 }

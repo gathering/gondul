@@ -24,7 +24,7 @@ async function postData(url, data) {
     headers: {
       "Content-Type": "application/json",
     },
-    json: data,
+    body: JSON.stringify(data)
   });
 
   await fetch(request)

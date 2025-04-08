@@ -40,7 +40,7 @@ var nmsInfoBox = nmsInfoBox || {
       views: {
         initial: {
           name: "Summary",
-          panels: ["switchLatency", "switchSummary", "switchComments"],
+          panels: ["switchLatency", "switchSummary", "switchLinks", "switchComments"],
           public: true,
         },
         ports: {
@@ -591,21 +591,17 @@ var switchSNMPPanel = function () {
       var groupObj = document.createElement("div");
       groupObj.classList.add("panel", "panel-default", "nms-panel-small");
       groupObj.innerHTML =
-        '<a class="panel-heading collapse-controller" style="display:block;" role="button" data-toggle="collapse" href="#' +
-        cleanObj +
-        '-group">' +
-        obj +
-        "</a>";
+        '<h6 class="">' + obj + '</h6>';
 
       var groupObjCollapse = document.createElement("div");
       groupObjCollapse.id = cleanObj + "-group";
-      groupObjCollapse.classList.add("collapse");
+      //groupObjCollapse.classList.add("collapse");
 
       var panelBodyObj = document.createElement("div");
       panelBodyObj.classList.add("panel-body");
 
       var tableObj = document.createElement("table");
-      tableObj.classList.add("table", "table-condensed");
+      tableObj.classList.add("table");
 
       var tbody = document.createElement("tbody");
 
@@ -906,6 +902,33 @@ var switchCommentsPanel = function () {
   };
 };
 nmsInfoBox.addPanelType("switchComments", switchCommentsPanel);
+
+/*
+ * Panel type: Switch links
+ *
+ *
+ *
+ */
+var switchLinksPanel = function () {
+  nmsInfoPanel.call(this, "switchLinks");
+  this.commentsHash = false;
+  this.refresh = function (reason) {
+    var domObj = document.createElement("div");
+    domObj.className = "gondul-is-private d-grid gap-0 row-gap-3";
+    var device = nmsData.smanagement.switches[this.sw]
+    if(["eos64"].includes(device["platform"]) && device["serial"] != null && device["serial"] != "") {
+    	var cap = document.createElement("a");
+    	cap.textContent = "Open in CVP";
+    	cap.href = "https://www.cv-prod-euwest-2.arista.io/cv/devices/overview/" + device["serial"];
+	cap.target = "_blank";
+	cap.className = "my-4 btn btn-outline-primary";
+	cap.role = "button";
+    	domObj.appendChild(cap);
+    }
+    this._render(domObj);
+  };
+};
+nmsInfoBox.addPanelType("switchLinks", switchLinksPanel);
 
 /*
  * Panel type: Switch summary

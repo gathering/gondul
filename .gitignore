@@ -1,6 +1,8 @@
+.env
 .*.swp
 data/
 web/templates
 web/templates/
 web/files/
 __pycache__
+api-faker

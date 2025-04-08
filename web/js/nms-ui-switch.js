@@ -175,10 +175,7 @@ class nmsEditRow extends nmsBox {
     input.html.className = "form-control";
     input.html.type = "text";
     input.row = this;
-    if (value.ro) {
-      input.html.disabled = true;
-      input.html.title = "Read/only attribute";
-    }
+    input.html.disabled = true;
     if (value instanceof nmsTypeSecret) {
       input.html.type = "password";
       input.html.autocomplete = "off";
@@ -278,12 +275,6 @@ class nmsModSwitch extends nmsModThing {
       distro_phy_port: new nmsTypePort(
         "Name of port we connect to at the distro switch. Used for provisioning, among other things."
       ),
-      poll_frequency: new nmsTypeInterval(
-        "Poll frequency for SNMP (will use default from backend)"
-      ),
-      community: new nmsTypeSecret(
-        "SNMP community (will use default from backend)"
-      ),
       placement: new nmsTypePlace(
         "Map placement (If following a regular naming scheme, the backend will place it poperly, otherwise a random place will be chose)"
       ),
@@ -312,7 +303,7 @@ class nmsModSwitch extends nmsModThing {
         continue;
       }
       console.assert(this._template[v] instanceof nmsType);
-      if (swm[v] != null) {
+      if (swm[v] != null && this._template[v]) {
         this._template[v].initial(swm[v]);
       }
     }

@@ -275,7 +275,7 @@ nmsData._genericUpdater = function (name, cacheok) {
 
   const request = new Request(this._sources[name].target + now, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "If-None-Match": nmsData[name] != undefined ? nmsData[name]["hash"] : null },
     signal: AbortSignal.timeout(2000), // 2s timeout
   });
 
@@ -283,15 +283,17 @@ nmsData._genericUpdater = function (name, cacheok) {
   fetch(request)
     .then((r) => {
       nmsData.stats.allFetches++;
-      if (!r.ok) {
+      if (!r.ok && r.status != 304) {
         throw new Error("Fetch failed with status: " + r.status);
       }
       var etag = r.headers.get("etag");
       if (
+        r.status != 304 && (
         etag == null ||
         nmsData[name] == undefined ||
         (nmsData[name]["hash"] != etag &&
           nmsData[name]["hash"] != etag.slice(2))
+        )
       ) {
         r.json().then((data) => {
           nmsData.stats.jsonParse++;

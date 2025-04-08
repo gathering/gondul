@@ -23,14 +23,14 @@ async def devices(request: Request, response: Response, cache = Depends(get_redi
         response.headers["etag"] = etag
     if(request.headers.get('If-None-Match') == etag):
         raise HTTPException(status_code=304)
-    
+
     devices = json.loads(cache.get('devices:data')) if cache.exists('devices:data') else {}
     return {
         "switches": { device: { key: devices[device][key] for key in list(DeviceManagement.__fields__.keys()) } for device in devices },
         "time": cache.get('devices:updated'),
         "hash": etag
     }
-    
+
 # networks
 @router.get("/networks")
 async def networks(cache = Depends(get_redis)) -> Networks:
@@ -43,14 +43,34 @@ async def networks(cache = Depends(get_redis)) -> Networks:
 
 # snmp
 @router.get("/snmp")
-async def snmp(cache = Depends(get_redis)) -> Snmp:
-    snmp = json.loads(cache.get('snmp:data')) if cache.exists('snmp:data') else {}
+async def snmp(request: Request, response: Response, cache = Depends(get_redis)) -> Snmp:
+    updated = cache.get('snmp:updated')
+    etag = None
+    if updated is not None:
+        etag = hashlib.md5(updated.encode('utf-8')).hexdigest()
+        response.headers["etag"] = etag
+    if(request.headers.get('If-None-Match') == etag):
+        raise HTTPException(status_code=304)
+
+    output = {}
+    snmp_data = json.loads(cache.get('snmp:data:data')) if cache.exists('snmp:data:data') else {}
+    for device in snmp_data:
+        output.update({
+            device: {
+                "misc": {
+                    "sysName": { "0": snmp_data[device]["sysName"] },
+                    "sysUpTimeInstance": { "" : snmp_data[device]["sysUpTime"] },
+                    "sysDescr": { "0" : snmp_data[device]["sysDescr"] },
+                    "entPhysicalSerialNum": {"1": snmp_data[device]["entPhysicalSerialNum"] }
+                }
+            }
+        })
     return {
-        "snmp": snmp,
+        "snmp": output,
         "time": cache.get('snmp:updated'),
-        "hash": ""
+        "hash": etag
     }
-    
+
 # oplog
 @router.get("/oplog")
 async def oplog(request: Request, response: Response, cache = Depends(get_redis)) -> Oplog:
@@ -60,7 +80,7 @@ async def oplog(request: Request, response: Response, cache = Depends(get_redis)
         etag = hashlib.md5(updated.encode('utf-8')).hexdigest()
         response.headers["etag"] = etag
     if(request.headers.get('If-None-Match') == etag):
-        raise HTTPException(status_code=304)    
+        raise HTTPException(status_code=304)
 
     oplog = json.loads(cache.get('oplog:data')) if cache.exists('oplog:data') else []
     return {

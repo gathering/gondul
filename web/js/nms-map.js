@@ -92,7 +92,7 @@ nmsMap.init = function () {
 
 nmsMap.setSwitchColor = function (sw, color) {
   /*
-         * NEED TO LOCATE? YAS.	
+         * NEED TO LOCATE? YAS.
 	if (nmsData.switches.switches[sw] && nmsData.switches.switches[sw].tags.includes("locating") && this._color[sw] != "purple") {
 		color = "purple";
 	}
@@ -363,7 +363,7 @@ nmsMap._drawSwitch = function (sw) {
   var switchtext = sw;
   var textl = switchtext.length;
   // Cut switch name if longer than this
-  var text_cut_l = 14;
+  var text_cut_l = 18;
   // Cut switch name by more if we have a status indicator
   if (this._info[sw]) {
     text_cut_l -= this._info[sw].length;
@@ -608,10 +608,10 @@ nmsMap._moveMove = function (e) {
   var diffy = nmsMap._moveY - nmsMap._moveYstart;
   var box = {};
   nmsMap._clearOld(nmsMap._moveOldBox);
-  box["x"] = nmsMap._moveBox["x"] + diffx;
-  box["y"] = nmsMap._moveBox["y"] + diffy;
-  box["height"] = nmsMap._moveBox["height"];
-  box["width"] = nmsMap._moveBox["width"];
+  box["x"] = parseInt(nmsMap._moveBox["x"] + diffx);
+  box["y"] = parseInt(nmsMap._moveBox["y"] + diffy);
+  box["height"] = parseInt(nmsMap._moveBox["height"]);
+  box["width"] = parseInt(nmsMap._moveBox["width"]);
   nmsMap._moveOldBox = box;
   nmsMap._c.top.ctx.save();
   nmsMap._c.top.ctx.fillStyle = "red";
@@ -626,20 +626,10 @@ nmsMap._moveMove = function (e) {
 };
 
 nmsMap._moveSubmit = function () {
-  var data = {
-    sysname: nmsMap._moving,
-    placement: nmsMap._moveOldBox,
-  };
-  var myData = JSON.stringify([data]);
-  $.ajax({
-    type: "POST",
-    url: "/api/write/switches",
-    dataType: "text",
-    data: myData,
-    success: function (data, textStatus, jqXHR) {
-      nmsData.invalidate("switches");
-    },
-  });
+  var sysname = nmsMap._moving;
+  var placement = nmsMap._moveOldBox;
+  const data = postData(`/api/v2/device/${sysname}/placement`, placement);
+  console.log(data);
 };
 
 nmsMap._moveStopListen = function () {

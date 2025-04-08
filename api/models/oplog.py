@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class OplogData(BaseModel):
     id: int
     username: str | None = None
@@ -7,6 +8,7 @@ class OplogData(BaseModel):
     timestamp: str
     systems: str
     log: str
+
 
 class Oplog(BaseModel):
     oplog: list[OplogData]

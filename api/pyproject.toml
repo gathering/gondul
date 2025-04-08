@@ -12,7 +12,8 @@ dependencies = [
     "redis[hiredis] (>=5.2.1,<6.0.0)",
     "fastapi[standard] (>=0.115.11,<0.116.0)",
     "pynetbox (>=7.4.1,<8.0.0)",
-    "python-dotenv (>=1.1.0,<2.0.0)"
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "black (>=25.1.0,<26.0.0)"
 ]
 
 [tool.poetry]

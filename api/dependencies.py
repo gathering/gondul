@@ -12,6 +12,7 @@ from .config.netbox import nb
 
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     setup_logger()
@@ -19,11 +20,14 @@ async def lifespan(_: FastAPI):
     yield
     logger.warning("Shutting down the application")
 
+
 async def get_redis():
     return redis.Redis(connection_pool=pool)
 
+
 async def get_netbox():
     return nb
+
 
 async def add_process_time_header(request: Request, call_next: Callable):
     start_time = time.time()

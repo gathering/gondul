@@ -603,7 +603,7 @@ function saveSettings() {
     foo[nms.settingsList[v]] = nms[nms.settingsList[v]];
   }
   var string = btoa(JSON.stringify(foo));
-  //document.cookie = 'nms='+string;
+  document.cookie = 'nms='+string;
   //console.log("Add this to the URL to use these settings: nms="+string);
 }
 

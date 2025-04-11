@@ -29,6 +29,14 @@ nmsOplog.getSwitchLogs = function (sw) {
 // New-style-work-in-progress follows
 class nmsOplog2 {
   constructor() {
+    this._username = new nmsBox("span", {
+      html: { className: "navbar-text me-2" },
+    });
+    if (nms.user) {
+      this._username.html.textContent = nms.user;
+    }
+    this._username.attach("navbar");
+    this._username.show();
     this.logger = new nmsOplogInput();
     this.logger.attach("navbar");
     this.logger.show();
@@ -38,14 +46,6 @@ class nmsOplog2 {
     this.full.attach("oplog-parent");
     this.mini.show();
     this.full.show();
-    this._username = new nmsBox("p", {
-      html: { className: "navbar-text navbar-right" },
-    });
-    if (nms.user) {
-      this._username.html.textContent = nms.user;
-    }
-    this._username.attach("navbar");
-    this._username.show();
     nmsData.addHandler("oplog", "nmsOplogHandler", this.updateComments, this);
   }
   updateComments(x) {
@@ -280,7 +280,6 @@ class nmsOplogEntry extends nmsBox {
     return this.time.toISOString();
   }
   shortTime() {
-    console.log(this.time);
     return this.time.toTimeString().replace(/:\d\d .*$/, "");
   }
   getData(cutoff = 0) {

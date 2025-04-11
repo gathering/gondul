@@ -131,17 +131,18 @@ class nmsOplogInput extends nmsBox {
     if (this.entry == "") {
       return false;
     }
-    var myData = { user: this.user, systems: this.systems, log: this.entry };
-    myData = JSON.stringify(myData);
-    $.ajax({
-      type: "POST",
-      url: "/api/write/oplog",
-      dataType: "text",
-      data: myData,
-      success: function (data, textStatus, jqXHR) {
-        nmsData.invalidate("oplog");
-      },
-    });
+    var myData = { username: this.user, systems: this.systems, message: this.entry };
+    postData("/api/v2/oplog/", myData);
+    nmsData.invalidate("oplog");
+    // $.ajax({
+    //   type: "POST",
+    //   url: "/api/v2/oplog",
+    //   dataType: "text",
+    //   data: myData,
+    //   success: function (data, textStatus, jqXHR) {
+    //     nmsData.invalidate("oplog");
+    //   },
+    // });
     this.blank();
   }
   blank() {
@@ -268,9 +269,9 @@ class nmsOplogEntry extends nmsBox {
     super("tr");
     this.td1 = null;
     this.td2 = null;
-    this.time = new Date(entry.timestamp.replace(" ", "T"));
+    this.time = new Date(entry.time * 1000);
     this.id = entry.id;
-    this.data = entry.log;
+    this.data = entry.message;
     this.title = null;
     this.systems = entry.systems;
     this.username = entry.username;
@@ -279,6 +280,7 @@ class nmsOplogEntry extends nmsBox {
     return this.time.toISOString();
   }
   shortTime() {
+    console.log(this.time);
     return this.time.toTimeString().replace(/:\d\d .*$/, "");
   }
   getData(cutoff = 0) {

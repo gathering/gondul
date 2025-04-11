@@ -406,7 +406,7 @@ async function initNMS() {
       "smanagement",
       "/api/read/switches-management"
     );
-    nmsData.registerSource("oplog", "/api/read/oplog");
+    nmsData.registerSource("oplog", "/api/v2/oplog/");
     nmsData.registerSource(
       "networks",
       "/api/read/networks"

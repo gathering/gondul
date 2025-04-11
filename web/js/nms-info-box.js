@@ -878,7 +878,7 @@ var switchCommentsPanel = function () {
       tr = table.insertRow(-1);
       tr.className = td1 = tr.insertCell(0);
       td2 = tr.insertCell(1);
-      var date = new Date(logs[v]["timestamp"]);
+      var date = new Date(logs[v]["time"] * 1000);
       var month = date.getMonth() + 1;
       var day = date.getDate();
       var tmp =
@@ -895,7 +895,7 @@ var switchCommentsPanel = function () {
       td1.textContent = tmp;
       td1.classList.add("left");
       td2.textContent =
-        logs[v]["systems"] + "[" + logs[v]["username"] + "] " + logs[v]["log"];
+        logs[v]["systems"] + "[" + logs[v]["username"] + "] " + logs[v]["message"];
     }
     domObj.appendChild(table);
     this._render(domObj);

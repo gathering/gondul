@@ -14,8 +14,7 @@ router = APIRouter(prefix="/v2/oplog", tags=["oplog"])
 @router.get("/")
 async def list_oplog(request: Request, response: Response, db=Depends(get_db)) -> Oplog:
     last = db.exec(select(OplogBase).order_by(OplogBase.time.desc())).first()
-
-    updated = str(last.time)
+    updated = str(last.time) if last is not None else None
     etag = None
     if updated is not None:
         etag = hashlib.md5(updated.encode("utf-8")).hexdigest()

@@ -9,7 +9,7 @@ from app.models.network import Network, Networks
 from app.models.snmp import Snmp
 from app.api.deps import get_cache
 
-router = APIRouter(prefix="/api/read", tags=["read"])
+router = APIRouter(prefix="/read", tags=["read"])
 
 # switches-management
 @router.get("/switches-management")

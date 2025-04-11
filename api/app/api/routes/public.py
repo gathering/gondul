@@ -9,7 +9,7 @@ from app.models.device import PublicDevice, PublicDevices
 from app.models.ping import Ping
 from app.api.deps import get_cache
 
-router = APIRouter(prefix="/api/public", tags=["public"])
+router = APIRouter(prefix="/public", tags=["public"])
 
 # config
 @router.get("/config")

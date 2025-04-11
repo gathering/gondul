@@ -1,20 +1,20 @@
-from fastapi import APIRouter, Depends, Request, Response, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException, Depends
 import json
+import time
 import hashlib
 
-from ..models.device import DeviceManagement, DevicesManagement
-from ..models.network import Network, Networks
-from ..models.snmp import Snmp
-from ..models.oplog import Oplog
-from ..dependencies import get_redis
+
+from app.models.device import DeviceManagement, DevicesManagement
+from app.models.network import Network, Networks
+from app.models.snmp import Snmp
+from app.api.deps import get_cache
 
 router = APIRouter(prefix="/api/read", tags=["read"])
-
 
 # switches-management
 @router.get("/switches-management")
 async def devices(
-    request: Request, response: Response, cache=Depends(get_redis)
+    request: Request, response: Response, cache=Depends(get_cache)
 ) -> DevicesManagement:
     updated = cache.get("devices:updated")
     etag = None
@@ -42,7 +42,7 @@ async def devices(
 
 # networks
 @router.get("/networks")
-async def networks(cache=Depends(get_redis)) -> Networks:
+async def networks(cache=Depends(get_cache)) -> Networks:
     devices = (
         json.loads(cache.get("networks:data")) if cache.exists("networks:data") else {}
     )
@@ -60,7 +60,7 @@ async def networks(cache=Depends(get_redis)) -> Networks:
 
 # snmp
 @router.get("/snmp")
-async def snmp(request: Request, response: Response, cache=Depends(get_redis)) -> Snmp:
+async def snmp(request: Request, response: Response, cache=Depends(get_cache)) -> Snmp:
     updated = cache.get("snmp:updated")
     etag = None
     if updated is not None:
@@ -91,20 +91,3 @@ async def snmp(request: Request, response: Response, cache=Depends(get_redis)) -
             }
         )
     return {"snmp": output, "time": cache.get("snmp:updated"), "hash": etag}
-
-
-# oplog
-@router.get("/oplog")
-async def oplog(
-    request: Request, response: Response, cache=Depends(get_redis)
-) -> Oplog:
-    updated = cache.get("oplog:updated")
-    etag = None
-    if updated is not None:
-        etag = hashlib.md5(updated.encode("utf-8")).hexdigest()
-        response.headers["etag"] = etag
-    if request.headers.get("If-None-Match") == etag:
-        raise HTTPException(status_code=304)
-
-    oplog = json.loads(cache.get("oplog:data")) if cache.exists("oplog:data") else []
-    return {"oplog": oplog, "time": updated, "hash": etag}

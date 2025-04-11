@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
-from ..models.device import Placement
-from ..dependencies import get_netbox
+from app.models.device import Placement
+from app.api.deps import get_netbox
 
-router = APIRouter(prefix="/api/v2", tags=["v2"])
-
+router = APIRouter(prefix="/v2/devices", tags=["devices"])
 
 # set device placement
-@router.post("/device/{device_name}/placement")
+@router.post("/{device_name}/placement")
 async def set_device_placement(
     device_name, placement: Placement, nb=Depends(get_netbox)
 ) -> Placement:

@@ -6,3 +6,4 @@ web/templates/
 web/files/
 __pycache__
 api-faker
+api-old

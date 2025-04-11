@@ -1,28 +1,22 @@
-from fastapi import APIRouter, Depends, Request, Response, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException, Depends
 import json
 import time
 import hashlib
 
-from ..models.device import PublicDevice, PublicDevices
-from ..models.config import Config
-from ..models.ping import Ping
-from ..dependencies import get_redis
+from app.core.config import settings
+from app.models.config import Config
+from app.models.device import PublicDevice, PublicDevices
+from app.models.ping import Ping
+from app.api.deps import get_cache
 
 router = APIRouter(prefix="/api/public", tags=["public"])
-
-# dhcp
-# dhcp-summary
-
-# distro-tree
-# switch-state
-
 
 # config
 @router.get("/config")
 async def config(request: Request, response: Response) -> Config:
-    # TODO Read from env
+    # TODO Read from settings
     config = {
-        "sitename": "Development",
+        "sitename": f"{settings.PROJECT_NAME} - {settings.ENVIRONMENT}",
         "publicvhost": "example.gondul.tg.no",
         "public": False,
         "shortname": "tgX",
@@ -34,18 +28,17 @@ async def config(request: Request, response: Response) -> Config:
         raise HTTPException(status_code=304)
     return {"config": config, "time": round(time.time()), "hash": etag}
 
-
 # switches
 @router.get("/switches")
 async def devices(
-    request: Request, response: Response, cache=Depends(get_redis)
+    request: Request, response: Response, cache=Depends(get_cache)
 ) -> PublicDevices:
     updated = cache.get("devices:updated")
     etag = None
     if updated is not None:
         etag = hashlib.md5(updated.encode("utf-8")).hexdigest()
         response.headers["etag"] = etag
-    if request.headers.get("If-None-Match") == etag:
+    if etag is not None and request.headers.get("If-None-Match") == etag:
         raise HTTPException(status_code=304)
 
     devices = (
@@ -62,19 +55,18 @@ async def devices(
         "time": cache.get("devices:updated"),
         "hash": etag,
     }
-
-
+    
 # ping
 @router.get("/ping")
-async def devices(
-    request: Request, response: Response, cache=Depends(get_redis)
+async def ping(
+    request: Request, response: Response, cache=Depends(get_cache)
 ) -> Ping:
     updated = cache.get("ping:updated")
     etag = None
     if updated is not None:
         etag = hashlib.md5(updated.encode("utf-8")).hexdigest()
         response.headers["etag"] = etag
-    if request.headers.get("If-None-Match") == etag:
+    if etag is not None and request.headers.get("If-None-Match") == etag:
         raise HTTPException(status_code=304)
 
     output = {}
@@ -112,9 +104,7 @@ async def devices(
         )
     return {"switches": output, "time": cache.get("ping:updated"), "hash": etag}
 
-
-# ping
+# Not implemented
 @router.get("/switch-state")
-async def devices(cache=Depends(get_redis)) -> Ping:
-    ping = json.loads(cache.get("ping:data")) if cache.exists("ping:data") else {}
-    return {"switches": ping, "time": cache.get("ping:updated"), "hash": ""}
+async def switch_state():
+    return {}

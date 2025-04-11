@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends
 import json
 
-from ..dependencies import get_redis
+from app.api.deps import get_cache
 
-router = APIRouter(prefix="/api/prometheus", tags=["prometheus"])
+router = APIRouter(prefix="/v2/prometheus", tags=["prometheus"])
 
-
-#
 @router.get("/ping")
-async def devices(cache=Depends(get_redis)):
+async def devices(cache=Depends(get_cache)):
     output = []
 
     devices = (
@@ -34,7 +32,7 @@ async def devices(cache=Depends(get_redis)):
 
 
 @router.get("/snmp")
-async def devices(cache=Depends(get_redis)):
+async def devices(cache=Depends(get_cache)):
     output = []
 
     devices = (
@@ -49,7 +47,6 @@ async def devices(cache=Depends(get_redis)):
                     "labels": {
                         "sysname": device["sysname"],
                         "platform": device["platform"],
-                        "type": "v6",
                     },
                 }
             )
@@ -60,7 +57,6 @@ async def devices(cache=Depends(get_redis)):
                     "labels": {
                         "sysname": device["sysname"],
                         "platform": device["platform"],
-                        "type": "v4",
                     },
                 }
             )

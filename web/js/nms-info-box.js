@@ -642,19 +642,19 @@ var switchPortsPanel = function () {
       this._renderError("Waiting for data.");
       return;
     }
-    var expanderButton = document.createElement("a");
-    expanderButton.innerHTML = "Toggle all";
+    //var expanderButton = document.createElement("a");
+    //expanderButton.innerHTML = "Toggle all";
     //expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
-    expanderButton.setAttribute("role", "button");
+    //expanderButton.setAttribute("role", "button");
 
-    var interfaceAliasButton = document.createElement("a");
-    interfaceAliasButton.innerHTML = "Toggle interfaces without ifAlias";
+    //var interfaceAliasButton = document.createElement("a");
+    //interfaceAliasButton.innerHTML = "Toggle interfaces without ifAlias";
     //interfaceAliasButton.setAttribute("onclick", "$('.nms-interface-missing-alias').toggle();");
-    interfaceAliasButton.setAttribute("role", "button");
+    //interfaceAliasButton.setAttribute("role", "button");
 
-    domObj.appendChild(expanderButton);
-    domObj.appendChild(document.createElement("br"));
-    domObj.appendChild(interfaceAliasButton);
+    //domObj.appendChild(expanderButton);
+    //domObj.appendChild(document.createElement("br"));
+    //domObj.appendChild(interfaceAliasButton);
     var indicies = [];
     for (var obj in snmpJson) {
       indicies.push(obj);
@@ -724,8 +724,8 @@ var switchPortsPanel = function () {
 
       var groupObjCollapse = document.createElement("div");
       groupObjCollapse.id = cleanObj + "-group";
-      groupObjCollapse.classList.add("collapse");
-      groupObjCollapse.classList.add("collapse-top");
+      //groupObjCollapse.classList.add("collapse");
+      //groupObjCollapse.classList.add("collapse-top");
 
       var panelBodyObj = document.createElement("div");
       panelBodyObj.classList.add("panel-body");
@@ -758,12 +758,12 @@ var switchPortsPanel = function () {
       var tableTopObj = document.createElement("div");
       tableTopObj.innerHTML =
         '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#' +
-        cleanObj +
-        '-table-group">Details</a></span>';
+        cleanObj;
+        //'-table-group">Details</a></span>';
       var tableTopObjCollapse = document.createElement("div");
       tableTopObjCollapse.id = cleanObj + "-table-group";
-      tableTopObjCollapse.classList.add("collapse");
-      tableTopObjCollapse.classList.add("collapse-detail");
+      //tableTopObjCollapse.classList.add("collapse");
+      //tableTopObjCollapse.classList.add("collapse-detail");
       tableTopObjCollapse.appendChild(tableObj);
       tableTopObj.appendChild(tableTopObjCollapse);
       panelBodyObj.appendChild(tableTopObj);

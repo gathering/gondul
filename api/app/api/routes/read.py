@@ -75,10 +75,16 @@ async def snmp(request: Request, response: Response, cache=Depends(get_cache)) -
         if cache.exists("snmp:data:data")
         else {}
     )
+    ports_data = (
+        json.loads(cache.get("snmp:ports:data"))
+        if cache.exists("snmp:ports:data")
+        else {}
+    )
     for device in snmp_data:
         output.update(
             {
                 device: {
+                    "ports": ports_data[device]["ports"] if device in ports_data else {},
                     "misc": {
                         "sysName": {"0": snmp_data[device]["sysName"]},
                         "sysUpTimeInstance": {"": snmp_data[device]["sysUpTime"]},

@@ -130,7 +130,103 @@ def generateDevices():
     print("Device cache updated")
     print("--- %s seconds ---" % (time.time() - start_time))
 
+# {
+#     "ifInErrors":"0",
+#     "ifInDiscards":"0",
+#     "ifHCInOctets":"0",
+#     "ifOutDiscards":"0",
+#     "ifName":"ge-0/0/36.0",
+#     "ifAdminStatus":"up",
+#     "ifOperStatus":"lowerLayerDown",
+#     "ifIndex":"588",
+#     "ifOutQLen":"0",
+#     "ifAlias":"",
+#     "ifInUnknownProtos":"0",
+#     "ifOutErrors":"0",
+#     "ifType":"propVirtual",
+#     "ifPhysAddress":"44:f4:77:69:38:67",
+#     "ifHighSpeed":"0",
+#     "ifDescr":"ge-0/0/36.0",
+#     "ifHCOutOctets":"0",
+#     "ifLastChange":"6312"
+#  }
 
+def getSnmpPorts():
+    switches = {}        
+    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
+    prom_url = os.environ.get("PROM_URL")
+
+    ifIndex = requests.get(
+        prom_url + "/api/v1/query",
+        params={"query": "ifType_info"},
+        auth=basic
+    )
+    if ifIndex.ok and ifIndex.json()["status"] == "success":
+        for metric in ifIndex.json()["data"]["result"]:
+            if metric["metric"]["sysname"] not in switches:
+                switches[metric["metric"]["sysname"]] = {"ports": {}}
+            if metric["metric"]["ifName"] not in switches[metric["metric"]["sysname"]]["ports"]:
+                switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]] = {}
+            switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]].update({
+                "ifIndex": metric["metric"]["ifIndex"] if "ifIndex" in metric["metric"] else None,
+                "ifAlias": metric["metric"]["ifAlias"] if "ifAlias" in metric["metric"] else None,
+                "ifName": metric["metric"]["ifName"] if "ifName" in metric["metric"] else None,
+                "ifDescr": metric["metric"]["ifDescr"] if "ifDescr" in metric["metric"] else None,
+                "ifType": metric["metric"]["ifType"] if "ifType" in metric["metric"] else None,
+            })
+
+    ifAdminStatusMapping = {"1": "up", "2": "down"}
+    ifAdminStatus = requests.get(
+        prom_url + "/api/v1/query",
+        params={"query": "ifAdminStatus"},
+        auth=basic
+    )
+    if ifAdminStatus.ok and ifAdminStatus.json()["status"] == "success":
+        for metric in ifAdminStatus.json()["data"]["result"]:
+            if metric["metric"]["sysname"] not in switches:
+                switches[metric["metric"]["sysname"]] = {"ports": {}}
+            if metric["metric"]["ifName"] not in switches[metric["metric"]["sysname"]]["ports"]:
+                switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]] = {}
+            switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]].update({
+                "ifAdminStatus": ifAdminStatusMapping[str(metric["value"][1])]
+            })
+
+    # 1-up, 2-down, 3-testing, 4-unknown, 5-dormant, 6-notPresent, 7-lowerLayerDown
+    ifOperStatusMapping = {"1": "up", "2": "down", "3": "testing", "4": "unknown", "5": "dormant", "6": "notPresent", "7": "lowerLayerDown"}
+    ifOperStatus = requests.get(
+        prom_url + "/api/v1/query",
+        params={"query": "ifOperStatus"},
+        auth=basic
+    )
+    if ifOperStatus.ok and ifOperStatus.json()["status"] == "success":
+        for metric in ifOperStatus.json()["data"]["result"]:
+            if metric["metric"]["sysname"] not in switches:
+                switches[metric["metric"]["sysname"]] = {"ports": {}}
+            if metric["metric"]["ifName"] not in switches[metric["metric"]["sysname"]]["ports"]:
+                switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]] = {}
+            switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]].update({
+                "ifOperStatus": ifOperStatusMapping[str(metric["value"][1])]
+            })
+    
+
+    ifHighSpeed = requests.get(
+        prom_url + "/api/v1/query",
+        params={"query": "ifHighSpeed"},
+        auth=basic
+    )
+    if ifHighSpeed.ok and ifHighSpeed.json()["status"] == "success":
+        for metric in ifHighSpeed.json()["data"]["result"]:
+            if metric["metric"]["sysname"] not in switches:
+                switches[metric["metric"]["sysname"]] = {"ports": {}}
+            if metric["metric"]["ifName"] not in switches[metric["metric"]["sysname"]]["ports"]:
+                switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]] = {}
+            switches[metric["metric"]["sysname"]]["ports"][metric["metric"]["ifName"]].update({
+                "ifHighSpeed": metric["value"][1]
+            })
+        
+    cache.set("snmp:ports:updated", round(time.time()))
+    cache.set("snmp:ports:data", json.dumps(switches))
+            
 def getSnmp():
     output = {}
 
@@ -320,6 +416,7 @@ def snmp_main():
 snmp_jobqueue = queue.Queue()
 snmp_scheduler = schedule.Scheduler()
 snmp_scheduler.every(5).seconds.do(snmp_jobqueue.put, getSnmp)
+snmp_scheduler.every(5).seconds.do(snmp_jobqueue.put, getSnmpPorts)
 snmp_worker_thread = threading.Thread(daemon=True, target=snmp_main)
 snmp_worker_thread.start()
 

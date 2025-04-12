@@ -628,7 +628,7 @@ nmsMap._moveMove = function (e) {
 nmsMap._moveSubmit = function () {
   var sysname = nmsMap._moving;
   var placement = nmsMap._moveOldBox;
-  const data = postData(`/api/v2/device/${sysname}/placement`, placement);
+  const data = postData(`/api/v2/devices/${sysname}/placement`, placement);
   console.log(data);
 };
 

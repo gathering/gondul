@@ -1,0 +1,22 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "alembic>=1.15.2",
+    "fastapi[standard]>=0.115.12",
+    "psycopg[binary]>=3.2.6",
+    "pydantic>=2.11.3",
+    "pydantic-settings>=2.8.1",
+    "pynetbox>=7.4.1",
+    "redis[hiredis]>=5.2.1",
+    "sqlmodel>=0.0.24",
+]
+
+[tool.uv]
+dev-dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

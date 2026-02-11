@@ -72,7 +72,7 @@ def get_devices():
         #            #print(uplink)
         #            break
 
-        if device.custom_fields["gondul_placement"] is None:
+        if "gondul_placement" not in device.custom_fields or device.custom_fields["gondul_placement"] is None:
             placement = {
                 "height": 16,
                 "x": random.randrange(50, 1400, 20),

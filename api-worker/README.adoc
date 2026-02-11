@@ -1,0 +1,112 @@
+= API Worker
+
+Syncs various sources into a common cache.
+
+== Configuration
+
+See `.env-example`.
+
+== Sources
+
+=== Netbox
+
+Gets devices from DCIM and stores them in the cache.
+
+=== Prometheus
+
+Gets metrics for each device and stores them in the cache.
+
+==== Targets
+
+Expects these targets/metrics with these labels:
+
+===== Blackbox Exporter
+
+Used for ping stats.
+
+Example scrape config for prometheus:
+
+```yaml
+scrape_configs:
+  - job_name: 'memeping'
+    static_configs:
+      - targets:
+        - <ipv4 addr>
+        labels:
+          sysname: <name-of-device>
+          type: v4
+      - targets:
+        - <ipv6 addr>
+        labels:
+          sysname: <name-of-device>
+          type: v6
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: <blackbox exporter, e.g. "localhost:9115">
+    scrape_interval: 10s
+    scrape_timeout: 3s
+```
+
+===== SNMP Exporter
+
+Can use the default configuration for these modules:
+
+- if_mib
+- system
+
+but make sure to also poll these OIDs:
+
+ - name: entPhysicalSerialNum
+   oid: 1.3.6.1.2.1.47.1.1.1.1.11
+
+Example scrape config for prometheus:
+
+```yaml
+scrape_configs:
+  - job_name: 'snmp1'
+    static_configs:
+      - targets:
+        - <target>
+        labels:
+          sysname: <name-of-device>
+    metrics_path: /snmp
+    params:
+      auth: [public_v2] # auth configuration defined in snmp.yaml to use
+      module: [if_mib]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: <snmp exporter, e.g. "localhost:9116">
+    scrape_interval: 10s
+    scrape_timeout: 3s
+
+  - job_name: 'snmp2'
+    static_configs:
+      - targets:
+        - <target>
+        labels:
+          sysname: <name-of-device>
+    metrics_path: /snmp
+    params:
+      auth: [public_v2] # auth configuration defined in snmp.yaml to use
+      module: [system]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: <snmp exporter, e.g. "localhost:9116">
+    scrape_interval: 10s
+    scrape_timeout: 3s
+```

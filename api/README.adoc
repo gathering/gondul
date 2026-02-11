@@ -1,5 +1,12 @@
 = Gondul API
 
+API which link:../web[Gondul (web)] consumes.
+
+Provides data for the gondul frontend by proxying other sources, so that the frontend can
+be agnostic to the data storage, collectors, etc.
+
+See a rough overview of its components and their relationship here:
+
 ```mermaid
 sequenceDiagram
     actor TechNet

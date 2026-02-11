@@ -23,9 +23,9 @@ async def tile_request(path: str, response: Response):
     return response
 
 @app.post("/api/{path:path}")
-async def tile_post_request(path: str, response: Response):
+async def tile_post_request(request: Request, path: str, response: Response):
     async with httpx.AsyncClient() as client:
-        proxy = await client.get(f"{os.environ.get("GONDUL_URL")}/api/{path}", auth=auth)
+        proxy = await client.get(f"{os.environ.get("GONDUL_URL")}/api/{path}", auth=auth, data=await request.body())
     response.body = proxy.content
     response.status_code = proxy.status_code
     return response

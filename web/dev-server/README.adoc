@@ -1,0 +1,13 @@
+= Dev server
+
+Dev server for serving both gondul api and frontend ("map") on the same (local) host.
+
+Set up your ENV as exemplified in `.env-example`.
+
+Run the api/backend as described in ../../api and then run the dev server on a separate port, e.g.:
+
+```
+uv run fastapi run main.py --port 8088
+```
+
+Then visit http://localhost:8088[http://localhost:8088] in your browser.

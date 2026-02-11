@@ -1,14 +1,26 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response, FileResponse
 import httpx
-from dotenv import load_dotenv
 
+from pydantic import ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_ignore_empty=True,
+        extra="ignore",
+    )
+    GONDUL_URL: str
+    GONDUL_USERNAME: str
+    GONDUL_PASSWORD: str
+
+settings = Settings()
 app = FastAPI()
-load_dotenv()
 
-auth = httpx.BasicAuth(username=os.environ.get("GONDUL_USERNAME"), password=os.environ.get("GONDUL_PASSWORD"))
+auth = httpx.BasicAuth(username=settings.GONDUL_USERNAME, password=settings.GONDUL_PASSWORD)
 
 @app.get("/")
 async def root():
@@ -17,7 +29,7 @@ async def root():
 @app.get("/api/{path:path}")
 async def tile_request(path: str, response: Response):
     async with httpx.AsyncClient() as client:
-        proxy = await client.get(f"{os.environ.get("GONDUL_URL")}/api/{path}", auth=auth)
+        proxy = await client.get(f"{settings.GONDUL_URL}/api/{path}", auth=auth)
     response.body = proxy.content
     response.status_code = proxy.status_code
     return response
@@ -25,7 +37,7 @@ async def tile_request(path: str, response: Response):
 @app.post("/api/{path:path}")
 async def tile_post_request(request: Request, path: str, response: Response):
     async with httpx.AsyncClient() as client:
-        proxy = await client.get(f"{os.environ.get("GONDUL_URL")}/api/{path}", auth=auth, data=await request.body())
+        proxy = await client.post(f"{settings.GONDUL_URL}/api/{path}", auth=auth, data=await request.body())
     response.body = proxy.content
     response.status_code = proxy.status_code
     return response

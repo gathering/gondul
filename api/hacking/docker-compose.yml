@@ -1,0 +1,33 @@
+services:
+  prometheus:
+    image: docker.io/prom/prometheus:v3.9.1
+    volumes:
+      - /prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    networks:
+      - monitoring
+
+  blackbox-exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest
+    networks:
+      - monitoring
+
+  # run on host instead for snmp polling on localhost (https://github.com/prometheus/snmp_exporter)
+  # snmp-exporter:
+  #   image: docker.io/prom/snmp-exporter:v0.30.1
+  #   volumes:
+  #     - ./snmp.yml:/app/snmp.yml:ro
+  #   working_dir: /app
+  #   networks:
+  #     - monitoring
+  #   network_mode: host
+
+networks:
+  monitoring:
+    enable_ipv4: true
+    enable_ipv6: true
+
+volumes:
+  prometheus:

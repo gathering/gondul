@@ -1,0 +1,74 @@
+global:
+  scrape_interval: "10s"
+  scrape_timeout: "1s"
+  evaluation_interval: "1m"
+  body_size_limit: "0"
+  sample_limit: 0
+  label_limit: 0
+  label_name_length_limit: 0
+  label_value_length_limit: 0
+  target_limit: 0
+scrape_configs:
+  - job_name: 'meme'
+    static_configs:
+      - targets:
+        - 192.168.10.110
+        labels:
+          sysname: medic
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [if_mib]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.containers.internal:9116
+    scrape_interval: 10s
+    scrape_timeout: 3s
+  - job_name: 'memenmp'
+    static_configs:
+      - targets:
+        - 192.168.10.110
+        labels:
+          sysname: medic
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [system]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: host.containers.internal:9116
+    scrape_interval: 10s
+    scrape_timeout: 3s
+  - job_name: 'memeping'
+    static_configs:
+      - targets:
+        - 192.168.10.110
+        labels:
+          sysname: medic
+          type: v4
+      - targets:
+        - 2600:70ff:b01d:0:127c:61ff:fe79:e6a5
+        labels:
+          sysname: medic
+          type: v6
+    metrics_path: /probe
+    params:
+      target: [127.0.0.1]
+      module: [icmp]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+    scrape_interval: 10s
+    scrape_timeout: 3s

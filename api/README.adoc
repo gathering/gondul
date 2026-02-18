@@ -1,0 +1,85 @@
+= Gondul API
+
+API which link:../web[Gondul (web)] consumes.
+
+Provides data for the gondul frontend by proxying other sources, so that the frontend can
+be agnostic to the data storage, collectors, etc.
+
+See a rough overview of its components and their relationship here:
+
+```mermaid
+sequenceDiagram
+    actor TechNet
+    box rgba(244, 131, 51, 0.35) Gondul
+        participant web
+        participant API
+        participant cache@{ "type" : "database" }
+        participant API-Worker
+    end
+    box rgba(72, 199, 244, 0.35) Gondul+
+        participant Prometheus@{ "type" : "database" }
+        participant Blackbox Exporter
+        participant SNMP Exporter
+    end
+    box rgba(0, 0, 0, 0.35) net
+        participant Switch@{ "type" : "collections" }
+    end
+    
+    TechNet->>web: Open Gondul
+    loop While Gondul tab is open
+        activate web
+            web->>API: Poll
+            API->>cache: Poll
+            cache->>API: data
+            API->>web: data
+        deactivate web
+    end
+
+    loop Periodically
+        activate API-Worker
+            API-Worker ->> Prometheus: Poll
+            Prometheus ->> API-Worker: Data
+            API-Worker ->> cache: Store
+        deactivate API-Worker
+    end
+    
+    loop Periodically
+        activate Prometheus
+            par Polling
+                Prometheus ->> Blackbox Exporter: Poll
+                Blackbox Exporter ->> Switch: Poll
+                Switch ->> Blackbox Exporter: Data
+                Blackbox Exporter ->> Prometheus: Data
+            and Polling
+                Prometheus ->> SNMP Exporter: Poll
+                SNMP Exporter ->> Switch: Poll
+                Switch ->> SNMP Exporter: Data
+                SNMP Exporter ->> Prometheus: Data
+            end            
+        deactivate Prometheus
+    end
+```
+
+== Configuration
+
+TODO. (In the meantime, see `app/core/config.py`.)
+
+== Development
+
+Uses `uv` for dependency management.
+
+Run a development version of the API with:
+
+```
+uv run fastapi dev app/main.py
+```
+
+== Database
+
+Run migrations with
+
+```
+uv run alembic upgrade <version>
+```
+
+(see versions in ./app/alembic/versions/)

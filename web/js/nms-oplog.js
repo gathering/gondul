@@ -269,7 +269,7 @@ class nmsOplogEntry extends nmsBox {
     super("tr");
     this.td1 = null;
     this.td2 = null;
-    this.time = new Date(entry.time * 1000);
+    this.time = new Date(entry.time);
     this.id = entry.id;
     this.data = entry.message;
     this.title = null;

@@ -879,7 +879,6 @@ var switchCommentsPanel = function () {
       tr = table.insertRow(-1);
       tr.className = td1 = tr.insertCell(0);
       td2 = tr.insertCell(1);
-            console.log(logs[v])
       var date = new Date(logs[v]["time"]);
       td1.textContent = formatter.format(date);
       td1.classList.add("left");

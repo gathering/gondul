@@ -23,6 +23,12 @@ class GondulDevice(model.DeviceManagement):
     placement: model.Placement | None = Field(None, title='Gondul Placement')
     tags: list[str] = Field(list(), title='Tags')
 
+class GondulPingData(model.BaseModel):
+    v4_rtt: float | None = Field(None, title='IPv4 ping')
+    v6_rtt: float | None = Field(None, title='IPv6 ping')
+    v4_time: float | None = Field(None, title='IPv4 ping age (timestamp)') # TODO: serialize to timestamp
+    v6_time: float | None = Field(None, title='IPv6 ping age (timestamp)') # TODO: serialize to timestamp
+
 devicesAdapter = TypeAdapter(dict[str, GondulDevice])
 
 logging.basicConfig(level=logging.INFO)
@@ -365,46 +371,68 @@ def getSnmp():
 
     _update_cache("snmp", json.dumps(output))
 
-
-def getPing():
-    output = {}
-
+def prometheus_query(query: str, params={}):
     basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
     prom_url = os.environ.get("PROM_URL")
-    probe_icmp_duration_seconds = requests.get(
+
+    logger = logging.getLogger("prometheus")
+
+    return requests.get(
         prom_url + "/api/v1/query",
         params={
-            "query": 'probe_icmp_duration_seconds{phase="rtt"}',
-            "latency_offset": "1ms",
+            "query": query,
+            **params,
         },
         auth=basic,
     )
+
+
+def getPing():
+    output: dict[str, GondulPingData] = {}
+
+    probe_icmp_duration_seconds = prometheus_query('probe_icmp_duration_seconds{phase="rtt"}', params={
+        "latency_offset": "1ms",
+    })
+
     if (
         probe_icmp_duration_seconds.ok
         and probe_icmp_duration_seconds.json()["status"] == "success"
     ):
-        for metric in probe_icmp_duration_seconds.json()["data"]["result"]:
-            if metric["metric"]["sysname"] not in output:
-                output[metric["metric"]["sysname"]] = {}
-            if metric["value"][1] == "0":
-                output[metric["metric"]["sysname"]].update(
-                    {
-                        f'{metric["metric"]["type"]}_time': metric["value"][0],
-                        f'{metric["metric"]["type"]}_{metric["metric"]["phase"]}': None,
-                    }
-                )
+        for series in probe_icmp_duration_seconds.json()["data"]["result"]:
+            metric = series["metric"]
+            sysname = metric["sysname"]
+            ip_family = metric["type"]
+
+            value = series["value"]
+            ping_time = value[0]
+            ping_value = value[1]
+
+            ping_data: GondulPingData
+
+            # ping value is 0 if there was no reply
+            if ping_value == "0":
+                ping_data = GondulPingData(**{
+                    f'{ip_family}_time': ping_time,
+                    f'{ip_family}_{metric["phase"]}': None,
+                })
             else:
-                output[metric["metric"]["sysname"]].update(
-                    {
-                        f'{metric["metric"]["type"]}_time': metric["value"][0],
-                        f'{metric["metric"]["type"]}_{metric["metric"]["phase"]}': float(
-                            metric["value"][1]
-                        ),
-                    }
-                )
+                ping_data = GondulPingData(**{
+                    f'{ip_family}_time': ping_time,
+                    f'{ip_family}_{metric["phase"]}': float(ping_value),
+                })
 
-    _update_cache("ping", json.dumps(output))
+            if sysname in output:
+                existing_ping_data = output[sysname]
+                for key, val in ping_data.model_dump().items():
+                    # Skip the empty values
+                    if not val:
+                        continue
+                    setattr(existing_ping_data, key, val)
+                output.update({sysname: existing_ping_data})
+            else:
+                output[sysname] = ping_data
 
+    _update_cache("ping", json.dumps({sysname: ping.model_dump() for sysname, ping in output.items()}))
 
 class Job:
     jobqueue = queue.Queue()

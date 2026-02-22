@@ -1,3 +1,4 @@
+import logging
 import time
 import threading
 import schedule
@@ -24,7 +25,12 @@ class GondulDevice(model.DeviceManagement):
 
 devicesAdapter = TypeAdapter(dict[str, GondulDevice])
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 load_dotenv()
+
+logger.info("Starting API worker")
 
 cache = redis.Redis(
     connection_pool=redis.ConnectionPool(
@@ -37,10 +43,11 @@ cache = redis.Redis(
 
 def _update_cache(key: str, data):
     start_time = time.time()
-    print(f"Updating {key} cache")
+    logger = logging.getLogger(f"cache_{key}")
+    logger.info(f"Updating cache")
     cache.set(f"{key}:updated", round(time.time()))
     cache.set(f"{key}:data", data)
-    print(f"Cache {key} updated in %.2f seconds" % (time.time() - start_time))
+    logger.info(f"Cache updated in %.2f seconds" % (time.time() - start_time))
 
 def update_devices(devices: dict[str, GondulDevice]):
     _update_cache("devices", devicesAdapter.dump_json(devices))
@@ -251,9 +258,8 @@ def getSnmpPorts():
                 "ifHighSpeed": metric["value"][1]
             })
         
-    cache.set("snmp:ports:updated", round(time.time()))
-    cache.set("snmp:ports:data", json.dumps(switches))
-            
+    _update_cache("snmp:ports", json.dumps(switches))
+
 def getSnmp():
     output = {}
 
@@ -357,8 +363,7 @@ def getSnmp():
                     }
                 )
 
-    cache.set("snmp:updated", round(time.time()))
-    cache.set("snmp:data:data", json.dumps(output))
+    _update_cache("snmp", json.dumps(output))
 
 
 def getPing():
@@ -398,9 +403,7 @@ def getPing():
                     }
                 )
 
-    cache.set("ping:updated", round(time.time()))
-    cache.set("ping:data", json.dumps(output))
-
+    _update_cache("ping", json.dumps(output))
 
 
 class Job:

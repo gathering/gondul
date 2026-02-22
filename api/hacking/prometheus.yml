@@ -9,66 +9,100 @@ global:
   label_value_length_limit: 0
   target_limit: 0
 scrape_configs:
-  - job_name: 'meme'
-    static_configs:
-      - targets:
-        - 192.168.10.110
-        labels:
-          sysname: medic
-    metrics_path: /snmp
-    params:
-      auth: [public_v2]
-      module: [if_mib]
+  - job_name: ping
+    http_sd_configs:
+      # gondul api
+      - url: http://host.containers.internal:8000/api/v2/prometheus/ping
+        refresh_interval: "60s"
+        follow_redirects: true
     relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
+      # set "instance" label because we override __address__ later on
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
         target_label: instance
-      - target_label: __address__
-        replacement: host.containers.internal:9116
-    scrape_interval: 10s
-    scrape_timeout: 3s
-  - job_name: 'memenmp'
-    static_configs:
-      - targets:
-        - 192.168.10.110
-        labels:
-          sysname: medic
-    metrics_path: /snmp
-    params:
-      auth: [public_v2]
-      module: [system]
+      # set http path to 'probe' (blackbox-exporter endpoint)
+      - replacement: probe
+        action: replace
+        target_label: __metrics_path__
+      # set http query param 'module' to 'icmp' (blackbox-exporter uses ping)
+      - replacement: icmp
+        action: replace
+        target_label: __param_module
+      # set http query param 'type' (target ip family) via "type" label
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - type
+        target_label: __param_type
+      # set http query param 'target' (ping target) via "__address__" label
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
+        target_label: __param_target
+        # override what we query for getting the metrics
+      - replacement: blackbox-exporter:9115
+        action: replace
+        source_labels:
+          - targets
+        target_label: __address__
+  - job_name: snmp
+    http_sd_configs:
+      # gondul api
+      - url: http://host.containers.internal:8000/api/v2/prometheus/snmp
+        refresh_interval: "60s"
+        follow_redirects: true
     relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
         target_label: instance
-      - target_label: __address__
-        replacement: host.containers.internal:9116
-    scrape_interval: 10s
-    scrape_timeout: 3s
-  - job_name: 'memeping'
-    static_configs:
-      - targets:
-        - 192.168.10.110
-        labels:
-          sysname: medic
-          type: v4
-      - targets:
-        - 2600:70ff:b01d:0:127c:61ff:fe79:e6a5
-        labels:
-          sysname: medic
-          type: v6
-    metrics_path: /probe
-    params:
-      target: [127.0.0.1]
-      module: [icmp]
+      - replacement: snmp
+        action: replace
+        target_label: __metrics_path__
+      - replacement: if_mib
+        action: replace
+        target_label: __param_module
+      - replacement: public_v2
+        action: replace
+        target_label: __param_auth
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
+        target_label: __param_target
+      - replacement: host.containers.internal:9116
+        action: replace
+        target_label: __address__
+  - job_name: snmp_sys
+    http_sd_configs:
+      # gondul api
+      - url: http://host.containers.internal:8000/api/v2/prometheus/snmp
+        refresh_interval: "60s"
+        follow_redirects: true
     relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
         target_label: instance
-      - target_label: __address__
-        replacement: blackbox-exporter:9115
-    scrape_interval: 10s
-    scrape_timeout: 3s
+      - replacement: snmp
+        action: replace
+        target_label: __metrics_path__
+      - replacement: system
+        action: replace
+        target_label: __param_module
+      - replacement: public_v2
+        action: replace
+        target_label: __param_auth
+      - replacement: "$1"
+        action: replace
+        source_labels:
+          - __address__
+        target_label: __param_target
+      - replacement: host.containers.internal:9116
+        action: replace
+        target_label: __address__

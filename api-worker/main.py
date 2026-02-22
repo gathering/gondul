@@ -8,11 +8,21 @@ import os
 
 import pynetbox
 import random
+import requests
 import netaddr
 
-import requests
+from ipaddress import IPv4Address, IPv6Address
+from pydantic import Field, TypeAdapter
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
+
+import model
+
+class GondulDevice(model.DeviceManagement):
+    placement: model.Placement | None = Field(None, title='Gondul Placement')
+    tags: list[str] = Field(list(), title='Tags')
+
+devicesAdapter = TypeAdapter(dict[str, GondulDevice])
 
 load_dotenv()
 
@@ -25,13 +35,21 @@ cache = redis.Redis(
     )
 )
 
-nb = pynetbox.api(
-    os.environ.get("NETBOX_URL"), token=os.environ.get("NETBOX_TOKEN"), threading=True
-)
+def _update_cache(key: str, data):
+    start_time = time.time()
+    print(f"Updating {key} cache")
+    cache.set(f"{key}:updated", round(time.time()))
+    cache.set(f"{key}:data", data)
+    print(f"Cache {key} updated in %.2f seconds" % (time.time() - start_time))
 
+def update_devices(devices: dict[str, GondulDevice]):
+    _update_cache("devices", devicesAdapter.dump_json(devices))
 
-def get_devices():
-    devices = {}
+def get_devices() -> dict[str, GondulDevice]:
+    nb = pynetbox.api(
+        os.environ.get("NETBOX_URL"), token=os.environ.get("NETBOX_TOKEN"), threading=True
+    )
+    devices: dict[str, GondulDevice] = {}
     for device in nb.dcim.devices.filter(
         role=[
             "access-switch",
@@ -72,50 +90,64 @@ def get_devices():
         #            #print(uplink)
         #            break
 
-        if "gondul_placement" not in device.custom_fields or device.custom_fields["gondul_placement"] is None:
-            placement = {
-                "height": 16,
-                "x": random.randrange(50, 1400, 20),
-                "y": random.randrange(50, 600, 20),
-                "width": 120,
-            }
+        placement: model.Placement
+        if "gondul_placement" in device.custom_fields and device.custom_fields["gondul_placement"]:
+            _placement = device.custom_fields["gondul_placement"]
+            if 'x' not in _placement or _placement['x'] is None:
+                _placement['x'] = random.randrange(50, 1400, 20)
+            if 'y' not in _placement or _placement['y'] is None:
+                _placement['y'] = random.randrange(50, 600, 20)
+            placement = model.Placement(
+                x=_placement["x"],
+                y=_placement["y"],
+                height=_placement["height"],
+                width=_placement["width"],
+            )
         else:
-            placement = device.custom_fields["gondul_placement"]
-            if "x" not in placement or placement["x"] is None:
-                placement["x"] = random.randrange(50, 1400, 20)
-            if "y" not in placement or placement["y"] is None:
-                placement["y"] = random.randrange(50, 600, 20)
-            if "height" not in placement or placement["height"] is None:
-                placement["height"] = 16
-            if "width" not in placement or placement["width"] is None:
-                placement["width"] = 120
+            _placement = device.custom_fields["gondul_placement"]
+            placement = model.Placement(
+                x=_placement["x"],
+                y=_placement["y"],
+                height=_placement["height"],
+                width=_placement["width"],
+            )
+            if not placement.x:
+                placement.x = random.randrange(50, 1400, 20)
+            if not placement.y:
+                placement.y = random.randrange(50, 600, 20)
+            if not placement.height:
+                placement.height = 16
+            if not placement.width:
+                placement.width = 120
 
-        devices.update(
-            {
-                device.name: {
-                    "sysname": device.name,
-                    "mgmt_v4_addr": (
-                        str(netaddr.IPNetwork(device.primary_ip4.address).ip)
+        dev = GondulDevice(
+                sysname=device.name,
+                    mgmt_v4_addr=(
+                        IPv4Address(str(netaddr.IPNetwork(device.primary_ip4.address).ip))
                         if device.primary_ip4 is not None
                         else None
                     ),
-                    "mgmt_v6_addr": (
-                        str(netaddr.IPNetwork(device.primary_ip6.address).ip)
+                    mgmt_v6_addr=(
+                        IPv6Address(str(netaddr.IPNetwork(device.primary_ip6.address).ip))
                         if device.primary_ip6 is not None
                         else None
                     ),
-                    "mgmt_vlan": mgmt_vlan,
-                    "traffic_vlan": traffic_vlan,
-                    "last_updated": device.last_updated,
-                    "distro_name": distro,
-                    "distro_phy_port": uplink,
-                    "tags": [tag.slug for tag in list(device.tags)],
-                    "placement": placement,
-                    "serial": device.serial,
-                    "platform": (
+                    mgmt_vlan=mgmt_vlan,
+                    traffic_vlan=traffic_vlan,
+                    last_updated=device.last_updated,
+                    distro_name=distro,
+                    distro_phy_port=uplink,
+                    tags=[tag.slug for tag in list(device.tags)],
+                    placement=placement,
+                    serial=device.serial,
+                    platform=(
                         device.platform.slug if device.platform is not None else None
                     ),
-                }
+            )
+
+        devices.update(
+            {
+                device.name: dev,
             }
         )
 
@@ -123,12 +155,7 @@ def get_devices():
 
 
 def generateDevices():
-    start_time = time.time()
-    print("Updating device cache")
-    cache.set("devices:updated", round(time.time()))
-    cache.set("devices:data", json.dumps(get_devices()))
-    print("Device cache updated")
-    print("--- %s seconds ---" % (time.time() - start_time))
+    update_devices(get_devices())
 
 # {
 #     "ifInErrors":"0",

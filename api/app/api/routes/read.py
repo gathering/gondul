@@ -71,8 +71,8 @@ async def snmp(request: Request, response: Response, cache=Depends(get_cache)) -
 
     output = {}
     snmp_data = (
-        json.loads(cache.get("snmp:data:data"))
-        if cache.exists("snmp:data:data")
+        json.loads(cache.get("snmp:data"))
+        if cache.exists("snmp:data")
         else {}
     )
     ports_data = (

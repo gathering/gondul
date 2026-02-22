@@ -6,6 +6,16 @@ Syncs various sources into a common cache.
 
 See `.env-example`.
 
+=== Generate models
+
+Generate models from API via
+
+```
+curl -sS http://localhost:8000/api/openapi.json | uv run datamodel-codegen --input-file-type openapi --output model.py
+```
+
+if self-hosting the API, or replace http://localhost:8000 with a gondul API somewhere else.
+
 == Sources
 
 === Netbox

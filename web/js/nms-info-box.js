@@ -856,6 +856,7 @@ nmsInfoBox.addPanelType("switchEdit", switchEditPanel);
  *
  */
 var switchCommentsPanel = function () {
+  var formatter = new Intl.DateTimeFormat(navigator.languages, {dateStyle: "short", timeStyle: 'short'});
   nmsInfoPanel.call(this, "switchComments");
   this.commentsHash = false;
   this.refresh = function (reason) {
@@ -878,21 +879,9 @@ var switchCommentsPanel = function () {
       tr = table.insertRow(-1);
       tr.className = td1 = tr.insertCell(0);
       td2 = tr.insertCell(1);
-      var date = new Date(logs[v]["time"] * 1000);
-      var month = date.getMonth() + 1;
-      var day = date.getDate();
-      var tmp =
-        date.getYear() +
-        1900 +
-        "-" +
-        (month < 10 ? "0" : "") +
-        month +
-        "-" +
-        (day < 10 ? "0" : "") +
-        day +
-        " " +
-        date.toTimeString().replace(/:\d\d .*$/, "");
-      td1.textContent = tmp;
+            console.log(logs[v])
+      var date = new Date(logs[v]["time"]);
+      td1.textContent = formatter.format(date);
       td1.classList.add("left");
       td2.textContent =
         logs[v]["systems"] + "[" + logs[v]["username"] + "] " + logs[v]["message"];

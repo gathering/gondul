@@ -402,54 +402,40 @@ def getPing():
     cache.set("ping:data", json.dumps(output))
 
 
-# DCIM
-def dcim_main():
+
+class Job:
+    jobqueue = queue.Queue()
+    scheduler = schedule.Scheduler()
+
+    def __init__(self, name, update_func, interval) -> None:
+        self.name = name
+        self.update_func = update_func
+        self.interval = interval
+
+    def run(self):
+        while 1:
+            job_func = self.jobqueue.get()
+            job_func()
+            self.jobqueue.task_done()
+
+    def start(self) -> None:
+        self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.update_func)
+        self.thread = threading.Thread(daemon=True, target=self.run)
+        self.thread.start()
+
+
+if __name__ == "__main__":
+    jobs = [
+        Job("dcim", generateDevices, 6),
+        Job("ping", getPing, 1),
+        Job("snmp", getSnmp, 5),
+        Job("snmpPorts", getSnmpPorts, 5),
+    ]
+
+    for job in jobs:
+        job.start()
+
     while 1:
-        job_func = dcim_jobqueue.get()
-        job_func()
-        dcim_jobqueue.task_done()
-
-
-dcim_jobqueue = queue.Queue()
-dcim_scheduler = schedule.Scheduler()
-dcim_scheduler.every(60).seconds.do(dcim_jobqueue.put, generateDevices)
-dcim_worker_thread = threading.Thread(daemon=True, target=dcim_main)
-dcim_worker_thread.start()
-
-
-# Ping
-def ping_main():
-    while 1:
-        job_func = ping_jobqueue.get()
-        job_func()
-        ping_jobqueue.task_done()
-
-
-ping_jobqueue = queue.Queue()
-ping_scheduler = schedule.Scheduler()
-ping_scheduler.every(1).seconds.do(ping_jobqueue.put, getPing)
-ping_worker_thread = threading.Thread(daemon=True, target=ping_main)
-ping_worker_thread.start()
-
-
-# Snmp
-def snmp_main():
-    while 1:
-        job_func = snmp_jobqueue.get()
-        job_func()
-        snmp_jobqueue.task_done()
-
-
-snmp_jobqueue = queue.Queue()
-snmp_scheduler = schedule.Scheduler()
-snmp_scheduler.every(5).seconds.do(snmp_jobqueue.put, getSnmp)
-snmp_scheduler.every(5).seconds.do(snmp_jobqueue.put, getSnmpPorts)
-snmp_worker_thread = threading.Thread(daemon=True, target=snmp_main)
-snmp_worker_thread.start()
-
-# Main loop
-while 1:
-    dcim_scheduler.run_pending()
-    ping_scheduler.run_pending()
-    snmp_scheduler.run_pending()
-    time.sleep(1)
+        for job in jobs:
+            job.scheduler.run_pending()
+        time.sleep(1)

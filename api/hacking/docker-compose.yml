@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: docker.io/library/postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - /var/lib/postgresql
+    networks:
+      - gondul
+  redis:
+    image: docker.io/library/redis
+    ports:
+      - 6379:6379
+    volumes:
+      - /data
+    networks:
+      - gondul
+
   prometheus:
     image: docker.io/prom/prometheus:v3.9.1
     volumes:
@@ -25,6 +44,9 @@ services:
   #   network_mode: host
 
 networks:
+  gondul:
+    enable_ipv4: true
+    enable_ipv6: true
   monitoring:
     enable_ipv4: true
     enable_ipv6: true

@@ -71,7 +71,7 @@ Uses `uv` for dependency management.
 Run a development version of the API with:
 
 ```
-uv run fastapi dev app/main.py
+uv run --env-file ../.env fastapi dev app/main.py
 ```
 
 == Database

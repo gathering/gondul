@@ -17,13 +17,13 @@ from pydantic import Field, TypeAdapter
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
-import model
+from .gondul_models import BaseModel, DeviceManagement, Placement
 
-class GondulDevice(model.DeviceManagement):
-    placement: model.Placement | None = Field(None, title='Gondul Placement')
+class GondulDevice(DeviceManagement):
+    placement: Placement | None = Field(None, title='Gondul Placement')
     tags: list[str] = Field(list(), title='Tags')
 
-class GondulPingData(model.BaseModel):
+class GondulPingData(BaseModel):
     v4_rtt: float | None = Field(None, title='IPv4 ping')
     v6_rtt: float | None = Field(None, title='IPv6 ping')
     v4_time: float | None = Field(None, title='IPv4 ping age (timestamp)') # TODO: serialize to timestamp
@@ -103,14 +103,14 @@ def get_devices() -> dict[str, GondulDevice]:
         #            #print(uplink)
         #            break
 
-        placement: model.Placement
+        placement: Placement
         if "gondul_placement" in device.custom_fields and device.custom_fields["gondul_placement"]:
             _placement = device.custom_fields["gondul_placement"]
             if 'x' not in _placement or _placement['x'] is None:
                 _placement['x'] = random.randrange(50, 1400, 20)
             if 'y' not in _placement or _placement['y'] is None:
                 _placement['y'] = random.randrange(50, 600, 20)
-            placement = model.Placement(
+            placement = Placement(
                 x=_placement["x"],
                 y=_placement["y"],
                 height=_placement["height"],
@@ -118,7 +118,7 @@ def get_devices() -> dict[str, GondulDevice]:
             )
         else:
             _placement = device.custom_fields["gondul_placement"]
-            placement = model.Placement(
+            placement = Placement(
                 x=_placement["x"],
                 y=_placement["y"],
                 height=_placement["height"],

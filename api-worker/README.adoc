@@ -2,6 +2,12 @@
 
 Syncs various sources into a common cache.
 
+== Running
+
+```
+uv run fastapi dev app/api.py
+```
+
 == Configuration
 
 See `.env-example`.

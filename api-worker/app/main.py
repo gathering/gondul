@@ -17,6 +17,7 @@ from pydantic import Field, TypeAdapter
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
+from .cache import pool
 from .gondul_models import BaseModel, DeviceManagement, Placement
 
 class GondulDevice(DeviceManagement):
@@ -39,12 +40,7 @@ load_dotenv()
 logger.info("Starting API worker")
 
 cache = redis.Redis(
-    connection_pool=redis.ConnectionPool(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=os.environ.get("REDIS_PORT", 6379),
-        db=os.environ.get("REDIS_DB", 0),
-        decode_responses=True,
-    )
+    connection_pool=pool
 )
 
 def _update_cache(key: str, data):
@@ -437,6 +433,7 @@ def getPing():
 class Job:
     jobqueue = queue.Queue()
     scheduler = schedule.Scheduler()
+    stopp = False
 
     def __init__(self, name, update_func, interval) -> None:
         self.name = name
@@ -444,29 +441,34 @@ class Job:
         self.interval = interval
 
     def run(self):
-        while 1:
+        while not self.stopp:
             job_func = self.jobqueue.get()
-            job_func()
+            try:
+                job_func()
+            except Exception as e:
+                logger.error(f"{self.name} job failed: {e}")
             self.jobqueue.task_done()
 
+    def ticker(self):
+        while not self.stopp:
+            self.scheduler.run_pending()
+            time.sleep(1)
+
     def start(self) -> None:
+        logger.info(f'starting job {self.name}')
         self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.update_func)
-        self.thread = threading.Thread(daemon=True, target=self.run)
+        self.thread = threading.Thread(daemon=True, target=self.run, name=self.name)
         self.thread.start()
+        self.ticker_thread = threading.Thread(daemon=True, target=self.ticker, name=f"{self.name}-ticker")
+        self.ticker_thread.start()
 
+    def stop(self) -> None:
+        logger.info(f'stopping job {self.name}')
+        self.stopp = True
+        self.thread.join(timeout=5.0)
+        if self.thread.is_alive():
+            logger.warning('failed stopping thread')
 
-if __name__ == "__main__":
-    jobs = [
-        Job("dcim", generateDevices, 6),
-        Job("ping", getPing, 1),
-        Job("snmp", getSnmp, 5),
-        Job("snmpPorts", getSnmpPorts, 5),
-    ]
-
-    for job in jobs:
-        job.start()
-
-    while 1:
-        for job in jobs:
-            job.scheduler.run_pending()
-        time.sleep(1)
+    def add_now(self) -> None:
+        logger.info(f'triggering update of {self.name}')
+        self.jobqueue.put(self.update_func)

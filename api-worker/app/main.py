@@ -24,14 +24,15 @@ from .gondul_models import BaseModel, DeviceManagement, Placement
 class GondulDevice(DeviceManagement):
     placement: Placement | None = Field(None, title='Gondul Placement')
     tags: list[str] = Field(list(), title='Tags')
+devicesAdapter = TypeAdapter(dict[str, GondulDevice])
 
 class GondulPingData(BaseModel):
     v4_rtt: float | None = Field(None, title='IPv4 ping')
     v6_rtt: float | None = Field(None, title='IPv6 ping')
     v4_time: float | None = Field(None, title='IPv4 ping age (timestamp)') # TODO: serialize to timestamp
     v6_time: float | None = Field(None, title='IPv6 ping age (timestamp)') # TODO: serialize to timestamp
+pingAdapter = TypeAdapter(dict[str, GondulPingData])
 
-devicesAdapter = TypeAdapter(dict[str, GondulDevice])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,9 +52,6 @@ def _update_cache(key: str, data):
     cache.set(f"{key}:updated", round(time.time()))
     cache.set(f"{key}:data", data)
     logger.info(f"Cache updated in %.2f seconds" % (time.time() - start_time))
-
-def update_devices(devices: dict[str, GondulDevice]):
-    _update_cache("devices", devicesAdapter.dump_json(devices))
 
 def get_devices() -> dict[str, GondulDevice]:
     nb = pynetbox.api(
@@ -164,9 +162,6 @@ def get_devices() -> dict[str, GondulDevice]:
     return devices
 
 
-def generateDevices():
-    update_devices(get_devices())
-
 # {
 #     "ifInErrors":"0",
 #     "ifInDiscards":"0",
@@ -243,7 +238,7 @@ def getSnmpPorts():
                 "ifHighSpeed": metric["value"][1]
             })
         
-    _update_cache("snmp:ports", json.dumps(switches))
+    return switches
 
 def getSnmp():
     output = {}
@@ -330,7 +325,7 @@ def getSnmp():
                     }
                 )
 
-    _update_cache("snmp", json.dumps(output))
+    return output
 
 def prometheus_query(query: str, params={}):
     basic = None
@@ -347,7 +342,7 @@ def prometheus_query(query: str, params={}):
     )
 
 
-def getPing():
+def getPing() -> dict[str, GondulPingData]:
     output: dict[str, GondulPingData] = {}
 
     probe_icmp_duration_seconds = prometheus_query('probe_icmp_duration_seconds{phase="rtt"}', params={
@@ -392,23 +387,31 @@ def getPing():
             else:
                 output[sysname] = ping_data
 
-    _update_cache("ping", json.dumps({sysname: ping.model_dump() for sysname, ping in output.items()}))
+    return output
 
 class Job:
 
-    def __init__(self, name, update_func, interval) -> None:
+    def __init__(self, name, poller_func, interval, dump_adapter: TypeAdapter | None=None) -> None:
         self.jobqueue = queue.Queue()
         self.scheduler = schedule.Scheduler()
         self.stopp = False
         self.name = name
-        self.update_func = update_func
+        self.poller_func = poller_func
         self.interval = interval
+        self.dump_adapter = dump_adapter
 
     def run(self):
         while not self.stopp:
             job_func = self.jobqueue.get()
             try:
-                job_func()
+                data = job_func()
+                if self.dump_adapter:
+                    _update_cache(self.name, self.dump_adapter.dump_json(data))
+                else:
+                    if isinstance(data, BaseModel):
+                        _update_cache(self.name, json.dumps({sysname: data.model_dump() for sysname, data in data.items()}))
+                    else:
+                        _update_cache(self.name, json.dumps({sysname: data for sysname, data in data.items()}))
             except Exception as e:
                 logger.error(f"{self.name} job failed: {e}")
             self.jobqueue.task_done()
@@ -420,7 +423,7 @@ class Job:
 
     def start(self) -> None:
         logger.info(f'starting job {self.name}')
-        self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.update_func)
+        self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.poller_func)
         self.thread = threading.Thread(daemon=True, target=self.run, name=self.name)
         self.thread.start()
         self.ticker_thread = threading.Thread(daemon=True, target=self.ticker, name=f"{self.name}-ticker")
@@ -435,4 +438,4 @@ class Job:
 
     def add_now(self) -> None:
         logger.info(f'triggering update of {self.name}')
-        self.jobqueue.put(self.update_func)
+        self.jobqueue.put(self.poller_func)

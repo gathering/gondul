@@ -4,16 +4,16 @@ import redis
 import hashlib
 
 from .cache import pool
-from .main import Job, generateDevices, getPing, getSnmp, getSnmpPorts
+from .main import Job, get_devices, getPing, getSnmp, getSnmpPorts, devicesAdapter, pingAdapter
 
 def get_cache():
     return redis.Redis(connection_pool=pool)
 
 jobs = {
-    "dcim": Job("dcim", generateDevices, 6),
-    "ping": Job("ping", getPing, 1),
+    "devices": Job("devices", get_devices, 6, dump_adapter=devicesAdapter),
+    "ping": Job("ping", getPing, 1, dump_adapter=pingAdapter),
     "snmp": Job("snmp", getSnmp, 5),
-    "snmpPorts": Job("snmpPorts", getSnmpPorts, 5),
+    "snmp:ports": Job("snmp:ports", getSnmpPorts, 5),
 }
 
 @asynccontextmanager
@@ -41,5 +41,5 @@ async def update_device(device: str, request: Request, response: Response, cache
         response.headers["etag"] = etag
     if request.headers.get("If-None-Match") == etag:
         raise HTTPException(status_code=304)
-    jobs["dcim"].add_now()
+    jobs["devices"].add_now()
     return {"ok": "ok", "device": device}

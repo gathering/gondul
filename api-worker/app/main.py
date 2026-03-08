@@ -395,11 +395,11 @@ def getPing():
     _update_cache("ping", json.dumps({sysname: ping.model_dump() for sysname, ping in output.items()}))
 
 class Job:
-    jobqueue = queue.Queue()
-    scheduler = schedule.Scheduler()
-    stopp = False
 
     def __init__(self, name, update_func, interval) -> None:
+        self.jobqueue = queue.Queue()
+        self.scheduler = schedule.Scheduler()
+        self.stopp = False
         self.name = name
         self.update_func = update_func
         self.interval = interval

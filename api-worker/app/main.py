@@ -18,6 +18,7 @@ from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
 from .cache import pool
+from .config import settings
 from .gondul_models import BaseModel, DeviceManagement, Placement
 
 class GondulDevice(DeviceManagement):
@@ -189,14 +190,8 @@ def generateDevices():
 
 def getSnmpPorts():
     switches = {}        
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
 
-    ifIndex = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifType_info"},
-        auth=basic
-    )
+    ifIndex = prometheus_query("ifType_info")
     if ifIndex.ok and ifIndex.json()["status"] == "success":
         for metric in ifIndex.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -212,11 +207,7 @@ def getSnmpPorts():
             })
 
     ifAdminStatusMapping = {"1": "up", "2": "down"}
-    ifAdminStatus = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifAdminStatus"},
-        auth=basic
-    )
+    ifAdminStatus = prometheus_query("ifAdminStatus")
     if ifAdminStatus.ok and ifAdminStatus.json()["status"] == "success":
         for metric in ifAdminStatus.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -229,11 +220,7 @@ def getSnmpPorts():
 
     # 1-up, 2-down, 3-testing, 4-unknown, 5-dormant, 6-notPresent, 7-lowerLayerDown
     ifOperStatusMapping = {"1": "up", "2": "down", "3": "testing", "4": "unknown", "5": "dormant", "6": "notPresent", "7": "lowerLayerDown"}
-    ifOperStatus = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifOperStatus"},
-        auth=basic
-    )
+    ifOperStatus = prometheus_query("ifOperStatus")
     if ifOperStatus.ok and ifOperStatus.json()["status"] == "success":
         for metric in ifOperStatus.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -245,11 +232,7 @@ def getSnmpPorts():
             })
     
 
-    ifHighSpeed = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifHighSpeed"},
-        auth=basic
-    )
+    ifHighSpeed = prometheus_query("ifHighSpeed")
     if ifHighSpeed.ok and ifHighSpeed.json()["status"] == "success":
         for metric in ifHighSpeed.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -265,13 +248,7 @@ def getSnmpPorts():
 def getSnmp():
     output = {}
 
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
-    sysUpTime = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysUpTime"},
-        auth=basic,
-    )
+    sysUpTime = prometheus_query("sysUpTime")
     if sysUpTime.ok and sysUpTime.json()["status"] == "success":
         for metric in sysUpTime.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -291,11 +268,7 @@ def getSnmp():
                     }
                 )
 
-    sysName = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysName"},
-        auth=basic,
-    )
+    sysName = prometheus_query("sysName")
     if sysName.ok and sysName.json()["status"] == "success":
         for metric in sysName.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -315,11 +288,7 @@ def getSnmp():
                     }
                 )
 
-    sysDescr = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysDescr"},
-        auth=basic,
-    )
+    sysDescr = prometheus_query("sysDescr")
     if sysDescr.ok and sysDescr.json()["status"] == "success":
         for metric in sysDescr.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -339,11 +308,7 @@ def getSnmp():
                     }
                 )
 
-    entPhysicalSerialNum = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "entPhysicalSerialNum"},
-        auth=basic,
-    )
+    entPhysicalSerialNum = prometheus_query("entPhysicalSerialNum")
     if entPhysicalSerialNum.ok and entPhysicalSerialNum.json()["status"] == "success":
         for metric in entPhysicalSerialNum.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -368,13 +333,12 @@ def getSnmp():
     _update_cache("snmp", json.dumps(output))
 
 def prometheus_query(query: str, params={}):
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
-
-    logger = logging.getLogger("prometheus")
+    basic = None
+    if settings.PROM_USER and settings.PROM_PASSWORD:
+        basic = HTTPBasicAuth(settings.PROM_USER, settings.PROM_PASSWORD)
 
     return requests.get(
-        prom_url + "/api/v1/query",
+        settings.PROM_URL + "/api/v1/query",
         params={
             "query": query,
             **params,

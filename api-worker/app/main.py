@@ -57,7 +57,7 @@ def update_devices(devices: dict[str, GondulDevice]):
 
 def get_devices() -> dict[str, GondulDevice]:
     nb = pynetbox.api(
-        os.environ.get("NETBOX_URL"), token=os.environ.get("NETBOX_TOKEN"), threading=True
+        settings.NETBOX_URL, token=settings.NETBOX_TOKEN, threading=True
     )
     devices: dict[str, GondulDevice] = {}
     for device in nb.dcim.devices.filter(

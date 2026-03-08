@@ -17,13 +17,22 @@ from pydantic import Field, TypeAdapter
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
-import model
+from .cache import pool
+from .config import settings
+from .gondul_models import BaseModel, DeviceManagement, Placement
 
-class GondulDevice(model.DeviceManagement):
-    placement: model.Placement | None = Field(None, title='Gondul Placement')
+class GondulDevice(DeviceManagement):
+    placement: Placement | None = Field(None, title='Gondul Placement')
     tags: list[str] = Field(list(), title='Tags')
-
 devicesAdapter = TypeAdapter(dict[str, GondulDevice])
+
+class GondulPingData(BaseModel):
+    v4_rtt: float | None = Field(None, title='IPv4 ping')
+    v6_rtt: float | None = Field(None, title='IPv6 ping')
+    v4_time: float | None = Field(None, title='IPv4 ping age (timestamp)') # TODO: serialize to timestamp
+    v6_time: float | None = Field(None, title='IPv6 ping age (timestamp)') # TODO: serialize to timestamp
+pingAdapter = TypeAdapter(dict[str, GondulPingData])
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,12 +42,7 @@ load_dotenv()
 logger.info("Starting API worker")
 
 cache = redis.Redis(
-    connection_pool=redis.ConnectionPool(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=os.environ.get("REDIS_PORT", 6379),
-        db=os.environ.get("REDIS_DB", 0),
-        decode_responses=True,
-    )
+    connection_pool=pool
 )
 
 def _update_cache(key: str, data):
@@ -49,12 +53,9 @@ def _update_cache(key: str, data):
     cache.set(f"{key}:data", data)
     logger.info(f"Cache updated in %.2f seconds" % (time.time() - start_time))
 
-def update_devices(devices: dict[str, GondulDevice]):
-    _update_cache("devices", devicesAdapter.dump_json(devices))
-
 def get_devices() -> dict[str, GondulDevice]:
     nb = pynetbox.api(
-        os.environ.get("NETBOX_URL"), token=os.environ.get("NETBOX_TOKEN"), threading=True
+        settings.NETBOX_URL, token=settings.NETBOX_TOKEN, threading=True
     )
     devices: dict[str, GondulDevice] = {}
     for device in nb.dcim.devices.filter(
@@ -97,14 +98,14 @@ def get_devices() -> dict[str, GondulDevice]:
         #            #print(uplink)
         #            break
 
-        placement: model.Placement
+        placement: Placement
         if "gondul_placement" in device.custom_fields and device.custom_fields["gondul_placement"]:
             _placement = device.custom_fields["gondul_placement"]
             if 'x' not in _placement or _placement['x'] is None:
                 _placement['x'] = random.randrange(50, 1400, 20)
             if 'y' not in _placement or _placement['y'] is None:
                 _placement['y'] = random.randrange(50, 600, 20)
-            placement = model.Placement(
+            placement = Placement(
                 x=_placement["x"],
                 y=_placement["y"],
                 height=_placement["height"],
@@ -112,7 +113,7 @@ def get_devices() -> dict[str, GondulDevice]:
             )
         else:
             _placement = device.custom_fields["gondul_placement"]
-            placement = model.Placement(
+            placement = Placement(
                 x=_placement["x"],
                 y=_placement["y"],
                 height=_placement["height"],
@@ -161,9 +162,6 @@ def get_devices() -> dict[str, GondulDevice]:
     return devices
 
 
-def generateDevices():
-    update_devices(get_devices())
-
 # {
 #     "ifInErrors":"0",
 #     "ifInDiscards":"0",
@@ -187,14 +185,8 @@ def generateDevices():
 
 def getSnmpPorts():
     switches = {}        
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
 
-    ifIndex = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifType_info"},
-        auth=basic
-    )
+    ifIndex = prometheus_query("ifType_info")
     if ifIndex.ok and ifIndex.json()["status"] == "success":
         for metric in ifIndex.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -210,11 +202,7 @@ def getSnmpPorts():
             })
 
     ifAdminStatusMapping = {"1": "up", "2": "down"}
-    ifAdminStatus = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifAdminStatus"},
-        auth=basic
-    )
+    ifAdminStatus = prometheus_query("ifAdminStatus")
     if ifAdminStatus.ok and ifAdminStatus.json()["status"] == "success":
         for metric in ifAdminStatus.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -227,11 +215,7 @@ def getSnmpPorts():
 
     # 1-up, 2-down, 3-testing, 4-unknown, 5-dormant, 6-notPresent, 7-lowerLayerDown
     ifOperStatusMapping = {"1": "up", "2": "down", "3": "testing", "4": "unknown", "5": "dormant", "6": "notPresent", "7": "lowerLayerDown"}
-    ifOperStatus = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifOperStatus"},
-        auth=basic
-    )
+    ifOperStatus = prometheus_query("ifOperStatus")
     if ifOperStatus.ok and ifOperStatus.json()["status"] == "success":
         for metric in ifOperStatus.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -243,11 +227,7 @@ def getSnmpPorts():
             })
     
 
-    ifHighSpeed = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "ifHighSpeed"},
-        auth=basic
-    )
+    ifHighSpeed = prometheus_query("ifHighSpeed")
     if ifHighSpeed.ok and ifHighSpeed.json()["status"] == "success":
         for metric in ifHighSpeed.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in switches:
@@ -258,18 +238,12 @@ def getSnmpPorts():
                 "ifHighSpeed": metric["value"][1]
             })
         
-    _update_cache("snmp:ports", json.dumps(switches))
+    return switches
 
 def getSnmp():
     output = {}
 
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
-    sysUpTime = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysUpTime"},
-        auth=basic,
-    )
+    sysUpTime = prometheus_query("sysUpTime")
     if sysUpTime.ok and sysUpTime.json()["status"] == "success":
         for metric in sysUpTime.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -289,11 +263,7 @@ def getSnmp():
                     }
                 )
 
-    sysName = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysName"},
-        auth=basic,
-    )
+    sysName = prometheus_query("sysName")
     if sysName.ok and sysName.json()["status"] == "success":
         for metric in sysName.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -313,11 +283,7 @@ def getSnmp():
                     }
                 )
 
-    sysDescr = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "sysDescr"},
-        auth=basic,
-    )
+    sysDescr = prometheus_query("sysDescr")
     if sysDescr.ok and sysDescr.json()["status"] == "success":
         for metric in sysDescr.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -337,11 +303,7 @@ def getSnmp():
                     }
                 )
 
-    entPhysicalSerialNum = requests.get(
-        prom_url + "/api/v1/query",
-        params={"query": "entPhysicalSerialNum"},
-        auth=basic,
-    )
+    entPhysicalSerialNum = prometheus_query("entPhysicalSerialNum")
     if entPhysicalSerialNum.ok and entPhysicalSerialNum.json()["status"] == "success":
         for metric in entPhysicalSerialNum.json()["data"]["result"]:
             if metric["metric"]["sysname"] not in output:
@@ -363,82 +325,117 @@ def getSnmp():
                     }
                 )
 
-    _update_cache("snmp", json.dumps(output))
+    return output
 
+def prometheus_query(query: str, params={}):
+    basic = None
+    if settings.PROM_USER and settings.PROM_PASSWORD:
+        basic = HTTPBasicAuth(settings.PROM_USER, settings.PROM_PASSWORD)
 
-def getPing():
-    output = {}
-
-    basic = HTTPBasicAuth(os.environ.get("PROM_USER"), os.environ.get("PROM_PASSWORD"))
-    prom_url = os.environ.get("PROM_URL")
-    probe_icmp_duration_seconds = requests.get(
-        prom_url + "/api/v1/query",
+    return requests.get(
+        settings.PROM_URL + "/api/v1/query",
         params={
-            "query": 'probe_icmp_duration_seconds{phase="rtt"}',
-            "latency_offset": "1ms",
+            "query": query,
+            **params,
         },
         auth=basic,
     )
+
+
+def getPing() -> dict[str, GondulPingData]:
+    output: dict[str, GondulPingData] = {}
+
+    probe_icmp_duration_seconds = prometheus_query('probe_icmp_duration_seconds{phase="rtt"}', params={
+        "latency_offset": "1ms",
+    })
+
     if (
         probe_icmp_duration_seconds.ok
         and probe_icmp_duration_seconds.json()["status"] == "success"
     ):
-        for metric in probe_icmp_duration_seconds.json()["data"]["result"]:
-            if metric["metric"]["sysname"] not in output:
-                output[metric["metric"]["sysname"]] = {}
-            if metric["value"][1] == "0":
-                output[metric["metric"]["sysname"]].update(
-                    {
-                        f'{metric["metric"]["type"]}_time': metric["value"][0],
-                        f'{metric["metric"]["type"]}_{metric["metric"]["phase"]}': None,
-                    }
-                )
+        for series in probe_icmp_duration_seconds.json()["data"]["result"]:
+            metric = series["metric"]
+            sysname = metric["sysname"]
+            ip_family = metric["type"]
+
+            value = series["value"]
+            ping_time = value[0]
+            ping_value = value[1]
+
+            ping_data: GondulPingData
+
+            # ping value is 0 if there was no reply
+            if ping_value == "0":
+                ping_data = GondulPingData(**{
+                    f'{ip_family}_time': ping_time,
+                    f'{ip_family}_{metric["phase"]}': None,
+                })
             else:
-                output[metric["metric"]["sysname"]].update(
-                    {
-                        f'{metric["metric"]["type"]}_time': metric["value"][0],
-                        f'{metric["metric"]["type"]}_{metric["metric"]["phase"]}': float(
-                            metric["value"][1]
-                        ),
-                    }
-                )
+                ping_data = GondulPingData(**{
+                    f'{ip_family}_time': ping_time,
+                    f'{ip_family}_{metric["phase"]}': float(ping_value),
+                })
 
-    _update_cache("ping", json.dumps(output))
+            if sysname in output:
+                existing_ping_data = output[sysname]
+                for key, val in ping_data.model_dump().items():
+                    # Skip the empty values
+                    if not val:
+                        continue
+                    setattr(existing_ping_data, key, val)
+                output.update({sysname: existing_ping_data})
+            else:
+                output[sysname] = ping_data
 
+    return output
 
 class Job:
-    jobqueue = queue.Queue()
-    scheduler = schedule.Scheduler()
 
-    def __init__(self, name, update_func, interval) -> None:
+    def __init__(self, name, poller_func, interval, dump_adapter: TypeAdapter | None=None) -> None:
+        self.jobqueue = queue.Queue()
+        self.scheduler = schedule.Scheduler()
+        self.stopp = False
         self.name = name
-        self.update_func = update_func
+        self.poller_func = poller_func
         self.interval = interval
+        self.dump_adapter = dump_adapter
 
     def run(self):
-        while 1:
+        while not self.stopp:
             job_func = self.jobqueue.get()
-            job_func()
+            try:
+                data = job_func()
+                if self.dump_adapter:
+                    _update_cache(self.name, self.dump_adapter.dump_json(data))
+                else:
+                    if isinstance(data, BaseModel):
+                        _update_cache(self.name, json.dumps({sysname: data.model_dump() for sysname, data in data.items()}))
+                    else:
+                        _update_cache(self.name, json.dumps({sysname: data for sysname, data in data.items()}))
+            except Exception as e:
+                logger.error(f"{self.name} job failed: {e}")
             self.jobqueue.task_done()
 
+    def ticker(self):
+        while not self.stopp:
+            self.scheduler.run_pending()
+            time.sleep(1)
+
     def start(self) -> None:
-        self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.update_func)
-        self.thread = threading.Thread(daemon=True, target=self.run)
+        logger.info(f'starting job {self.name}')
+        self.scheduler.every(self.interval).seconds.do(self.jobqueue.put, self.poller_func)
+        self.thread = threading.Thread(daemon=True, target=self.run, name=self.name)
         self.thread.start()
+        self.ticker_thread = threading.Thread(daemon=True, target=self.ticker, name=f"{self.name}-ticker")
+        self.ticker_thread.start()
 
+    def stop(self) -> None:
+        logger.info(f'stopping job {self.name}')
+        self.stopp = True
+        self.thread.join(timeout=5.0)
+        if self.thread.is_alive():
+            logger.warning('failed stopping thread')
 
-if __name__ == "__main__":
-    jobs = [
-        Job("dcim", generateDevices, 6),
-        Job("ping", getPing, 1),
-        Job("snmp", getSnmp, 5),
-        Job("snmpPorts", getSnmpPorts, 5),
-    ]
-
-    for job in jobs:
-        job.start()
-
-    while 1:
-        for job in jobs:
-            job.scheduler.run_pending()
-        time.sleep(1)
+    def add_now(self) -> None:
+        logger.info(f'triggering update of {self.name}')
+        self.jobqueue.put(self.poller_func)

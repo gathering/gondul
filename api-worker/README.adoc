@@ -2,16 +2,22 @@
 
 Syncs various sources into a common cache.
 
+== Running
+
+```
+uv run fastapi dev app/api.py
+```
+
 == Configuration
 
 See `.env-example`.
 
 === Generate models
 
-Generate models from API via
+Generate models from Gondul API via
 
 ```
-curl -sS http://localhost:8000/api/openapi.json | uv run datamodel-codegen --input-file-type openapi --output model.py
+curl -sS http://localhost:8000/api/openapi.json | uv run datamodel-codegen --input-file-type openapi --output gondul_models.py
 ```
 
 if self-hosting the API, or replace http://localhost:8000 with a gondul API somewhere else.

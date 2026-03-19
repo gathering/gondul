@@ -84,12 +84,12 @@ async def ping(
         )
         age4 = (
             (time.time() - ping[device]["v4_time"])
-            if "v4_time" in ping[device]
+            if "v4_time" in ping[device] and ping[device]["v4_time"] is not None
             else None
         )
         age6 = (
             (time.time() - ping[device]["v6_time"])
-            if "v6_time" in ping[device]
+            if "v6_time" in ping[device] and ping[device]["v6_time"] is not None
             else None
         )
         output.update(

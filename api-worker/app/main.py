@@ -446,6 +446,8 @@ def getSnmpPortsSql():
             output[sysname]['ports'] = {}
 
         for key, val in data.items():
+            if if_name not in output[sysname]['ports']:
+                output[sysname]['ports'][if_name] = {}
             output[sysname]['ports'][if_name][key] = val
 
     return output

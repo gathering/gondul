@@ -13,6 +13,7 @@ import random
 import requests
 import netaddr
 
+from datetime impot datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 from pydantic import Field, TypeAdapter
 from sqlalchemy import Column, MetaData, Table, create_engine, select
@@ -402,11 +403,12 @@ def getPing() -> dict[str, GondulPingData]:
     return output
 
 def sql_query(query):
+    interval = datetime.utcnow() - timedelta(minutes=15)
     # distinct/order by ifName is a bit hacky for non-ports, but the field exists, so it doesn't hurt..
     q = select(snmp_table) \
             .distinct(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"]) \
             .order_by(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"], snmp_table.c.time.desc()) \
-            .where(snmp_table.c.metadata["id"].astext.endswith(f';{query}'))
+            .where(snmp_table.c.time >= interval, snmp_table.c.metadata["id"].astext.endswith(f';{query}'))
     with psql_engine.connect() as conn:
         result = conn.execute(q)
         return result.all()

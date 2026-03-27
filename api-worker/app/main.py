@@ -405,7 +405,7 @@ def sql_query(query):
     # distinct/order by ifName is a bit hacky for non-ports, but the field exists, so it doesn't hurt..
     q = select(snmp_table) \
             .distinct(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"]) \
-            .order_by(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"], snmp_table.c.time) \
+            .order_by(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"], snmp_table.c.time.desc()) \
             .where(snmp_table.c.metadata["id"].astext.endswith(f';{query}'))
     with psql_engine.connect() as conn:
         result = conn.execute(q)

@@ -13,7 +13,7 @@ import random
 import requests
 import netaddr
 
-from datetime impot datetime, timedelta
+from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 from pydantic import Field, TypeAdapter
 from sqlalchemy import Column, MetaData, Table, create_engine, select

@@ -16,6 +16,8 @@ dependencies = [
     "python-dotenv (>=1.1.0,<2.0.0)",
     "black>=25.1.0,<27.0.0",
     "fastapi[standard]>=0.135.1",
+    "sqlalchemy>=2.0.48",
+    "psycopg2>=2.9.11",
 ]
 
 [dependency-groups]

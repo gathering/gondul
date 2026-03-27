@@ -17,4 +17,6 @@ class Settings(BaseSettings):
     PROM_USER: str | None = None
     PROM_PASSWORD: str | None = None
 
+    PSQL_CONNECTION_STRING: str
+
 settings = Settings()  # type: ignore

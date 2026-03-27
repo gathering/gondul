@@ -1,3 +1,4 @@
+from importlib.metadata import metadata
 import logging
 import time
 import threading
@@ -14,6 +15,8 @@ import netaddr
 
 from ipaddress import IPv4Address, IPv6Address
 from pydantic import Field, TypeAdapter
+from sqlalchemy import Column, MetaData, Table, create_engine, select
+from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 
@@ -44,6 +47,15 @@ logger.info("Starting API worker")
 cache = redis.Redis(
     connection_pool=pool
 )
+
+snmp_table_metadata = MetaData()
+snmp_table = Table(
+    'snmp', snmp_table_metadata,
+    Column('time', TIMESTAMP),
+    Column('metadata', JSONB),
+    Column('data', JSONB),
+)
+psql_engine = create_engine(settings.PSQL_CONNECTION_STRING)
 
 def _update_cache(key: str, data):
     start_time = time.time()
@@ -388,6 +400,56 @@ def getPing() -> dict[str, GondulPingData]:
                 output[sysname] = ping_data
 
     return output
+
+def sql_query(query):
+    # distinct/order by ifName is a bit hacky for non-ports, but the field exists, so it doesn't hurt..
+    q = select(snmp_table) \
+            .distinct(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"]) \
+            .order_by(snmp_table.c.metadata["target"], snmp_table.c.metadata["ifName"], snmp_table.c.time) \
+            .where(snmp_table.c.metadata["id"].astext.endswith(f';{query}'))
+    with psql_engine.connect() as conn:
+        result = conn.execute(q)
+        return result.all()
+
+def getSnmpSql():
+    rows = sql_query("system")
+    output = {}
+
+    for row in rows:
+        timestamp = row[0]
+        metadata = row[1]
+        data = row[2]
+        sysname = metadata['id'].split(';')[0]
+
+        if sysname not in output:
+            output[sysname] = {}
+
+        for key, val in data.items():
+            output[sysname][f'{key}_time'] = timestamp.timestamp()
+            output[sysname][key] = val
+
+    return output
+
+def getSnmpPortsSql():
+    rows = sql_query("ports")
+    output = {}
+
+    for row in rows:
+        # timestamp = row[0] # TODO: figure out how ports data deals with timestamp
+        metadata = row[1]
+        data = row[2]
+        sysname = metadata['id'].split(';')[0]
+        if_name = metadata['ifName']
+
+        if sysname not in output:
+            output[sysname] = {}
+            output[sysname]['ports'] = {}
+
+        for key, val in data.items():
+            output[sysname]['ports'][if_name][key] = val
+
+    return output
+
 
 class Job:
 

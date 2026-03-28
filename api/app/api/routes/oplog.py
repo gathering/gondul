@@ -1,7 +1,7 @@
 import hashlib
 import time
 
-from fastapi import APIRouter, Request, Response, HTTPException, Depends
+from fastapi import APIRouter, BackgroundTasks, Request, Response, HTTPException, Depends
 from sqlmodel import select
 
 from app.api.deps import get_db
@@ -27,9 +27,9 @@ async def list_oplog(request: Request, response: Response, db=Depends(get_db)) -
     return {"oplog": oplogs, "time": updated, "hash": etag}
 
 @router.post("/")
-async def create_oplog(oplog: OplogCreate, db=Depends(get_db)):
+async def create_oplog(oplog: OplogCreate, background_tasks: BackgroundTasks, db=Depends(get_db)):
     validated_oplog = OplogBase.model_validate(oplog, update={"time": round(time.time())})
     db.add(validated_oplog)
     db.commit()
-    send_oplog_notification(validated_oplog)
+    background_tasks.add_task(send_oplog_notification, validated_oplog)
     return oplog

@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     NETBOX_URL: str = "http://localhost"
     NETBOX_TOKEN: str = ""
 
-    SLACK_WEBHOOK_URI: str
+    SLACK_WEBHOOK_URI: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     NETBOX_URL: str = "http://localhost"
     NETBOX_TOKEN: str = ""
 
+    SLACK_WEBHOOK_URI: str
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

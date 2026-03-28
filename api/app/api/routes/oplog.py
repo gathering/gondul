@@ -7,6 +7,7 @@ from sqlmodel import select
 from app.api.deps import get_db
 from app.models.oplog import Oplog, OplogBase, OplogCreate
 from app.api.deps import get_db
+from app.core.slack_webhook import send_oplog_notification
 
 router = APIRouter(prefix="/v2/oplog", tags=["oplog"])
 
@@ -27,6 +28,8 @@ async def list_oplog(request: Request, response: Response, db=Depends(get_db)) -
 
 @router.post("/")
 async def create_oplog(oplog: OplogCreate, db=Depends(get_db)):
-    db.add(OplogBase.model_validate(oplog, update={"time": round(time.time())}))
+    validated_oplog = OplogBase.model_validate(oplog, update={"time": round(time.time())})
+    db.add(validated_oplog)
     db.commit()
+    send_oplog_notification(validated_oplog)
     return oplog

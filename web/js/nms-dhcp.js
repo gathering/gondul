@@ -8,7 +8,7 @@ nmsDhcp.init = function () {
 
 nmsDhcp.updateSummary = function () {
   let el = document.getElementById("dhcp-summary");
-  if (el === undefined) return;
+  if (!el) return;
 
   el.innerHTML = "";
 

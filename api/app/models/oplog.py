@@ -27,3 +27,4 @@ class OplogCreate(BaseModel):
     username: str | None = None
     systems: str | None = None
     message: str
+    send_to_slack: bool | None = None

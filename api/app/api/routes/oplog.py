@@ -33,6 +33,6 @@ async def create_oplog(oplog: OplogCreate, background_tasks: BackgroundTasks, db
     )
     db.add(validated_oplog)
     db.commit()
-    if oplog.send_to_slack != False: # Optional parameter to disable sending slack messages, for backwards compatibility, default is to send messages.
+    if oplog.send_to_slack != False: # Optional parameter to disable sending slack messages. Default is to send messages for backwards compatibility.
         background_tasks.add_task(send_oplog_notification, validated_oplog)
     return oplog

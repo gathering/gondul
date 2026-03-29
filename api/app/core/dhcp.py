@@ -2,39 +2,48 @@ import logging
 import time
 
 from pyisckea import Kea
+from validators import url
 
 from app.core.config import settings
 
-URIS = {
-    "v4": settings.KEA_DHCP4_URI if settings.KEA_DHCP4_URI else "",
-    "v6": settings.KEA_DHCP6_URI if settings.KEA_DHCP6_URI else ""
-}
 
-logger = logging.getLogger(__name__)
 
+class DummyDHCPServer():
+    def get_summary(self):
+        return {"dhcp": {}}
+
+    def get_details(self):
+        return {}
 
 class KeaDHCPServer():
-    _v4_client = Kea(URIS["v4"])
-    _v6_client = Kea(URIS["v6"])
+    _client: Kea
+    _logger = logging.getLogger(__name__)
 
-    def get_v4_leases(self):
-        return self._v4_client.dhcp4.lease4_get_all()
+    def __init__(self, api_uri: str) -> None:
+        if not api_uri:
+            self._logger.warning(
+                "KEA_DHCP_API_URI not provided, DHCP data will be unavailable")
+        else:
+            self._client = Kea(api_uri)
 
-    def get_v6_leases(self):
-        return self._v6_client.dhcp6.lease6_get_all()
+    def _get_v4_leases(self):
+        return self._client.dhcp4.lease4_get_all()
 
-    def get_subnet_ids(self):
+    def _get_v6_leases(self):
+        return self._client.dhcp6.lease6_get_all()
+
+    def _get_subnet_ids(self):
         """
         Returns subnet IDs for both IPv4 and IPv6 subnets
         """
-        v4 = self._v4_client.dhcp4.subnet4_list()
-        v6 = self._v4_client.dhcp6.subnet6_list()
+        v4 = self._client.dhcp4.subnet4_list()
+        v6 = self._client.dhcp6.subnet6_list()
         return [net.id for net in v4+v6 if net.id]
 
     def get_summary(self):
         # In frontend: Saves to nmsdata.dhcpsummary, see nms-dhcp.js
-        v4 = self.get_v4_leases()
-        v6 = self.get_v6_leases()
+        v4 = self._get_v4_leases()
+        v6 = self._get_v6_leases()
 
         unique_v4 = len(set([lease.ip_address for lease in v4]))
         unique_v6 = len(set([lease.ip_address for lease in v6]))
@@ -50,11 +59,11 @@ class KeaDHCPServer():
 
     def get_details(self):
         # In frontend: Saves to nmsdata.dhcp, see nms-map-handlers.js, function dhcpUpdater and dhcpInfo
-        v4_leases = [lease for lease in self.get_v4_leases()
+        v4_leases = [lease for lease in self._get_v4_leases()
                      if lease.subnet_id]
-        v6_leases = [lease for lease in self.get_v6_leases()
+        v6_leases = [lease for lease in self._get_v6_leases()
                      if lease.subnet_id]
-        subnet_ids = self.get_subnet_ids()
+        subnet_ids = self._get_subnet_ids()
 
         # When this data collection has occurred
         now: int = round(time.time())
@@ -114,4 +123,9 @@ class KeaDHCPServer():
             "networks": subnet_lease_counts
         }
 
-dhcp = KeaDHCPServer()
+
+dhcp: DummyDHCPServer | KeaDHCPServer
+if not settings.KEA_DHCP_API_URI or not url(settings.KEA_DHCP_API_URI):
+    dhcp = DummyDHCPServer()
+else:
+    dhcp = KeaDHCPServer(settings.KEA_DHCP_API_URI)

@@ -385,8 +385,8 @@ async function initNMS() {
     "/api/public/switches"
   );
   //nmsData.registerSource("switchstate", "/api/public/switch-state");
-  //nmsData.registerSource("dhcpsummary","/api/public/dhcp-summary");
-  //nmsData.registerSource("dhcp","/api/public/dhcp");
+  nmsData.registerSource("dhcpsummary","/api/v2/dhcp/summary");
+  nmsData.registerSource("dhcp","/api/public/dhcp");
 
   // Fetch initial config. Basically just populates nms._public.
   // All other settings are kept in nmsData['config'].

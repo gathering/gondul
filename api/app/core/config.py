@@ -51,6 +51,9 @@ class Settings(BaseSettings):
 
     SLACK_WEBHOOK_URI: str | None = None
 
+    KEA_DHCP4_URI: str | None = None
+    KEA_DHCP6_URI: str | None = None
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:

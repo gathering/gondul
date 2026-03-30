@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 from .cache import pool
 from .config import settings
-from .gondul_models import BaseModel, DeviceManagement, Placement
+from .gondul_models import BaseModel, DeviceManagement, Network, Placement
 
 class GondulDevice(DeviceManagement):
     placement: Placement | None = Field(None, title='Gondul Placement')
@@ -91,15 +91,15 @@ def get_devices() -> dict[str, GondulDevice]:
         lag_id = None
 
         # Find distro and distro port through the cable connected on uplink ae.
-        # interfaces = list(nb.dcim.interfaces.filter(device_id=device.id))
-        # for interface in interfaces:
-        #    if interface["type"]["value"] == "lag":
-        #        lag_id = interface["id"]
-        #        if len(interface["tagged_vlans"]) > 0:
-        #            mgmt_vlan = interface["tagged_vlans"][0]["name"]
-        #        if len(interface["tagged_vlans"]) > 1:
-        #            traffic_vlan = interface["tagged_vlans"][1]["name"]
-        #        break
+        interfaces = list(nb.dcim.interfaces.filter(device_id=device.id))
+        for interface in interfaces:
+           if interface["type"]["value"] == "lag":
+               lag_id = interface["id"]
+               if len(interface["tagged_vlans"]) > 0:
+                   mgmt_vlan = interface["tagged_vlans"][0]["name"]
+               if len(interface["tagged_vlans"]) > 1:
+                   traffic_vlan = interface["tagged_vlans"][1]["name"]
+               break
 
         # if lag_id is not None:
         #    # get first lag member
@@ -174,6 +174,45 @@ def get_devices() -> dict[str, GondulDevice]:
 
     return devices
 
+def get_networks() -> dict[str, Network]:
+    nb = pynetbox.api(
+        settings.NETBOX_URL, token=settings.NETBOX_TOKEN, threading=True
+    )
+    networks: dict[str, Network] = {}
+    for vlan in nb.ipam.vlans.all():
+        subnet4 = None
+        gw4: IPv4Address | None = None
+        subnet6 = None
+        gw6: IPv6Address | None = None
+
+        for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
+            if subnet4 is not None or gw4 is not None:
+                print(f"Found more than one networks for v4 prefix in vlan={vlan.id}, selected first...")
+                break
+            net = netaddr.IPNetwork(prefix.prefix)
+            subnet4 = prefix.prefix
+            gw4 = IPv4Address(netaddr.IPAddress(net.first + 1))
+
+        for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=6):
+            if subnet6 is not None or gw6 is not None:
+                print(f"Found more than one networks for v6 prefix in vlan={vlan.id}, selected first...")
+                break
+            net = netaddr.IPNetwork(prefix.prefix)
+            subnet6 = prefix.prefix
+            gw6 = IPv6Address(netaddr.IPAddress(net.first + 1))
+
+        network = Network(
+            name=vlan.name,
+            vlan=vlan.id,
+            gw6=IPv6Address(gw6),
+            gw4=gw4,
+            subnet4=subnet4,
+            subnet6=subnet6,
+            tags=vlan.tags,
+        )
+        networks[vlan.name] = network
+
+    return networks
 
 # {
 #     "ifInErrors":"0",

@@ -208,7 +208,7 @@ def get_networks() -> dict[str, Network]:
             gw4=gw4,
             subnet4=subnet4,
             subnet6=subnet6,
-            tags=vlan.tags,
+            tags=[tag.name for tag in vlan.tags],
         )
         networks[vlan.name] = network
 

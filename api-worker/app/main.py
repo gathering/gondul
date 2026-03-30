@@ -98,9 +98,15 @@ def get_devices() -> dict[str, GondulDevice]:
            if interface["type"]["value"] == "lag":
                lag_id = interface["id"]
                if len(interface["tagged_vlans"]) > 0:
-                   mgmt_vlan = interface["tagged_vlans"][0]["name"]
+                   for vlan in interface["tagged_vlans"]:
+                       if 'mgmt' in vlan["name"].lower():
+                           mgmt_vlan = vlan["name"]
+                           break
                if len(interface["tagged_vlans"]) > 1:
-                   traffic_vlan = interface["tagged_vlans"][1]["name"]
+                   for vlan in interface["tagged_vlans"]:
+                       if 'mgmt' not in vlan["name"].lower():
+                           traffic_vlan = vlan["name"]
+                           break
                break
 
         # if lag_id is not None:

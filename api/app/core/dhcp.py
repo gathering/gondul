@@ -19,6 +19,7 @@ class DHCPSubnetDetails():
 
 class DHCPSummaryResponse():
     dhcp: dict[int, int]
+    """Has two keys `4` and `6`, each having the amount of unique IP leases for the respective IP version"""
 
     def __init__(self, dhcp: dict[int, int]) -> None:
         self.dhcp = dhcp
@@ -80,13 +81,6 @@ class KeaDHCPServer():
         unique_v4 = len(set([lease.ip_address for lease in v4]))
         unique_v6 = len(set([lease.ip_address for lease in v6]))
 
-        # Return object should match format expected by frontend:
-        # {
-        #   "dhcp": {
-        #     4: unique ipv4 leases (int),
-        #     6: unique ipv6 leases (int),
-        #   }
-        # }
         return DHCPSummaryResponse({4: unique_v4, 6: unique_v6})
 
     def get_details(self) -> DHCPDetailsResponse:

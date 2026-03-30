@@ -126,13 +126,13 @@ class KeaDHCPServer():
         for lease in v4_leases:
             if not lease.subnet_id or not lease.cltt:
                 continue
-            if lease.subnet_id in last_lease_refresh_v6:
-                last_lease_refresh_v6[lease.subnet_id] = max(
+            if lease.subnet_id in last_lease_refresh_v4:
+                last_lease_refresh_v4[lease.subnet_id] = max(
                     lease.cltt,
-                    last_lease_refresh_v6[lease.subnet_id]
+                    last_lease_refresh_v4[lease.subnet_id]
                 )
             else:
-                last_lease_refresh_v6[lease.subnet_id] = max(lease.cltt, 0)
+                last_lease_refresh_v4[lease.subnet_id] = max(lease.cltt, 0)
 
         for lease in v6_leases:
             if not lease.subnet_id or not lease.cltt:

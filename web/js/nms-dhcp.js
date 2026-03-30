@@ -3,7 +3,7 @@
 var nmsDhcp = nmsDhcp || {};
 
 nmsDhcp.init = function () {
-  nmsData.addHandler("dhcpsummary", "nmsDhcpHandler", nmsDhcp.updateSummary);
+  //nmsData.addHandler("dhcpsummary", "nmsDhcpHandler", nmsDhcp.updateSummary);
 };
 
 nmsDhcp.updateSummary = function () {

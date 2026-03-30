@@ -51,8 +51,10 @@ class Settings(BaseSettings):
 
     SLACK_WEBHOOK_URI: str | None = None
 
-    # Can target either :8084 or :8086 (DHCPv4 or DHCPv6), both return the same data
-    KEA_DHCP_API_URI: str | None = None
+    # Important! These MUST be separate - They may return the same data, but the
+    # KEA library is NOT happy if you try to request v6 data from the v4 api.
+    KEA_DHCP4_API_URI: str | None = None
+    KEA_DHCP6_API_URI: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

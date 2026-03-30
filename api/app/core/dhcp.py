@@ -6,6 +6,11 @@ from validators import url
 
 from app.core.config import settings
 
+URIS = {
+    "v4": settings.KEA_DHCP4_API_URI if settings.KEA_DHCP4_API_URI else "",
+    "v6": settings.KEA_DHCP6_API_URI if settings.KEA_DHCP6_API_URI else ""
+}
+
 
 class DHCPSubnetDetails():
     clients: int
@@ -49,28 +54,26 @@ class DummyDHCPServer():
 
 
 class KeaDHCPServer():
-    _client: Kea
+    _v4_client: Kea
+    _v6_client: Kea
     _logger = logging.getLogger(__name__)
 
-    def __init__(self, api_uri: str) -> None:
-        if not api_uri:
-            self._logger.warning(
-                "KEA_DHCP_API_URI not provided, DHCP data will be unavailable")
-        else:
-            self._client = Kea(api_uri)
+    def __init__(self) -> None:
+        self._v4_client = Kea(URIS["v4"])
+        self._v6_client = Kea(URIS["v6"])
 
     def _get_v4_leases(self):
-        return self._client.dhcp4.lease4_get_all()
+        return self._v4_client.dhcp4.lease4_get_all()
 
     def _get_v6_leases(self):
-        return self._client.dhcp6.lease6_get_all()
+        return self._v6_client.dhcp6.lease6_get_all()
 
     def _get_subnet_ids(self):
         """
         Returns subnet IDs for both IPv4 and IPv6 subnets
         """
-        v4 = self._client.dhcp4.subnet4_list()
-        v6 = self._client.dhcp6.subnet6_list()
+        v4 = self._v4_client.dhcp4.subnet4_list()
+        v6 = self._v6_client.dhcp6.subnet6_list()
         return [net.id for net in v4+v6 if net.id]
 
     def get_summary(self):
@@ -141,7 +144,7 @@ class KeaDHCPServer():
 
 
 dhcp: DummyDHCPServer | KeaDHCPServer
-if not settings.KEA_DHCP_API_URI or not url(settings.KEA_DHCP_API_URI):
+if url(URIS["v4"]) or not url(URIS["v6"]):
     dhcp = DummyDHCPServer()
 else:
-    dhcp = KeaDHCPServer(settings.KEA_DHCP_API_URI)
+    dhcp = KeaDHCPServer()

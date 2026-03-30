@@ -7,6 +7,37 @@ from validators import url
 from app.core.config import settings
 
 
+class DHCPSubnetDetails():
+    clients: int
+    """Leases"""
+
+    def __init__(self, clients: int) -> None:
+        self.clients = clients
+
+# Weird field namings and format is because this is what is expected by gondul
+
+
+class DHCPSummaryResponse():
+    dhcp: dict[int, int]
+
+    def __init__(self, dhcp: dict[int, int]) -> None:
+        self.dhcp = dhcp
+
+# Weird field namings and format is because this is what is expected by gondul
+
+
+class DHCPDetailsResponse():
+    time: int
+    """data collection unix timestamp"""
+
+    dhcpv4: dict[int, int]
+    """key=[subnet_id], value=last dhcp refresh unix timestamp"""
+    dhcpv6: dict[int, int]
+    """key=[subnet_id], value=last dhcp refresh unix timestamp"""
+
+    networks: dict[int, DHCPSubnetDetails]
+    """key=[subnet_id], value={ clients: leases per subnet }"""
+
 
 class DummyDHCPServer():
     def get_summary(self):
@@ -14,6 +45,7 @@ class DummyDHCPServer():
 
     def get_details(self):
         return {}
+
 
 class KeaDHCPServer():
     _client: Kea
@@ -55,9 +87,9 @@ class KeaDHCPServer():
         #     6: unique ipv6 leases (int),
         #   }
         # }
-        return {"dhcp": {4: unique_v4, 6: unique_v6}}
+        return DHCPSummaryResponse({4: unique_v4, 6: unique_v6})
 
-    def get_details(self):
+    def get_details(self) -> DHCPDetailsResponse:
         # In frontend: Saves to nmsdata.dhcp, see nms-map-handlers.js, function dhcpUpdater and dhcpInfo
         v4_leases = [lease for lease in self._get_v4_leases()
                      if lease.subnet_id]
@@ -70,7 +102,7 @@ class KeaDHCPServer():
 
         # Key: Subnet ID as defined by Kea
         # Value: Amount of leases belonging to that subnet
-        subnet_lease_counts: dict[int, int] = {}
+        subnet_lease_counts: dict[int, DHCPSubnetDetails] = {}
 
         # Key: Subnet ID as defined by Kea
         # Value: Unix timestamp to the last time this was updated
@@ -81,13 +113,13 @@ class KeaDHCPServer():
 
         # Initialize so even subnets without leases return _some_ data
         for subnet_id in subnet_ids:
-            subnet_lease_counts[subnet_id] = 0
+            subnet_lease_counts[subnet_id] = DHCPSubnetDetails(0)
 
         # Add data for subnet counts
         for lease in v4_leases+v6_leases:
             if not lease.subnet_id:
                 continue
-            subnet_lease_counts[lease.subnet_id] += 1
+            subnet_lease_counts[lease.subnet_id].clients += 1
 
         # Add data for last lease refresh (subnet "staleness")
         for lease in v4_leases:
@@ -105,23 +137,13 @@ class KeaDHCPServer():
                 last_lease_refresh_v6[lease.subnet_id] or 0
             )
 
-        # Return object should match format expected by frontend:
-        # {
-        #   time: collection timestamp (int)
-        #   dhcp4: object, key=[subnet_id (int)], value=last dhcp refresh timestamp (int)
-        #   dhcp6: object, key=[subnet_id (int)], value=last dhcp refresh timestamp (int)
-        #   networks: {
-        #     [subnet_id (int)]: {
-        #       clients: leases per subnet (int)
-        #     }
-        #   }
-        # }
-        return {
-            "time": now,
-            "dhcpv4": last_lease_refresh_v4,
-            "dhcpv6": last_lease_refresh_v4,
-            "networks": subnet_lease_counts
-        }
+        response = DHCPDetailsResponse()
+        response.time = now
+        response.dhcpv4 = last_lease_refresh_v4
+        response.dhcpv6 = last_lease_refresh_v6
+        response.networks = subnet_lease_counts
+
+        return response
 
 
 dhcp: DummyDHCPServer | KeaDHCPServer

@@ -36,9 +36,9 @@ class DHCPDetailsResponse():
     time: int
     """data collection unix timestamp"""
 
-    dhcpv4: dict[int, int]
+    dhcp4: dict[int, int]
     """key=[subnet_id], value=last dhcp refresh unix timestamp"""
-    dhcpv6: dict[int, int]
+    dhcp6: dict[int, int]
     """key=[subnet_id], value=last dhcp refresh unix timestamp"""
 
     networks: dict[int, DHCPSubnetDetails]
@@ -148,8 +148,8 @@ class KeaDHCPServer():
 
         response = DHCPDetailsResponse()
         response.time = now
-        response.dhcpv4 = last_lease_refresh_v4
-        response.dhcpv6 = last_lease_refresh_v6
+        response.dhcp4 = last_lease_refresh_v4
+        response.dhcp6 = last_lease_refresh_v6
         response.networks = subnet_lease_counts
 
         return response

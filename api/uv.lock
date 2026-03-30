@@ -64,6 +64,7 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pyisckea" },
     { name = "pynetbox" },
     { name = "redis", extra = ["hiredis"] },
     { name = "slack-sdk" },
@@ -78,6 +79,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.6" },
     { name = "pydantic", specifier = ">=2.11.3" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
+    { name = "pyisckea", specifier = ">=0.9.2" },
     { name = "pynetbox", specifier = ">=7.4.1" },
     { name = "redis", extras = ["hiredis"], specifier = ">=5.2.1" },
     { name = "slack-sdk", specifier = ">=3.41.0" },
@@ -958,6 +960,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7c/2d/c3338d48ea6cc0feb8446d8e6937e1408088a72a39937982cc6111d17f84/pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f", size = 4968581, upload-time = "2025-01-06T17:26:30.443Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/0b/9fcc47d19c48b59121088dd6da2488a49d5f72dacf8262e2790a1d2c7d15/pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c", size = 1225293, upload-time = "2025-01-06T17:26:25.553Z" },
+]
+
+[[package]]
+name = "pyisckea"
+version = "0.9.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5f/07/37d4186593ab66dab6c79faced9d58af3c15f769eb3b2215825e5acd0040/pyisckea-0.9.2.tar.gz", hash = "sha256:a0a29afc2f6fe79f800f0d848a4ecfa2ef73416e7c30550a91dd55ea44cf7f0e", size = 38752, upload-time = "2025-06-16T17:59:57.159Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9e/c5/6b2797838d5bd38c473fe3091749bcf2acf43d20230d3d07e3f47440c17c/pyisckea-0.9.2-py3-none-any.whl", hash = "sha256:6776c025f8e0cc5424f190eb5ba4a19b67f53f6a8b8424ff7e6b4276104cd22f", size = 60683, upload-time = "2025-06-16T17:59:55.47Z" },
 ]
 
 [[package]]

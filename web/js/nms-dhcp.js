@@ -7,21 +7,15 @@ nmsDhcp.init = function () {
 };
 
 nmsDhcp.updateSummary = function () {
-  var e = document.getElementById("dhcp-summary");
-  if (e == undefined) {
-    return;
-  }
-  e.innerHTML = "";
-  if (nmsData.dhcpsummary.dhcp[4] != undefined) {
-    e.innerHTML = e.innerHTML + nmsData.dhcpsummary.dhcp[4] + " IPv4 clients";
-  }
-  if (
-    nmsData.dhcpsummary.dhcp[4] != undefined &&
-    nmsData.dhcpsummary.dhcp[6] != undefined
-  ) {
-    e.innerHTML = e.innerHTML + " | ";
-  }
-  if (nmsData.dhcpsummary.dhcp[6] != undefined) {
-    e.innerHTML = e.innerHTML + nmsData.dhcpsummary.dhcp[6] + " IPv6 clients";
-  }
+  let el = document.getElementById("dhcp-summary");
+  if (!el) return;
+
+  el.innerHTML = "";
+
+  let components = [
+    `${nmsData.dhcpsummary.dhcp[4] || "unknown"} IPv4 clients`,
+    `${nmsData.dhcpsummary.dhcp[6] || "unknown"} IPv6 clients`,
+  ];
+
+  el.innerHTML = components.join(" | ");
 };

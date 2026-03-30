@@ -206,7 +206,7 @@ def get_networks() -> dict[str, Network]:
         network = Network(
             name=vlan.name,
             vlan=vlan.id,
-            gw6=IPv6Address(gw6),
+            gw6=gw6,
             gw4=gw4,
             subnet4=subnet4,
             subnet6=subnet6,

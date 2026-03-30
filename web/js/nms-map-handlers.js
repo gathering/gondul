@@ -629,24 +629,31 @@ function dhcpUpdater() {
   ) {
     return;
   }
-  var now = nmsData.dhcp.time;
-  for (var sw in nmsData.switches.switches) {
-    var c = nmsColor.blue;
-    var sv4 = nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
-    var sv6 = nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
-    if (sv4 == undefined && sv6 == undefined) {
-      nmsMap.setSwitchColor(sw, c);
+
+  let now = nmsData.dhcp.time;
+
+  for (let sw in nmsData.switches.switches) {
+    let last_v4_dhcp_refresh =
+      nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
+    let last_v6_dhcp_refresh =
+      nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
+
+    if (!switch_ipv4 && !switch_ipv6) {
+      nmsMap.setSwitchColor(sw, nmsColor.blue);
       continue;
     }
-    var thenv4 = parseInt(sv4);
-    var thenv6 = parseInt(sv6);
-    var then = Math.max(thenv4, thenv6);
-    c = getDhcpColor(now - then);
-    nmsMap.setSwitchColor(sw, c);
+
+    let then = Math.max(
+      parseInt(last_v4_dhcp_refresh),
+      parseInt(last_v6_dhcp_refresh),
+    );
+
+    nmsMap.setSwitchColor(sw, getDhcpColor(now - then));
   }
 }
+
 function dhcpInfo(sw) {
-  var ret = new handlerInfo("dhcp", "DHCP state");
+  let ret = new handlerInfo("dhcp", "DHCP state");
   ret.why = "No DHCP data";
   ret.data[0].description = "DHCPv4 age";
 
@@ -661,32 +668,32 @@ function dhcpInfo(sw) {
   ) {
     return (ret.data[1] = {});
   }
-  var dhcpClients = 0;
-  var clientPortsUp = 0;
-  var clientPortsUp = setTree(
+  let dhcpClients = 0;
+  let clientPortsUp = setTree(
     nmsData,
     ["switchstate", "switches", sw, "clients", "live"],
-    0
+    0,
   );
   var clientPortsTotal = setTree(
     nmsData,
     ["switchstate", "switches", sw, "clients", "total"],
-    0
+    0,
   );
-  if (testTree(nmsData, ["smanagement", "switches", sw, "traffic_vlan"])) {
-    if (
-      testTree(nmsData, [
-        "dhcp",
-        "networks",
-        nmsData.smanagement.switches[sw].traffic_vlan,
-        "clients",
-      ])
-    ) {
-      dhcpClients =
-        nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan]
-          .clients;
-    }
+
+  if (
+    testTree(nmsData, ["smanagement", "switches", sw, "traffic_vlan"]) &&
+    testTree(nmsData, [
+      "dhcp",
+      "networks",
+      nmsData.smanagement.switches[sw].traffic_vlan,
+      "clients",
+    ])
+  ) {
+    dhcpClients =
+      nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan]
+        .clients;
   }
+
   if (
     testTree(nmsData, [
       "dhcp",
@@ -694,23 +701,19 @@ function dhcpInfo(sw) {
       nmsData.smanagement.switches[sw].traffic_vlan,
     ])
   ) {
-    var now = nmsData.dhcp.time;
-    var then =
+    let now = nmsData.dhcp.time;
+    let last_v4_dhcp_refresh =
       nmsData.dhcp.dhcp4[nmsData.smanagement.switches[sw].traffic_vlan];
-    var diff = now - then;
-    var divider = 10;
-    if (dhcpClients < 10) {
-      divider = 12;
-    }
-    if (tagged(sw, "slowdhcp")) {
-      divider = 12;
-    }
+    let diff = now - last_v4_dhcp_refresh;
+
+    let divider = dhcpClients < 10 || tagged(sw, "slowdhcp") ? 12 : 10;
 
     ret.data[0].value = secondsToTime(diff);
     ret.why = "DHCP freshness";
     ret.score = diff / divider > 350 ? 350 : parseInt(diff / divider);
   } else {
     ret.data[0].value = "No DHCPv4 data";
+
     if (testTree(nmsData, ["smanagement", "switches", sw])) {
       if (
         nmsData.smanagement.switches[sw].traffic_vlan == undefined ||
@@ -739,17 +742,12 @@ function dhcpInfo(sw) {
       nmsData.smanagement.switches[sw].traffic_vlan,
     ])
   ) {
-    var now = nmsData.dhcp.time;
-    var then =
-      nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
-    var diff = now - then;
-    var divider = 10;
-    if (dhcpClients < 10) {
-      divider = 12;
-    }
-    if (tagged(sw, "slowdhcp")) {
-      divider = 12;
-    }
+    let now = nmsData.dhcp.time;
+    let last_v6_dhcp_refresh;
+    nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
+    let diff = now - last_v6_dhcp_refresh;
+
+    let divider = dhcpClients < 10 || tagged(sw, "slowdhcp") ? 12 : 10;
 
     ret.data[1].value = secondsToTime(diff);
     ret.why = "DHCP freshness";
@@ -777,6 +775,7 @@ function dhcpInfo(sw) {
       ret.why = "No management data for DHCP";
     }
   }
+
   if (
     testTree(nmsData, [
       "dhcp",
@@ -785,7 +784,7 @@ function dhcpInfo(sw) {
       "clients",
     ])
   ) {
-    var dhcpClients =
+    dhcpClients =
       nmsData.dhcp.networks[nmsData.smanagement.switches[sw].traffic_vlan]
         .clients;
     ret.data[2] = {};
@@ -794,10 +793,16 @@ function dhcpInfo(sw) {
         nmsData.smanagement.switches[sw].traffic_vlan
       ].clients;
     ret.data[2].description = "DHCP clients";
+
     if (testTree(nmsData, ["switchstate", "switches", sw, "clients", "live"])) {
-      var tu = parseInt(nmsData.switchstate.switches[sw].clients.live);
-      var tt = parseInt(nmsData.switchstate.switches[sw].clients.total);
-      if (tu - dhcpClients > 12) {
+      let live_connections = parseInt(
+        nmsData.switchstate.switches[sw].clients.live,
+      );
+      let total_connections = parseInt(
+        nmsData.switchstate.switches[sw].clients.total,
+      );
+
+      if (live_connections - dhcpClients > 12) {
         if (ret.score < 450) {
           ret.score = 450;
           ret.why = "Far more client ports than dhcp clients";
@@ -805,6 +810,7 @@ function dhcpInfo(sw) {
       }
     }
   }
+
   if (testTree(nmsData, ["switches", "switches", sw, "tags"])) {
     if (tagged(sw, "ignoredhcp")) {
       ret.score = 0;

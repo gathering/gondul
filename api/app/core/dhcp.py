@@ -63,10 +63,14 @@ class KeaDHCPServer():
         self._v6_client = Kea(URIS["v6"])
 
     def _get_v4_leases(self):
-        return self._v4_client.dhcp4.lease4_get_all()
+        leases = self._v4_client.dhcp4.lease4_get_all()
+        self._logger.debug(leases)
+        return leases
 
     def _get_v6_leases(self):
-        return self._v6_client.dhcp6.lease6_get_all()
+        leases = self._v6_client.dhcp6.lease6_get_all()
+        self._logger.debug(leases)
+        return leases
 
     def _get_subnet_ids(self):
         """
@@ -124,14 +128,14 @@ class KeaDHCPServer():
                 continue
             last_lease_refresh_v4[lease.subnet_id] = max(
                 lease.cltt,
-                last_lease_refresh_v4[lease.subnet_id] or 0
+                last_lease_refresh_v4[lease.subnet_id] if lease.subnet_id in last_lease_refresh_v4 else 0
             )
         for lease in v6_leases:
             if not lease.subnet_id or not lease.cltt:
                 continue
             last_lease_refresh_v6[lease.subnet_id] = max(
                 lease.cltt,
-                last_lease_refresh_v6[lease.subnet_id] or 0
+                last_lease_refresh_v6[lease.subnet_id] if lease.subnet_id in last_lease_refresh_v6 else 0
             )
 
         response = DHCPDetailsResponse()

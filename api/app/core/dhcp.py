@@ -144,7 +144,7 @@ class KeaDHCPServer():
 
 
 dhcp: DummyDHCPServer | KeaDHCPServer
-if url(URIS["v4"]) or not url(URIS["v6"]):
+if not url(URIS["v4"]) or not url(URIS["v6"]):
     dhcp = DummyDHCPServer()
 else:
     dhcp = KeaDHCPServer()

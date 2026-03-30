@@ -4,7 +4,7 @@ import redis
 import hashlib
 
 from .cache import pool
-from .main import Job, get_devices, get_networks, getPing, getSnmp, getSnmpPorts, devicesAdapter, getSnmpPortsSql, getSnmpSql, pingAdapter
+from .main import Job, get_devices, get_networks, getPing, getSnmp, getSnmpPorts, devicesAdapter, networkAdapter, getSnmpPortsSql, getSnmpSql, pingAdapter
 
 def get_cache():
     return redis.Redis(connection_pool=pool)
@@ -14,7 +14,7 @@ jobs = {
     "ping": Job("ping", getPing, 1, dump_adapter=pingAdapter),
     "snmp": Job("snmp", getSnmpSql, 5),
     "snmp:ports": Job("snmp:ports", getSnmpPortsSql, 5),
-    "networks": Job("networks", get_networks, 5),
+    "networks": Job("networks", get_networks, 5, dump_adapter=networkAdapter),
 }
 
 @asynccontextmanager

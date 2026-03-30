@@ -37,6 +37,8 @@ class GondulPingData(BaseModel):
     v6_time: float | None = Field(None, title='IPv6 ping age (timestamp)') # TODO: serialize to timestamp
 pingAdapter = TypeAdapter(dict[str, GondulPingData])
 
+networkAdapter = TypeAdapter(dict[str, Network])
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

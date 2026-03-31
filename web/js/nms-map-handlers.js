@@ -638,14 +638,14 @@ function dhcpUpdater() {
     let last_v6_dhcp_refresh =
       nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
 
-    if (!switch_ipv4 && !switch_ipv6) {
+    if (!last_v4_dhcp_refresh && !last_v6_dhcp_refresh) {
       nmsMap.setSwitchColor(sw, nmsColor.blue);
       continue;
     }
 
     let then = Math.max(
-      parseInt(last_v4_dhcp_refresh),
-      parseInt(last_v6_dhcp_refresh),
+      parseInt(last_v4_dhcp_refresh || 0),
+      parseInt(last_v6_dhcp_refresh || 0),
     );
 
     nmsMap.setSwitchColor(sw, getDhcpColor(now - then));

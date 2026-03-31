@@ -72,13 +72,28 @@ class KeaDHCPServer():
         self._logger.debug(leases)
         return leases
 
-    def _get_subnet_ids(self):
+    def _get_subnet_ids(self) -> dict[int, int]:
         """
-        Returns subnet IDs for both IPv4 and IPv6 subnets
+        Returns subnet mappings from Netbox ID (returned by Kea)
+        to VLAN ID (expected by gondul).
+
+        Key: Netbox ID; Value: VLAN ID
         """
         v4 = self._v4_client.dhcp4.subnet4_list()
         v6 = self._v6_client.dhcp6.subnet6_list()
-        return [net.id for net in v4+v6 if net.id]
+
+        subnet_map: dict[int, int] = {}
+        for net in v4:
+            if not net.id:
+                continue
+            subnet_data = self._v4_client.dhcp4.subnet4_get(net.id)
+
+            if not subnet_data.user_context or "vlan-id" not in subnet_data.user_context:
+                continue
+
+            subnet_map[net.id] = subnet_data.user_context["vlan-id"]
+
+        return subnet_map
 
     def get_summary(self):
         # In frontend: Saves to nmsdata.dhcpsummary, see nms-dhcp.js
@@ -96,7 +111,8 @@ class KeaDHCPServer():
                      if lease.subnet_id]
         v6_leases = [lease for lease in self._get_v6_leases()
                      if lease.subnet_id]
-        subnet_ids = self._get_subnet_ids()
+        # { netbox_id:vlan_id }
+        subnet_mappings = self._get_subnet_ids()
 
         # When this data collection has occurred
         now: int = round(time.time())
@@ -105,7 +121,7 @@ class KeaDHCPServer():
         # Value: Amount of leases belonging to that subnet
         subnet_lease_counts: dict[int, DHCPSubnetDetails] = {}
 
-        # Key: Subnet ID as defined by Kea
+        # Key: Subnet ID as  defined by Kea
         # Value: Unix timestamp to the last time this was updated
         # Note: A subnet not being defined as a key in here means there is no
         #       available leases, and is intentional. Do not initialize to 0.
@@ -113,14 +129,14 @@ class KeaDHCPServer():
         last_lease_refresh_v6: dict[int, int] = {}
 
         # Initialize so even subnets without leases return _some_ data
-        for subnet_id in subnet_ids:
-            subnet_lease_counts[subnet_id] = DHCPSubnetDetails(0)
+        for _index, (_netbox_id, vlan_id) in enumerate(subnet_mappings.items()):
+            subnet_lease_counts[vlan_id] = DHCPSubnetDetails(0)
 
         # Add data for subnet counts
         for lease in v4_leases+v6_leases:
-            if not lease.subnet_id:
+            if not lease.subnet_id or lease.subnet_id not in subnet_mappings:
                 continue
-            subnet_lease_counts[lease.subnet_id].clients += 1
+            subnet_lease_counts[subnet_mappings[lease.subnet_id]].clients += 1
 
         # Add data for last lease refresh (subnet "staleness")
         for lease in v4_leases:

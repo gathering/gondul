@@ -11,6 +11,8 @@ class Network(BaseModel):
     subnet6: ipaddress.IPv6Network | None = "2001:db8:5b96::/64"
     gw4: ipaddress.IPv4Address | None = "198.51.100.1"
     gw6: ipaddress.IPv6Address | None = "2001:db8:5b96::1"
+    prefix_id4: int | None
+    prefix_id6: int | None
 
 
 class Networks(BaseModel):

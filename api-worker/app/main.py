@@ -37,8 +37,11 @@ class GondulPingData(BaseModel):
     v6_time: float | None = Field(None, title='IPv6 ping age (timestamp)') # TODO: serialize to timestamp
 pingAdapter = TypeAdapter(dict[str, GondulPingData])
 
-networkAdapter = TypeAdapter(dict[str, Network])
+class GondulNetwork(Network):
+    prefix_id4: int | None  # Used for connecting DHCP pools leases in frontend
+    prefix_id6: int | None  # Used for connecting DHCP pools leases in frontend
 
+networkAdapter = TypeAdapter(dict[str, GondulNetwork])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -192,6 +195,8 @@ def get_networks() -> dict[str, Network]:
         gw4: IPv4Address | None = None
         subnet6 = None
         gw6: IPv6Address | None = None
+        prefix_id4: int | None = None
+        prefix_id6: int | None = None
 
         for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=4):
             if subnet4 is not None or gw4 is not None:
@@ -200,6 +205,7 @@ def get_networks() -> dict[str, Network]:
             net = netaddr.IPNetwork(prefix.prefix)
             subnet4 = prefix.prefix
             gw4 = IPv4Address(netaddr.IPAddress(net.first + 1))
+            prefix_id4 = prefix.id
 
         for prefix in nb.ipam.prefixes.filter(vlan_id=vlan.id, family=6):
             if subnet6 is not None or gw6 is not None:
@@ -208,14 +214,17 @@ def get_networks() -> dict[str, Network]:
             net = netaddr.IPNetwork(prefix.prefix)
             subnet6 = prefix.prefix
             gw6 = IPv6Address(netaddr.IPAddress(net.first + 1))
+            prefix_id6 = prefix.id
 
-        network = Network(
+        network = GondulNetwork(
             name=vlan.name,
             vlan=vlan.id,
             gw6=gw6,
             gw4=gw4,
             subnet4=subnet4,
             subnet6=subnet6,
+            prefix_id4=prefix_id4,
+            prefix_id6=prefix_id6,
             tags=[tag.name for tag in vlan.tags],
         )
         networks[vlan.name] = network

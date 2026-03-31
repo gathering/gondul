@@ -2,6 +2,8 @@ import logging
 import time
 
 from pyisckea import Kea
+from pyisckea.models.dhcp4.lease import Lease4
+from pyisckea.models.dhcp6.lease import Lease6
 from validators import url
 
 from app.core.config import settings
@@ -19,20 +21,18 @@ class DHCPSubnetDetails():
     def __init__(self, clients: int) -> None:
         self.clients = clients
 
-# Weird field namings and format is because this is what is expected by gondul
-
 
 class DHCPSummaryResponse():
+    # Weird field namings and format is because this is what is expected by gondul
     dhcp: dict[int, int]
     """Has two keys `4` and `6`, each having the amount of unique IP leases for the respective IP version"""
 
     def __init__(self, dhcp: dict[int, int]) -> None:
         self.dhcp = dhcp
 
-# Weird field namings and format is because this is what is expected by gondul
-
 
 class DHCPDetailsResponse():
+    # Weird field namings and format is because this is what is expected by gondul
     time: int
     """data collection unix timestamp"""
 
@@ -72,26 +72,29 @@ class KeaDHCPServer():
         self._logger.debug(leases)
         return leases
 
-    def _get_subnet_ids(self) -> dict[int, int]:
+    def _get_subnet_vlan_mappings(self) -> dict[int, int]:
         """
         Returns subnet mappings from Netbox ID (returned by Kea)
         to VLAN ID (expected by gondul).
 
         Key: Netbox ID; Value: VLAN ID
         """
-        v4 = self._v4_client.dhcp4.subnet4_list()
-        v6 = self._v6_client.dhcp6.subnet6_list()
+        subnets = [
+            [self._v4_client.dhcp4.subnet4_list(), self._v4_client.dhcp4.subnet4_get],
+            [self._v6_client.dhcp6.subnet6_list(), self._v6_client.dhcp6.subnet6_get]
+        ]
 
         subnet_map: dict[int, int] = {}
-        for net in v4:
-            if not net.id:
-                continue
-            subnet_data = self._v4_client.dhcp4.subnet4_get(net.id)
+        for [subnets, get_subnet] in subnets:
+            for net in subnets:
+                if not net.id:
+                    continue
+                subnet_data = get_subnet(net.id)
 
-            if not subnet_data.user_context or "vlan-id" not in subnet_data.user_context:
-                continue
+                if not subnet_data.user_context or "vlan-id" not in subnet_data.user_context:
+                    continue
 
-            subnet_map[net.id] = subnet_data.user_context["vlan-id"]
+                subnet_map[net.id] = subnet_data.user_context["vlan-id"]
 
         return subnet_map
 
@@ -107,66 +110,59 @@ class KeaDHCPServer():
 
     def get_details(self) -> DHCPDetailsResponse:
         # In frontend: Saves to nmsdata.dhcp, see nms-map-handlers.js, function dhcpUpdater and dhcpInfo
-        v4_leases = [lease for lease in self._get_v4_leases()
-                     if lease.subnet_id]
-        v6_leases = [lease for lease in self._get_v6_leases()
-                     if lease.subnet_id]
-        # { netbox_id:vlan_id }
-        subnet_mappings = self._get_subnet_ids()
+        v4_leases = [lease for lease in self._get_v4_leases() if lease.subnet_id]
+        v6_leases = [lease for lease in self._get_v6_leases() if lease.subnet_id]
+
+        subnet_vlan_mappings = self._get_subnet_vlan_mappings()
 
         # When this data collection has occurred
         now: int = round(time.time())
 
-        # Key: Subnet ID as defined by Kea
-        # Value: Amount of leases belonging to that subnet
-        subnet_lease_counts: dict[int, DHCPSubnetDetails] = {}
+        # Key: VLAN ID (NOT subnet ID from Kea, as this is the Netbox object ID)
+        # Value: Object containing the amount of leases belonging to that vlan
+        vlan_lease_counts: dict[int, DHCPSubnetDetails] = {}
 
-        # Key: Subnet ID as  defined by Kea
+        # Key: VLAN ID (NOT subnet ID from Kea, as this is the Netbox object ID)
         # Value: Unix timestamp to the last time this was updated
-        # Note: A subnet not being defined as a key in here means there is no
-        #       available leases, and is intentional. Do not initialize to 0.
+        # Note: A VLAN not being defined as a key in here means there is no
+        #       available leases, and there is no timestamp for the last refresh available.
+        #       Do NOT initialize all VLANs to 0.
         last_lease_refresh_v4: dict[int, int] = {}
         last_lease_refresh_v6: dict[int, int] = {}
 
-        # Initialize so even subnets without leases return _some_ data
-        for _index, (_netbox_id, vlan_id) in enumerate(subnet_mappings.items()):
-            subnet_lease_counts[vlan_id] = DHCPSubnetDetails(0)
+        # Initialize VLAN lease counts so all VLANs return _some_ data
+        for _index, (_netbox_id, vlan_id) in enumerate(subnet_vlan_mappings.items()):
+            vlan_lease_counts[vlan_id] = DHCPSubnetDetails(0)
 
         # Add data for subnet counts
         for lease in v4_leases+v6_leases:
-            if not lease.subnet_id or lease.subnet_id not in subnet_mappings:
+            if lease.subnet_id not in subnet_vlan_mappings:
                 continue
-            subnet_lease_counts[subnet_mappings[lease.subnet_id]].clients += 1
+            vlan_lease_counts[subnet_vlan_mappings[lease.subnet_id]].clients += 1
+
+        _temp = [
+            [v4_leases, last_lease_refresh_v4],
+            [v6_leases, last_lease_refresh_v6],
+        ]
 
         # Add data for last lease refresh (subnet "staleness")
-        for lease in v4_leases:
-            if not lease.subnet_id or not lease.cltt:
-                continue
-            if lease.subnet_id in last_lease_refresh_v4:
-                last_lease_refresh_v4[lease.subnet_id] = max(
-                    lease.cltt,
-                    last_lease_refresh_v4[lease.subnet_id]
-                )
-            else:
-                last_lease_refresh_v4[lease.subnet_id] = max(lease.cltt, 0)
+        for [leases, last_refreshed] in _temp:
+            for lease in leases:
+                if (not lease.cltt or lease.subnet_id not in subnet_vlan_mappings):
+                    continue
 
-        for lease in v6_leases:
-            if not lease.subnet_id or not lease.cltt:
-                continue
+                vlan_id = subnet_vlan_mappings[lease.subnet_id]
 
-            if lease.subnet_id in last_lease_refresh_v6:
-                last_lease_refresh_v6[lease.subnet_id] = max(
-                    lease.cltt,
-                    last_lease_refresh_v6[lease.subnet_id]
-                )
-            else:
-                last_lease_refresh_v6[lease.subnet_id] = max(lease.cltt, 0)
+                if vlan_id in last_refreshed:
+                    last_refreshed[vlan_id] = max(lease.cltt, last_refreshed[vlan_id])
+                else:
+                    last_refreshed[vlan_id] = max(lease.cltt, 0)
 
         response = DHCPDetailsResponse()
         response.time = now
         response.dhcp4 = last_lease_refresh_v4
         response.dhcp6 = last_lease_refresh_v6
-        response.networks = subnet_lease_counts
+        response.networks = vlan_lease_counts
 
         return response
 

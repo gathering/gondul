@@ -829,7 +829,7 @@ function dhcpInit() {
     nmsColor.red,
   ]);
   nmsData.addHandler("dhcp", "mapHandler", dhcpUpdater);
-  setLegend(1, "white", "Undefined");
+  setLegend(1, nmsColor.blue, "Undefined");
   setLegend(2, getDhcpColor(1), "1 Second old");
   setLegend(3, getDhcpColor(300), "300 Seconds old");
   setLegend(4, getDhcpColor(900), "900 Seconds old");

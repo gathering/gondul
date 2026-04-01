@@ -85,6 +85,7 @@ def get_devices() -> dict[str, GondulDevice]:
             "leaf",
             "oob-switch",
             "spine",
+            "l2-leaf",
         ],
         status="active",
     ):

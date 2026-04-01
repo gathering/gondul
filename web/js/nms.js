@@ -107,6 +107,12 @@ var nms = {
   },
 };
 
+const AGGREGATE_REGEX = /B:/i // ae-like interfaces
+const MEMBER_REGEX = /G:/i // fe/ge/xe-like interfaces (members of ae-like)
+const PORT_UP_REGEX = /^up(\(1\))?$/i // up or up(1)
+const PORT_DOWN_REGEX = /^down(\(2\))?$/i // down or down(2)
+const PORT_LOWERLAYERDOWN_REGEX = /^lowerLayerDown(\(7\))?$/i
+
 /*
  * Returns a handler object.
  *

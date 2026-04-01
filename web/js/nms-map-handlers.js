@@ -971,10 +971,6 @@ function snmpInit() {
   snmpUpdater();
 }
 
-
-const AGGREGATE_REGEX = /B:/i // ae-like interfaces
-const MEMBER_REGEX = /G:/i // fe/ge/xe-like interfaces (members of ae-like)
-
 function snmpUpInfo(sw) {
   var ret = new handlerInfo("uplink", "SNMP uplink data");
   ret.why = "No SNMP uplink data";
@@ -989,13 +985,13 @@ function snmpUpInfo(sw) {
     for (var port in nmsData.snmp.snmp[sw].ports) {
       var port = nmsData.snmp.snmp[sw].ports[port];
       if (port["ifAlias"] != null) {
-        if (port["ifAlias"].match(AGGREGATE_REGEX) && (port["ifOperStatus"] === "up" || port["ifOperStatus"] === "up(1)")) {
+        if (AGGREGATE_REGEX.test(port["ifAlias"]) && PORT_UP_REGEX.test(port["ifOperStatus"])) {
           aggregate_up_speed += parseInt(port["ifHighSpeed"]);
         }
         if (port["ifAlias"].match(MEMBER_REGEX)) {
           aggregate_member_total += 1;
 
-          if (port["ifOperStatus"] === "up" || port["ifOperStatus"] === "up(1)") {
+          if (PORT_UP_REGEX.test(port["ifOperStatus"])) {
             aggregate_member_up += 1;
             member_up_speed += parseInt(port["ifHighSpeed"]);
           }
@@ -1009,11 +1005,7 @@ function snmpUpInfo(sw) {
         ret.score = 0;
       }
 
-      ret.why =
-        "LAG member (ge/mge/xe/et) speed is " +
-        member_up_speed +
-        " but logical (ae) is " +
-        aggregate_up_speed;
+      ret.why = `LAG member speed is ${member_up_speed} but aggregate is ${aggregate_up_speed}`;
       ret.data[0].value = ret.why;
     }
 

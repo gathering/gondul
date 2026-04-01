@@ -628,152 +628,201 @@ var switchPortsPanel = function () {
   this.init = function () {
     this.refresh();
   };
+
+  this.filterState = {
+    showInterfacesWithoutAlias: false
+  }
+
+  this.toggleShowInterfacesWithoutAlias = function () {
+    this.filterState.showInterfacesWithoutAlias = !this.filterState.showInterfacesWithoutAlias;
+    // _probably_ only has one panel ID at a time?
+    this.refresh();
+  }
+
   this.refresh = function (reason) {
-    var domObj = document.createElement("div");
-    domObj.classList.add("panel-group");
+    let rootElementHtml = document.createElement("div");
+    rootElementHtml.classList.add("panel-group");
+
+    let switchPorts;
 
     try {
-      var snmpOldJson;
-      var snmpJson = nmsData.snmp.snmp[this.sw]["ports"];
+      let switchPorts_old;
+      /** @type Record<str, Record<str, unknown>> */
+      switchPorts = nmsData.snmp.snmp[this.sw]["ports"];
       if (nmsData.old.snmp != undefined) {
-        snmpOldJson = nmsData.old.snmp.snmp[this.sw]["ports"];
+        switchPorts_old = nmsData.old.snmp.snmp[this.sw]["ports"];
       }
     } catch (e) {
       this._renderError("Waiting for data.");
       return;
     }
-    //var expanderButton = document.createElement("a");
-    //expanderButton.innerHTML = "Toggle all";
-    //expanderButton.setAttribute("onclick","$('.collapse-top').collapse('toggle');");
-    //expanderButton.setAttribute("role", "button");
 
-    //var interfaceAliasButton = document.createElement("a");
-    //interfaceAliasButton.innerHTML = "Toggle interfaces without ifAlias";
-    //interfaceAliasButton.setAttribute("onclick", "$('.nms-interface-missing-alias').toggle();");
-    //interfaceAliasButton.setAttribute("role", "button");
+    const displayWithoutAliasCheckboxHtml = document.createElement("a");
+    displayWithoutAliasCheckboxHtml.innerHTML = `Show interfaces without alias&nbsp;`;
+    displayWithoutAliasCheckboxHtml.setAttribute("onclick", "Object.values(nmsInfoBox._windowHandler._panels)[0].toggleShowInterfacesWithoutAlias()")
+    displayWithoutAliasCheckboxHtml.setAttribute("role", "button");
+    displayWithoutAliasCheckboxHtml.href = "#"
 
-    //domObj.appendChild(expanderButton);
-    //domObj.appendChild(document.createElement("br"));
-    //domObj.appendChild(interfaceAliasButton);
-    var indicies = [];
-    for (var obj in snmpJson) {
-      indicies.push(obj);
+    const displayWithoutAliasCheckboxIconHtml = document.createElement("span");
+    displayWithoutAliasCheckboxIconHtml.classList.add("bi")
+    if (this.filterState.showInterfacesWithoutAlias) {
+      displayWithoutAliasCheckboxIconHtml.classList.add("bi-check-circle-fill", "text-success")
+    } else {
+      displayWithoutAliasCheckboxIconHtml.classList.add("bi-x-circle-fill","text-danger")
     }
-    indicies.sort(function (a, b) {
-      var tmpx = [snmpJson[a].ifName, snmpJson[b].ifName];
-      tmpx.sort();
-      if (tmpx[0] == snmpJson[a].ifName) {
-        return -1;
-      } else {
-        return 1;
+
+    displayWithoutAliasCheckboxHtml.appendChild(displayWithoutAliasCheckboxIconHtml)
+
+    rootElementHtml.appendChild(displayWithoutAliasCheckboxHtml);
+    rootElementHtml.appendChild(document.createElement("br"));
+
+    //? Keys are separated and enumerated over specifically because that allows us to sort them
+    //? and list the interfaces in alphanumeric order.
+    let switchPortKeys = Object.keys(switchPorts)
+      .filter((port) =>  switchPorts[port].ifAlias || (!switchPorts[port].ifAlias && this.filterState.showInterfacesWithoutAlias))
+      .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+
+    for (let portName of switchPortKeys) {
+      let cleanPortName = portName.replace(/\W+/g, "");
+      let portData = switchPorts[portName]
+
+      let headerSummaryHtml = document.createElement("details");
+      headerSummaryHtml.classList.add("panel", "panel-default", "nms-panel-small");
+
+
+      // Default to unknown status
+      // https://icons.getbootstrap.com/ -- https://getbootstrap.com/docs/4.0/utilities/colors/
+      let iconClass = "bi-question-diamond-fill text-info"
+      let title = `Unknown status (oper ${portData.ifOperStatus}, admin ${portData.ifAdminStatus})` // Hover text
+
+      if (
+        PORT_DOWN_REGEX.test(portData.ifOperStatus) ||
+        PORT_LOWERLAYERDOWN_REGEX.test(portData.ifOperStatus)
+      ) {
+        // Link down
+        headerSummaryHtml.classList.add("nms-interface-down");
+        iconClass = "bi-x-circle-fill text-danger";
+        title = "Link down";
       }
-    });
-    for (var obji in indicies) {
-      var obj = indicies[obji];
-      var cleanObj = obj.replace(/\W+/g, "");
-      var groupObj = document.createElement("div");
-      groupObj.classList.add("panel", "panel-default", "nms-panel-small");
-      var glyphicon = "glyphicon-remove";
-      var button = "btn-danger";
-      var title = "link down";
-      groupObj.classList.add("nms-interface-down");
-      if (snmpJson[obj].ifOperStatus == "up") {
-        glyphicon = "glyphicon-ok";
-        button = "btn-success";
-        title = "link up";
-        groupObj.classList.remove("nms-interface-down");
+
+      if (PORT_UP_REGEX.test(portData.ifOperStatus)) {
+        // Link up
+        iconClass = "bi-check-circle-fill text-success";
+        title = "Link up";
+        headerSummaryHtml.classList.remove("nms-interface-down");
       }
-      if (snmpJson[obj].ifAdminStatus == "down") {
-        glyphicon = "glyphicon-ban-circle";
-        title = "admin down";
-        button = "btn-info";
+
+      if (PORT_DOWN_REGEX.test(portData.ifAdminStatus)) {
+        // Link disabled
+        iconClass = "bi-slash-square-fill text-warning";
+        title = "Link administratively down";
       }
-      var traffic = "";
+
+      console.log(portData.ifOperStatus)
+
+      let trafficInOutHtml = "";
       try {
-        var nowin = parseInt(snmpJson[obj].ifHCInOctets);
-        var nowout = parseInt(snmpJson[obj].ifHCOutOctets);
-        if (!isNaN(nowin) && !isNaN(nowout)) {
-          traffic =
-            "<small>" +
-            byteCount(nowin) +
-            "B in | " +
-            byteCount(nowout) +
-            "B out </small>";
-        }
+        let totalTrafficIn = parseInt(portData.ifHCInOctets);
+        let totalTrafficOut = parseInt(portData.ifHCOutOctets);
+        if (!(isNaN(totalTrafficIn) || isNaN(totalTrafficOut))) {
+          trafficInOutHtml =
+            `<small>
+              ${byteCount(totalTrafficIn)}B in | ${byteCount(totalTrafficOut)}B out
+            </small>`;
+          }
       } catch (e) {}
 
-      if (snmpJson[obj].ifAlias == null || snmpJson[obj].ifAlias == "") {
-        groupObj.classList.add("nms-interface-missing-alias");
+      if (!portData.ifAlias) {
+        headerSummaryHtml.classList.add("nms-interface-missing-alias");
       }
-      groupObj.innerHTML =
-        '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#' +
-        cleanObj +
-        '-group">' +
-        snmpJson[obj].ifName +
-        " </a><small>" +
-        snmpJson[obj].ifAlias +
-        '</small><span class="pull-right">' +
-        traffic +
-        '<i class="btn-xs ' +
-        button +
-        '"><span class="glyphicon ' +
-        glyphicon +
-        '" title="' +
-        title +
-        '" aria-hidden="true"></span></i></span></span>';
 
-      var groupObjCollapse = document.createElement("div");
-      groupObjCollapse.id = cleanObj + "-group";
-      //groupObjCollapse.classList.add("collapse");
-      //groupObjCollapse.classList.add("collapse-top");
+      headerSummaryHtml.innerHTML =
+        `<summary class="panel-heading">
+          <a class="collapse-controller" role="button" data-toggle="collapse" href="#${cleanPortName}-group">
+            ${switchPorts[portName].ifName}
+          </a>
+          <small>
+            ${switchPorts[portName].ifAlias}
+          </small>
+          <span class="pull-right">
+            ${trafficInOutHtml}
+            &nbsp;
+            <span class="bi ${iconClass}" title="${title}" aria-hidden="true"></span>
+          </span>
+        </summary>`;
 
-      var panelBodyObj = document.createElement("div");
-      panelBodyObj.classList.add("panel-body");
+      var groupHtmlCollapse = document.createElement("div");
+      groupHtmlCollapse.id = `${cleanPortName}-group`;
 
-      var tableObj = document.createElement("table");
-      tableObj.classList.add("table", "table-condensed");
+      var panelBodyHtml = document.createElement("div");
+      panelBodyHtml.classList.add("panel-body");
 
-      var tbody = document.createElement("tbody");
-      var props = [];
-      for (var prop in snmpJson[obj]) {
-        props.push(prop);
-      }
-      props.sort();
-      for (var index in props) {
-        var prop = props[index];
-        var propObj = document.createElement("tr");
-        var append = "";
-        var value = snmpJson[obj][prop];
+      var tableHtml = document.createElement("table");
+      tableHtml.classList.add("table", "table-condensed");
+
+      var tableBodyHtml = document.createElement("tbody");
+
+      var portPropertyKeys = Object.keys(portData).sort();
+      for (let portPropertyName of portPropertyKeys) {
+        let value = portData[portPropertyName];
+        let propHtml = document.createElement("tr");
+
+        let extraData;
+
         if (!isNaN(parseInt(value))) {
-          append = byteCount(value, 2);
-          if (append != value) append = " (" + append + ")";
-          else append = "";
+          extraData = byteCount(value, 2);
+          if (extraData != value) extraData = `(${extraData})`
+          else extraData = "";
         }
-        propObj.innerHTML =
-          "<td>" + prop + "</td><td>" + value + append + "</td>";
-        tbody.appendChild(propObj);
+
+        propHtml.innerHTML = `
+          <td>${portPropertyName}</td>
+          <td>${value} ${extraData}</td>
+          `
+        tableBodyHtml.appendChild(propHtml);
       }
 
-      tableObj.appendChild(tbody);
-      var tableTopObj = document.createElement("div");
-      tableTopObj.innerHTML =
-        '<span class="panel-heading" style="display:block;"><a class="collapse-controller" role="button" data-toggle="collapse" href="#' +
-        cleanObj;
-        //'-table-group">Details</a></span>';
-      var tableTopObjCollapse = document.createElement("div");
-      tableTopObjCollapse.id = cleanObj + "-table-group";
-      //tableTopObjCollapse.classList.add("collapse");
-      //tableTopObjCollapse.classList.add("collapse-detail");
-      tableTopObjCollapse.appendChild(tableObj);
-      tableTopObj.appendChild(tableTopObjCollapse);
-      panelBodyObj.appendChild(tableTopObj);
-      //panelBodyObj.appendChild(tableObj);
-      groupObjCollapse.appendChild(panelBodyObj);
-      groupObj.appendChild(groupObjCollapse);
-      domObj.appendChild(groupObj);
+      tableHtml.appendChild(tableBodyHtml);
+      var tableTopHtml = document.createElement("div");
+      tableTopHtml.innerHTML = ``
+
+      /*
+      div.panel-group -- rootElementHtml
+        div.panel -- groupHtml
+          span.panel-heading -- tableTopHtml
+            a.collapse-controller (#<id>-group)
+            small (ifAlias)
+            span.pull-right
+              small (traffic in/out)
+              i (button? invisible)
+                span.glyphicon (icon? invisible)
+
+          <id>-group -- groupHtmlCollapse
+            panel-body -- panelBodyHtml
+              div
+                panel-heading (empty?)
+                <id>-table-group
+                  table -- tableHtml
+                    tbody
+                      tr
+                        td
+                        td
+      */
+
+     // tableTopHtml = headers
+     // groupHtmlCollapse = table data
+
+      var tableTopHtmlCollapse = document.createElement("div");
+      tableTopHtmlCollapse.id = cleanPortName + "-table-group";
+      tableTopHtmlCollapse.appendChild(tableHtml);
+      tableTopHtml.appendChild(tableTopHtmlCollapse);
+      panelBodyHtml.appendChild(tableTopHtml);
+      groupHtmlCollapse.appendChild(panelBodyHtml);
+      headerSummaryHtml.appendChild(groupHtmlCollapse);
+      rootElementHtml.appendChild(headerSummaryHtml);
     }
 
-    this._render(domObj);
+    this._render(rootElementHtml);
   };
 };
 nmsInfoBox.addPanelType("switchPorts", switchPortsPanel);

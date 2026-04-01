@@ -88,10 +88,7 @@ async def snmp(request: Request, response: Response, cache=Depends(get_cache)) -
                     "misc": {
                         "sysName": {"0": snmp_data[device]["sysName"]},
                         "sysUpTimeInstance": {"": snmp_data[device]["sysUpTime"]},
-                        "sysDescr": {"0": snmp_data[device]["sysDescr"]},
-                        "entPhysicalSerialNum": {
-                            "1": snmp_data[device]["entPhysicalSerialNum"]
-                        },
+                        "sysDescr": {"0": snmp_data[device]["sysDescr"]}
                     }
                 }
             }

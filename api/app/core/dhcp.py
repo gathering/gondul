@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Literal
 
 from pyisckea import Kea
 from pyisckea.models.dhcp4.lease import Lease4
@@ -13,8 +14,10 @@ URIS = {
     "v6": settings.KEA_DHCP6_API_URI if settings.KEA_DHCP6_API_URI else ""
 }
 
-vlan_id = int
-subnet_id = int
+type VlanId = int
+type SubnetId = int
+type UnixTimestamp = int
+type IpVersion = Literal[4, 6]
 
 class DHCPSubnetDetails():
     clients: int
@@ -26,34 +29,38 @@ class DHCPSubnetDetails():
 
 class DHCPSummaryResponse():
     # Weird field namings and format is because this is what is expected by gondul
-    dhcp: dict[int, int]
+    dhcp: dict[IpVersion, int]
     """Has two keys `4` and `6`, each having the amount of unique IP leases for the respective IP version"""
 
-    def __init__(self, dhcp: dict[int, int] = {}) -> None:
+    def __init__(self, dhcp: dict[IpVersion, int] = {}) -> None:
         self.dhcp = dhcp
 
 
 class DHCPDetailsResponse():
     # Weird field namings and format is because this is what is expected by gondul
-    time: int = round(time.time())
-    """data collection unix timestamp"""
+    time: UnixTimestamp
+    """data collection time"""
 
-    dhcp4: dict[vlan_id, int] = {}
-    """key=[vlan_id], value=last dhcp refresh unix timestamp"""
-    dhcp6: dict[vlan_id, int] = {}
-    """key=[vlan_id], value=last dhcp refresh unix timestamp"""
+    dhcp4: dict[VlanId, UnixTimestamp] = {}
+    """last dhcp refresh time"""
+    dhcp6: dict[VlanId, UnixTimestamp] = {}
+    """last dhcp refresh time"""
 
-    networks: dict[int, DHCPSubnetDetails] = {}
-    """key=[vlan_id], value={ clients: leases per VLAN }"""
+    networks: dict[VlanId, DHCPSubnetDetails] = {}
+
+    def __init__(self) -> None:
+        self.time = round(time.time())
+        self.dhcp4 = {}
+        self.dhcp6 = {}
+        self.networks = {}
 
 
 class DummyDHCPServer():
     def get_summary(self) -> DHCPSummaryResponse:
-        return DHCPSummaryResponse({})
+        return DHCPSummaryResponse()
 
     def get_details(self) -> DHCPDetailsResponse:
-        response = DHCPDetailsResponse()
-        return response
+        return DHCPDetailsResponse()
 
 
 class KeaDHCPServer():
@@ -75,7 +82,7 @@ class KeaDHCPServer():
         self._logger.debug(leases)
         return leases
 
-    def _get_subnet_vlan_mappings(self) -> dict[subnet_id, vlan_id]:
+    def _get_subnet_vlan_mappings(self) -> dict[SubnetId, VlanId]:
         """
         Returns mappings from Netbox ID (used for subnets in and returned by Kea)
         to VLAN ID (expected by gondul).
@@ -88,7 +95,7 @@ class KeaDHCPServer():
             [self._v6_client.dhcp6.subnet6_list(), self._v6_client.dhcp6.subnet6_get]
         ]
 
-        subnet_vlan_mapping: dict[subnet_id, vlan_id] = {}
+        subnet_vlan_mapping: dict[SubnetId, VlanId] = {}
         for [subnets, get_subnet_details] in subnets_v4_v6:
             for subnet in subnets:
                 if not subnet.id:
@@ -122,19 +129,15 @@ class KeaDHCPServer():
 
         subnet_vlan_mappings = self._get_subnet_vlan_mappings()
 
-        # Key: VLAN ID (NOT subnet ID from Kea, as this is the Netbox object ID)
-        # Value: Object containing the amount of leases belonging to that vlan
-        vlan_lease_counts: dict[int, DHCPSubnetDetails] = {}
+        vlan_lease_counts: dict[VlanId, DHCPSubnetDetails] = {}
 
-        # Key: VLAN ID (NOT subnet ID from Kea, as this is the Netbox object ID)
-        # Value: Unix timestamp to the last time this was updated
-        # Note: A VLAN not being defined as a key in here means there is no
-        #       available leases, and there is no timestamp for the last refresh available.
-        #       Do NOT initialize all VLANs to 0.
-        last_lease_refresh_v4: dict[int, int] = {}
-        last_lease_refresh_v6: dict[int, int] = {}
+        # Note: A VLAN not being defined as a key in here means there is no available leases, and
+        # there is no timestamp for the last refresh. Do NOT initialize all VLANs to 0.
+        last_lease_refresh_v4: dict[VlanId, UnixTimestamp] = {}
+        last_lease_refresh_v6: dict[VlanId, UnixTimestamp] = {}
 
-        # Initialize VLAN lease counts so all VLANs return _some_ data
+        # Initialize VLAN lease counts so all VLANs return _some_ data. This is okay to initialize
+        # to zero; zero clients is okay, zero timestamp is not
         for _index, (_netbox_id, vlan_id) in enumerate(subnet_vlan_mappings.items()):
             vlan_lease_counts[vlan_id] = DHCPSubnetDetails(0)
 

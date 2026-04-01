@@ -792,7 +792,7 @@ function dhcpInfo(sw) {
       nmsData.dhcp.networks[
         nmsData.smanagement.switches[sw].traffic_vlan
       ].clients;
-    ret.data[2].description = "DHCP clients";
+    ret.data[2].description = "DHCP clients (v4+v6)";
 
     if (testTree(nmsData, ["switchstate", "switches", sw, "clients", "live"])) {
       let live_connections = parseInt(

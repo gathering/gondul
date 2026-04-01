@@ -564,12 +564,12 @@ function pingInfo(sw) {
                     (parseInt(
                       nmsData["snmp"]["snmp"][distro]["misc"][
                         "sysUpTimeInstance"
-                      ][""]
+                      ][""],
                     ) -
                       parseInt(
                         nmsData["snmp"]["snmp"][distro]["ports"][phy][
                           "ifLastChange"
-                        ]
+                        ],
                       )) /
                     100;
                   var diff2 = {
@@ -743,8 +743,8 @@ function dhcpInfo(sw) {
     ])
   ) {
     let now = nmsData.dhcp.time;
-    let last_v6_dhcp_refresh;
-    nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
+    let last_v6_dhcp_refresh =
+      nmsData.dhcp.dhcp6[nmsData.smanagement.switches[sw].traffic_vlan];
     let diff = now - last_v6_dhcp_refresh;
 
     let divider = dhcpClients < 10 || tagged(sw, "slowdhcp") ? 12 : 10;
@@ -1058,7 +1058,7 @@ function memoryUpdater() {
         var local = nmsData.snmp.snmp[sw].misc["jnxOperatingBuffer"][u];
         buffer = Math.max(
           nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer[u],
-          buffer
+          buffer,
         );
       }
       nmsMap.setSwitchColor(sw, nmsColor.getColorStop(buffer * 10));
@@ -1080,7 +1080,7 @@ function memoryInfo(sw) {
       var local = nmsData.snmp.snmp[sw].misc["jnxOperatingBuffer"][u];
       memory = Math.max(
         nmsData.snmp.snmp[sw].misc.jnxOperatingBuffer[u],
-        memory
+        memory,
       );
     }
     if (memory < 70) {
@@ -1109,7 +1109,7 @@ function tagged(sw, tag) {
     console.log(
       "Tried to find tags for " +
         sw +
-        "but tags-datastructure is probably not an array?"
+        "but tags-datastructure is probably not an array?",
     );
   }
   return false;
@@ -1132,7 +1132,7 @@ function networkInfo(sw) {
         v: setTree(
           nmsData,
           ["networks", "networks", mg.traffic_vlan],
-          undefined
+          undefined,
         ),
       },
     ];
@@ -1289,7 +1289,7 @@ function healthUpdater() {
       ) {
         nmsMap.setSwitchInfo(
           sw,
-          worst.realdata[nms.legendPick.handler][nms.legendPick.idx].value
+          worst.realdata[nms.legendPick.handler][nms.legendPick.idx].value,
         );
       } else {
         nmsMap.setSwitchInfo(sw, undefined);

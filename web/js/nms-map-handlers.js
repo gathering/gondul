@@ -971,27 +971,39 @@ function snmpInit() {
   snmpUpdater();
 }
 
+
+const AGGREGATE_REGEX = /B:/i // ae-like interfaces
+const MEMBER_REGEX = /G:/i // fe/ge/xe-like interfaces (members of ae-like)
+
 function snmpUpInfo(sw) {
   var ret = new handlerInfo("uplink", "SNMP uplink data");
   ret.why = "No SNMP uplink data";
   ret.score = 0;
 
   if (testTree(nmsData, ["snmp", "snmp", sw, "ports"])) {
-    var total_up = 0;
-    var seen_up = 0;
+    var aggregate_up_speed = 0;
+    var member_up_speed = 0;
+    let aggregate_member_total = 0;
+    let aggregate_member_up = 0;
+
     for (var port in nmsData.snmp.snmp[sw].ports) {
-      var x = nmsData.snmp.snmp[sw].ports[port];
-      if (x["ifAlias"] != null) {
-        if (x["ifAlias"].match(/B:/i) && (x["ifOperStatus"] == "up" || x["ifOperStatus"] == "up(1)")) {
-          total_up += parseInt(x["ifHighSpeed"]);
+      var port = nmsData.snmp.snmp[sw].ports[port];
+      if (port["ifAlias"] != null) {
+        if (port["ifAlias"].match(AGGREGATE_REGEX) && (port["ifOperStatus"] === "up" || port["ifOperStatus"] === "up(1)")) {
+          aggregate_up_speed += parseInt(port["ifHighSpeed"]);
         }
-        if (x["ifAlias"].match(/G:/i) && (x["ifOperStatus"] == "up" || x["ifOperStatus"] == "up(1)")) {
-          seen_up += parseInt(x["ifHighSpeed"]);
+        if (port["ifAlias"].match(MEMBER_REGEX)) {
+          aggregate_member_total += 1;
+
+          if (port["ifOperStatus"] === "up" || port["ifOperStatus"] === "up(1)") {
+            aggregate_member_up += 1;
+            member_up_speed += parseInt(port["ifHighSpeed"]);
+          }
         }
       }
     }
-    ret.data[0].value = "LAG member speed and total speed is " + seen_up;
-    if (total_up != seen_up) {
+    ret.data[0].value = "LAG member speed and total speed is " + member_up_speed;
+    if (aggregate_up_speed != member_up_speed) {
       ret.score = 500;
       if (tagged(sw, "ignoreuplink")) {
         ret.score = 0;
@@ -999,10 +1011,20 @@ function snmpUpInfo(sw) {
 
       ret.why =
         "LAG member (ge/mge/xe/et) speed is " +
-        seen_up +
+        member_up_speed +
         " but logical (ae) is " +
-        total_up;
+        aggregate_up_speed;
       ret.data[0].value = ret.why;
+    }
+
+    ret.data[1] = {
+      value: `LAG members is ${aggregate_member_up}/${aggregate_member_total}`,
+      description: "Uplink count",
+    }
+    if (aggregate_member_total != aggregate_member_up && !tagged(sw, "ignoreuplink")) {
+      let missing_links = aggregate_member_total-aggregate_member_up
+      ret.score = 500 + 100 * missing_links
+      ret.why = `Missing ${missing_links} of ${aggregate_member_total} links`
     }
   }
   return ret;

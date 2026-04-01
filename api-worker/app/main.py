@@ -73,7 +73,7 @@ def _update_cache(key: str, data):
 
 def get_devices() -> dict[str, GondulDevice]:
     nb = pynetbox.api(
-        settings.NETBOX_URL, token=settings.NETBOX_TOKEN, threading=True
+        settings.NETBOX_URL, token=settings.NETBOX_TOKEN, threading=True, strict_filters=True,
     )
     devices: dict[str, GondulDevice] = {}
     for device in nb.dcim.devices.filter(
@@ -85,7 +85,8 @@ def get_devices() -> dict[str, GondulDevice]:
             "leaf",
             "oob-switch",
             "spine",
-        ]
+        ],
+        status="active",
     ):
         # print(device.name)
         distro = None

@@ -982,10 +982,10 @@ function snmpUpInfo(sw) {
     for (var port in nmsData.snmp.snmp[sw].ports) {
       var x = nmsData.snmp.snmp[sw].ports[port];
       if (x["ifAlias"] != null) {
-        if (x["ifAlias"].match(/B:/i) && x["ifOperStatus"] == "up") {
+        if (x["ifAlias"].match(/B:/i) && (x["ifOperStatus"] == "up" || x["ifOperStatus"] == "up(1)")) {
           total_up += parseInt(x["ifHighSpeed"]);
         }
-        if (x["ifAlias"].match(/G:/i) && x["ifOperStatus"] == "up") {
+        if (x["ifAlias"].match(/G:/i) && (x["ifOperStatus"] == "up" || x["ifOperStatus"] == "up(1)")) {
           seen_up += parseInt(x["ifHighSpeed"]);
         }
       }

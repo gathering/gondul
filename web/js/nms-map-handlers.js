@@ -910,7 +910,6 @@ function snmpInfo(sw) {
     ret.data[0].value = "No data";
     if (testTree(nmsData, ["smanagement", "switches", sw])) {
       if (
-        nmsData.smanagement.switches[sw].community == undefined ||
         nmsData.smanagement.switches[sw].community == "disable"
       ) {
         ret.score = 0;
